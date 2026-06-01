@@ -25,10 +25,10 @@ jobs:
           global-json-file: global.json
 
       - name: Restore
-        run: dotnet restore EP.Tamin.NET.slnx
+        run: dotnet restore --force
 
       - name: Build
-        run: dotnet build EP.Tamin.NET.slnx --no-restore --configuration Release
+        run: dotnet build -m --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test EP.Tamin.NET.slnx --no-build --configuration Release --verbosity normal
+        run: dotnet test --no-build --configuration Release --verbosity normal
