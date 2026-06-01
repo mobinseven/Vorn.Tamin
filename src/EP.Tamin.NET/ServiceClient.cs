@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 
 namespace EP.Tamin.NET;
@@ -8,34 +7,34 @@ namespace EP.Tamin.NET;
 /// </summary>
 public sealed class ServiceClient
 {
-    private readonly TaminSession _session;
+    private readonly TaminEndpointClient _endpointClient;
 
-    internal ServiceClient(TaminSession session)
+    internal ServiceClient(TaminApiClient apiClient)
     {
-        _session = session;
+        _endpointClient = new TaminEndpointClient(apiClient);
     }
 
     // ── Legacy / untyped helpers (backward-compatible) ───────────────────────
 
     /// <summary>Fetches the raw service list from <c>ws-services</c>.</summary>
     public Task<JsonElement> GetAllServicesAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => GetAsync("ws-services", query, cancellationToken);
+        => _endpointClient.GetAsync("ws-services", query, cancellationToken);
 
     /// <summary>Fetches available prescription types from <c>ws-prescription-type</c>.</summary>
     public Task<JsonElement> GetPrescriptionTypeAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => GetAsync("ws-prescription-type", query, cancellationToken);
+        => _endpointClient.GetAsync("ws-prescription-type", query, cancellationToken);
 
     /// <summary>Fetches the paraclinic tariff list from <c>ws-par-taref</c>.</summary>
     public Task<JsonElement> GetParaclinicTarefAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => GetAsync("ws-par-taref", query, cancellationToken);
+        => _endpointClient.GetAsync("ws-par-taref", query, cancellationToken);
 
     /// <summary>Fetches drug amounts / reference data from <c>ws-drug-amount</c>.</summary>
     public Task<JsonElement> GetDrugAmountAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => GetAsync("ws-drug-amount", query, cancellationToken);
+        => _endpointClient.GetAsync("ws-drug-amount", query, cancellationToken);
 
     /// <summary>Fetches drug administration instructions from <c>ws-drug-instruction</c>.</summary>
     public Task<JsonElement> GetDrugInstructionAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => GetAsync("ws-drug-instruction", query, cancellationToken);
+        => _endpointClient.GetAsync("ws-drug-instruction", query, cancellationToken);
 
     // ── Typed reference-data methods (Section 11) ────────────────────────────
 
@@ -57,13 +56,13 @@ public sealed class ServiceClient
         bool? activeOnly = null,
         CancellationToken cancellationToken = default)
     {
-        var query = BuildQuery(
+        var query = TaminEndpointClient.BuildQuery(
             ("search_text", searchText),
             ("drug_code", drugCode),
             ("page", page?.ToString()),
             ("page_size", pageSize?.ToString()),
             ("active_only", activeOnly?.ToString().ToLowerInvariant()));
-        return GetAsync("ws-drug-amount", query, cancellationToken);
+        return _endpointClient.GetAsync("ws-drug-amount", query, cancellationToken);
     }
 
     /// <summary>
@@ -86,14 +85,14 @@ public sealed class ServiceClient
         bool? activeOnly = null,
         CancellationToken cancellationToken = default)
     {
-        var query = BuildQuery(
+        var query = TaminEndpointClient.BuildQuery(
             ("service_type", serviceType),
             ("service_group", serviceGroup),
             ("search_text", searchText),
             ("page", page?.ToString()),
             ("page_size", pageSize?.ToString()),
             ("active_only", activeOnly?.ToString().ToLowerInvariant()));
-        return GetAsync("ws-services", query, cancellationToken);
+        return _endpointClient.GetAsync("ws-services", query, cancellationToken);
     }
 
     /// <summary>
@@ -114,13 +113,13 @@ public sealed class ServiceClient
         string? date = null,
         CancellationToken cancellationToken = default)
     {
-        var query = BuildQuery(
+        var query = TaminEndpointClient.BuildQuery(
             ("patient_national_id", patientNationalId),
             ("item_code", itemCode),
             ("item_type", itemType),
             ("doctor_id", doctorId),
             ("date", date));
-        return GetAsync("ws-allowed-count", query, cancellationToken);
+        return _endpointClient.GetAsync("ws-allowed-count", query, cancellationToken);
     }
 
     /// <summary>
@@ -141,30 +140,13 @@ public sealed class ServiceClient
         string? providerId = null,
         CancellationToken cancellationToken = default)
     {
-        var query = BuildQuery(
+        var query = TaminEndpointClient.BuildQuery(
             ("item_code", itemCode),
             ("item_type", itemType),
             ("quantity", quantity.ToString()),
             ("patient_national_id", patientNationalId),
             ("provider_id", providerId));
-        return GetAsync("ws-price", query, cancellationToken);
+        return _endpointClient.GetAsync("ws-price", query, cancellationToken);
     }
 
-    private async Task<JsonElement> GetAsync(string endpoint, IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
-    {
-        using var request = _session.CreateRequest(HttpMethod.Get, _session.BuildUri(endpoint, query));
-        using var response = await _session.HttpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        return ResponseHandling.Handle(response.StatusCode, response.ReasonPhrase, content);
-    }
-
-    private static IReadOnlyDictionary<string, string?> BuildQuery(params (string key, string? value)[] pairs)
-    {
-        var dict = new Dictionary<string, string?>(pairs.Length);
-        foreach (var (key, value) in pairs)
-            if (!string.IsNullOrWhiteSpace(value))
-                dict[key] = value;
-        return dict;
-    }
 }
-

@@ -36,6 +36,8 @@ public sealed class TaminSession
     /// <summary>Paraclinic service delivery operations.</summary>
     public ParaclinicClient Paraclinic { get; }
 
+    internal TaminApiClient ApiClient { get; }
+
     /// <summary>
     /// Creates a <see cref="TaminSession"/> using a pre-obtained OAuth token.
     /// </summary>
@@ -46,7 +48,7 @@ public sealed class TaminSession
     /// <param name="clientId">Optional Client-Id header value issued during API onboarding.</param>
     public TaminSession(HttpClient httpClient, string? oauthToken = null, Uri? baseUri = null, bool needToken = true, string? clientId = null)
     {
-        HttpClient = httpClient;
+        HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         BaseUri = EnsureTrailingSlash(baseUri ?? new Uri(DefaultUrl));
         ClientId = clientId;
 
@@ -59,11 +61,12 @@ public sealed class TaminSession
         if (!string.IsNullOrWhiteSpace(clientId))
             HttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Client-Id", clientId);
 
-        Service = new ServiceClient(this);
-        Prescription = new PrescriptionClient(this);
-        Identity = new IdentityClient(this);
-        Pharmacy = new PharmacyClient(this);
-        Paraclinic = new ParaclinicClient(this);
+        ApiClient = new TaminApiClient(this);
+        Service = new ServiceClient(ApiClient);
+        Prescription = new PrescriptionClient(ApiClient);
+        Identity = new IdentityClient(ApiClient);
+        Pharmacy = new PharmacyClient(ApiClient);
+        Paraclinic = new ParaclinicClient(ApiClient);
     }
 
     /// <summary>
