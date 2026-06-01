@@ -1,7 +1,7 @@
 # Vorn.Tamin
 
-[![NuGet](https://img.shields.io/nuget/v/Vorn.Tamin)](https://www.nuget.org/packages/Vorn.Tamin)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![NuGet Version](https://img.shields.io/nuget/v/vorn.tamin?style=flat-square)](https://www.nuget.org/packages/Vorn.Tamin)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 A .NET 10 client SDK for the [EP.Tamin](https://ep.tamin.ir) electronic prescription API of the Social Security Insurance of Iran (سازمان تأمین اجتماعی). 
 
