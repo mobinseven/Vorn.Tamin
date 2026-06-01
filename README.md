@@ -811,14 +811,6 @@ catch (ServerError)
 | `ConnectionError` | `Redirection`, `ClientError` → (`BadRequest`, `UnauthorizedAccess`, `ForbiddenAccess`, `ResourceNotFound`, `MethodNotAllowed`, `ResourceConflict`, `ResourceGone`, `ResourceInvalid`), `ServerError` |
 | `Exception` (domain) | `AuthenticationError`, `AuthorizationError`, `IdentityError`, `EntitlementError`, `ValidationError`, `BusinessRuleError`, `DuplicateSubmissionRisk`, `TemporaryServiceError` |
 
-### Internal (not for direct use)
-
-| Type | Notes |
-|---|---|
-| `TaminApiClient` | Internal HTTP plumbing. Not part of the public contract. |
-| `TaminEndpointClient` | Internal per-domain endpoint wrapper. Not part of the public contract. |
-| `ResponseHandling` | Internal response-to-exception mapping. Not part of the public contract. |
-
 ---
 
 ## Limitations & compatibility notes
