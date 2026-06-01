@@ -13,7 +13,7 @@ internal sealed class TaminEndpointClient
     public TaminEndpointClient(TaminApiClient api, string prefix = "")
     {
         _api = api ?? throw new ArgumentNullException(nameof(api));
-        _prefix = prefix.Trim('/');
+        _prefix = prefix?.Trim('/') ?? string.Empty;
     }
 
     public Task<JsonElement> GetAsync(
@@ -24,7 +24,9 @@ internal sealed class TaminEndpointClient
 
     public Task<JsonElement> PostAsync<TPayload>(string endpoint, TPayload payload, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(payload);
+        if (payload is null)
+            throw new ArgumentNullException(nameof(payload));
+
         return _api.PostAsync(BuildEndpoint(endpoint), payload, cancellationToken);
     }
 
