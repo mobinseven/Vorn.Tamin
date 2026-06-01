@@ -16,6 +16,29 @@ public sealed class Prescription
 /// </summary>
 public sealed record DocEprsc(string DocType = "1");
 
+/// <summary>Status values for a prescription through its lifecycle.</summary>
+public enum PrescriptionStatus
+{
+    /// <summary>Created locally but not yet submitted.</summary>
+    Draft,
+    /// <summary>Sent to the official API.</summary>
+    Submitted,
+    /// <summary>Accepted by the official API.</summary>
+    Accepted,
+    /// <summary>Rejected by the official API.</summary>
+    Rejected,
+    /// <summary>Accepted conditionally or requires user attention.</summary>
+    Warning,
+    /// <summary>Changed after original registration.</summary>
+    Edited,
+    /// <summary>Deleted or cancelled where allowed.</summary>
+    Deleted,
+    /// <summary>Waiting for retry after temporary failure.</summary>
+    PendingSync,
+    /// <summary>Submission failed and requires support review.</summary>
+    Failed,
+}
+
 /// <summary>Identifies the category of items in a prescription.</summary>
 public enum PrescriptionType
 {
