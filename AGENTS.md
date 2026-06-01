@@ -13,4 +13,4 @@ Always strictly* follow these architecture rules:
 * The most CRITICAL rule: Keep the design simple. Keep it simple stupid. **(KISS / YAGNI)**
 * Use one source of truth for shared data and rules. **(Single Source of Truth — SSOT / DRY)**
 
-* Strictly following a rule means not following it must be considered a red line and a deal breaker.
+\* Strictly following a rule means not following it must be considered a red line and a deal breaker.
