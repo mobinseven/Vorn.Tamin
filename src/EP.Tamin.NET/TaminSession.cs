@@ -61,7 +61,7 @@ public sealed class TaminSession
         if (!string.IsNullOrWhiteSpace(clientId))
             HttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Client-Id", clientId);
 
-        ApiClient = new TaminApiClient(this);
+        ApiClient = new TaminApiClient(HttpClient, BaseUri);
         Service = new ServiceClient(ApiClient);
         Prescription = new PrescriptionClient(ApiClient);
         Identity = new IdentityClient(ApiClient);
@@ -117,7 +117,7 @@ public sealed class TaminSession
     /// <returns>The new <see cref="TokenResult"/>.</returns>
     public async Task<TokenResult> RefreshTokenAsync(string refreshToken, string? clientId = null, CancellationToken cancellationToken = default)
     {
-        var uri = BuildUri("ws/api/auth/refresh");
+        var uri = new Uri(BaseUri, "ws/api/auth/refresh");
         using var request = new HttpRequestMessage(HttpMethod.Post, uri)
         {
             Content = new StringContent(
@@ -151,7 +151,7 @@ public sealed class TaminSession
     /// <returns>A <see cref="ValidateTokenResult"/> describing the token state.</returns>
     public async Task<ValidateTokenResult> ValidateTokenAsync(string accessToken, CancellationToken cancellationToken = default)
     {
-        var uri = BuildUri("ws/api/auth/validate");
+        var uri = new Uri(BaseUri, "ws/api/auth/validate");
         using var request = new HttpRequestMessage(HttpMethod.Post, uri)
         {
             Content = new StringContent(
@@ -169,32 +169,6 @@ public sealed class TaminSession
             return JsonSerializer.Deserialize<ValidateTokenResult>(data.GetRawText()) ?? new ValidateTokenResult();
 
         return JsonSerializer.Deserialize<ValidateTokenResult>(content) ?? new ValidateTokenResult();
-    }
-
-    internal Uri BuildUri(string endpoint, IReadOnlyDictionary<string, string?>? query = null)
-    {
-        var absolute = new Uri(BaseUri, endpoint.TrimStart('/'));
-        if (query is null || query.Count == 0)
-            return absolute;
-
-        var queryString = string.Join("&", query
-            .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
-            .Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value!)}"));
-
-        if (string.IsNullOrEmpty(queryString))
-            return absolute;
-
-        var separator = absolute.Query.Length == 0 ? "?" : "&";
-        return new Uri($"{absolute}{separator}{queryString}");
-    }
-
-    internal HttpRequestMessage CreateRequest(HttpMethod method, Uri uri, string? correlationId = null)
-    {
-        var request = new HttpRequestMessage(method, uri);
-        request.Headers.TryAddWithoutValidation("Request-Id", Guid.NewGuid().ToString());
-        if (!string.IsNullOrWhiteSpace(correlationId))
-            request.Headers.TryAddWithoutValidation("Correlation-Id", correlationId);
-        return request;
     }
 
     private static async Task<string> LoginAsync(
