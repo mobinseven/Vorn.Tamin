@@ -49,7 +49,7 @@ internal sealed class TaminApiClient
         return ResponseHandling.Handle(response.StatusCode, response.ReasonPhrase, content);
     }
 
-    internal Uri BuildUri(string endpoint, IReadOnlyDictionary<string, string?>? query = null)
+    private Uri BuildUri(string endpoint, IReadOnlyDictionary<string, string?>? query = null)
     {
         var absolute = new Uri(_baseUri, endpoint.TrimStart('/'));
         if (query is null || query.Count == 0)
