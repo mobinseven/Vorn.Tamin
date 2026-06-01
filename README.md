@@ -3,8 +3,6 @@
 [![NuGet](https://img.shields.io/nuget/v/EP.Tamin.NET)](https://www.nuget.org/packages/EP.Tamin.NET)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**کارآور سامانه نسخه الکترونیک تامین اجتماعی در .NET**
-
 A .NET 10 client SDK for the [EP.Tamin](https://ep.tamin.ir) electronic prescription API of the Social Security Insurance of Iran (سازمان تأمین اجتماعی). Inspired by the Python [`Mazafard/tamin-sdk`](https://github.com/Mazafard/tamin-sdk).
 
 ---
