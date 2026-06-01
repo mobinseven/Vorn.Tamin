@@ -7,7 +7,7 @@
 
     <!-- NuGet package metadata -->
     <PackageId>EP.Tamin.NET</PackageId>
-    <Description>A .NET 10 client SDK for the EP.Tamin electronic prescription API (Social Security Insurance of Iran). Inspired by the Python tamin-sdk.</Description>
+    <Description>A .NET 10 client SDK for the EP.Tamin electronic prescription API (Social Security Insurance of Iran).</Description>
     <PackageTags>tamin;epresc;electronic-prescription;iran;social-security;sdk;httpclient</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
