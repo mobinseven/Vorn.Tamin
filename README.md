@@ -3,7 +3,7 @@
 [![NuGet](https://img.shields.io/nuget/v/Vorn.Tamin)](https://www.nuget.org/packages/Vorn.Tamin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A .NET 10 client SDK for the [EP.Tamin](https://ep.tamin.ir) electronic prescription API of the Social Security Insurance of Iran (سازمان تأمین اجتماعی). Inspired by the Python [`Mazafard/tamin-sdk`](https://github.com/Mazafard/tamin-sdk).
+A .NET 10 client SDK for the [EP.Tamin](https://ep.tamin.ir) electronic prescription API of the Social Security Insurance of Iran (سازمان تأمین اجتماعی). 
 
 ---
 
@@ -831,6 +831,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, code-style guidelines,
 # Run all tests
 dotnet test Vorn.Tamin.slnx
 ```
+
+---
+
+## Acknowledgement
+
+Inspired by the Python [`Mazafard/tamin-sdk`](https://github.com/Mazafard/tamin-sdk).
 
 ---
 
