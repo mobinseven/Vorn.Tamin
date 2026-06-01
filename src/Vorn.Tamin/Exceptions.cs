@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace EP.Tamin.NET;
+namespace Vorn.Tamin;
 
 /// <summary>Thrown when an authorization token was required but not supplied.</summary>
 public class AuthTokenNotSuppliedException : Exception

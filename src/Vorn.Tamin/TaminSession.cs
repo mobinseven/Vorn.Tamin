@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
-namespace EP.Tamin.NET;
+namespace Vorn.Tamin;
 
 /// <summary>
 /// Manages an authenticated HTTP session to the EP.Tamin API.

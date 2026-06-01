@@ -7,9 +7,9 @@
     <File Path="tag.ps1" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/EP.Tamin.NET/EP.Tamin.NET.csproj" />
+    <Project Path="src/Vorn.Tamin/Vorn.Tamin.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/EP.Tamin.NET.Tests/EP.Tamin.NET.Tests.csproj" />
+    <Project Path="tests/Vorn.Tamin.Tests/Vorn.Tamin.Tests.csproj" />
   </Folder>
 </Solution>

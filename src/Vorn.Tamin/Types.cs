@@ -1,4 +1,4 @@
-namespace EP.Tamin.NET;
+namespace Vorn.Tamin;
 
 /// <summary>
 /// Represents a generic prescription payload as a key-value dictionary.

@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\EP.Tamin.NET\EP.Tamin.NET.csproj" />
+    <ProjectReference Include="..\..\src\EP.Tamin.NET\Vorn.Tamin.csproj" />
   </ItemGroup>
 
 </Project>

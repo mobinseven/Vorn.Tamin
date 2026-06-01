@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace EP.Tamin.NET.Extensions;
+namespace Vorn.Tamin.Extensions;
 
 /// <summary>
 /// Configuration options for the EP.Tamin SDK, suitable for use with

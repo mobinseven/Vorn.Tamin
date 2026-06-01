@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace EP.Tamin.NET;
+namespace Vorn.Tamin;
 
 /// <summary>
 /// Sends HTTP requests for domain clients and applies the shared EP.Tamin response contract.

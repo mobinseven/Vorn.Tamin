@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace EP.Tamin.NET;
+namespace Vorn.Tamin;
 
 /// <summary>
 /// Provides paraclinic service delivery operations (Section 13).

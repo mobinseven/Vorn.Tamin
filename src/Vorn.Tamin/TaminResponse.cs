@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace EP.Tamin.NET;
+namespace Vorn.Tamin;
 
 /// <summary>
 /// Standard API response wrapper matching the EP.Tamin API envelope:

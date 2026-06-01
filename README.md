@@ -1,6 +1,6 @@
-# EP.Tamin.NET
+# Vorn.Tamin
 
-[![NuGet](https://img.shields.io/nuget/v/EP.Tamin.NET)](https://www.nuget.org/packages/EP.Tamin.NET)
+[![NuGet](https://img.shields.io/nuget/v/Vorn.Tamin)](https://www.nuget.org/packages/Vorn.Tamin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A .NET 10 client SDK for the [EP.Tamin](https://ep.tamin.ir) electronic prescription API of the Social Security Insurance of Iran (سازمان تأمین اجتماعی). Inspired by the Python [`Mazafard/tamin-sdk`](https://github.com/Mazafard/tamin-sdk).
@@ -34,7 +34,7 @@ A .NET 10 client SDK for the [EP.Tamin](https://ep.tamin.ir) electronic prescrip
 
 ## What problem does this solve?
 
-Calling the EP.Tamin REST API from .NET requires assembling authentication headers, serialising request/response bodies, handling custom status envelopes, mapping HTTP status codes to typed exceptions, and managing per-request tracing identifiers. **EP.Tamin.NET** encapsulates all of that in a single, lightweight SDK so you can focus on your application logic.
+Calling the EP.Tamin REST API from .NET requires assembling authentication headers, serialising request/response bodies, handling custom status envelopes, mapping HTTP status codes to typed exceptions, and managing per-request tracing identifiers. **Vorn.Tamin** encapsulates all of that in a single, lightweight SDK so you can focus on your application logic.
 
 ---
 
@@ -42,17 +42,17 @@ Calling the EP.Tamin REST API from .NET requires assembling authentication heade
 
 ### dotnet CLI
 ```bash
-dotnet add package EP.Tamin.NET
+dotnet add package Vorn.Tamin
 ```
 
 ### Package Manager Console
 ```powershell
-Install-Package EP.Tamin.NET
+Install-Package Vorn.Tamin
 ```
 
 ### PackageReference
 ```xml
-<PackageReference Include="EP.Tamin.NET" Version="*" />
+<PackageReference Include="Vorn.Tamin" Version="*" />
 ```
 
 ---
@@ -73,7 +73,7 @@ The three `Microsoft.Extensions.*` packages are transitive dependencies — you 
 ## Quick-start
 
 ```csharp
-using EP.Tamin.NET;
+using Vorn.Tamin;
 using System.Text.Json;
 
 // ── Option A: pre-obtained bearer token ──────────────────────────────────────
@@ -121,7 +121,7 @@ JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(
 Register the SDK in `Program.cs` or `Startup.cs`:
 
 ```csharp
-using EP.Tamin.NET.Extensions;
+using Vorn.Tamin.Extensions;
 
 builder.Services.AddTaminClient(o =>
 {
@@ -829,7 +829,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, code-style guidelines,
 
 ```bash
 # Run all tests
-dotnet test EP.Tamin.NET.slnx
+dotnet test Vorn.Tamin.slnx
 ```
 
 ---
@@ -842,10 +842,10 @@ See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
-[MIT](LICENSE) © EP.Tamin.NET Contributors
+[MIT](LICENSE) © Vorn.Tamin Contributors
 
 ---
 
-**Repository:** <https://github.com/mobinseven/EP.Tamin.NET>  
-**Issues:** <https://github.com/mobinseven/EP.Tamin.NET/issues>
+**Repository:** <https://github.com/mobinseven/Vorn.Tamin>  
+**Issues:** <https://github.com/mobinseven/Vorn.Tamin/issues>
 

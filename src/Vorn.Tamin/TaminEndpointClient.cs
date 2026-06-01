@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace EP.Tamin.NET;
+namespace Vorn.Tamin;
 
 /// <summary>
 /// Composes domain endpoints and delegates transport to the shared API client.

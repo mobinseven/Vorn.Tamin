@@ -1,8 +1,9 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Vorn.Tamin;
 
-namespace EP.Tamin.NET.Tests;
+namespace Vorn.Tamin.Tests;
 
 public class TaminSessionTests
 {

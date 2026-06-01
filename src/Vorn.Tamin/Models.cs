@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace EP.Tamin.NET;
+namespace Vorn.Tamin;
 
 // ── Authentication DTOs (Section 6) ─────────────────────────────────────────
 
@@ -255,7 +255,7 @@ public sealed class PhysiotherapyItem
 /// <summary>Request payload for registering a visit-only prescription.</summary>
 public sealed class RegisterVisitPrescriptionRequest
 {
-    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)EP.Tamin.NET.PrescriptionType.Visit;
+    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Visit;
     [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
     [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("visit_date")] public required string VisitDate { get; init; }
@@ -268,7 +268,7 @@ public sealed class RegisterVisitPrescriptionRequest
 /// <summary>Request payload for registering a drug prescription.</summary>
 public sealed class RegisterDrugPrescriptionRequest
 {
-    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)EP.Tamin.NET.PrescriptionType.Drug;
+    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Drug;
     [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
     [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("visit_date")] public required string VisitDate { get; init; }
@@ -280,7 +280,7 @@ public sealed class RegisterDrugPrescriptionRequest
 /// <summary>Request payload for registering a paraclinic prescription.</summary>
 public sealed class RegisterParaclinicPrescriptionRequest
 {
-    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)EP.Tamin.NET.PrescriptionType.Paraclinic;
+    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Paraclinic;
     [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
     [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("visit_date")] public required string VisitDate { get; init; }
@@ -290,7 +290,7 @@ public sealed class RegisterParaclinicPrescriptionRequest
 /// <summary>Request payload for registering a medical service prescription.</summary>
 public sealed class RegisterMedicalServicePrescriptionRequest
 {
-    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)EP.Tamin.NET.PrescriptionType.Service;
+    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Service;
     [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
     [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("visit_date")] public required string VisitDate { get; init; }
@@ -300,7 +300,7 @@ public sealed class RegisterMedicalServicePrescriptionRequest
 /// <summary>Request payload for registering a referral prescription.</summary>
 public sealed class RegisterReferralPrescriptionRequest
 {
-    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)EP.Tamin.NET.PrescriptionType.Referral;
+    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Referral;
     [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
     [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("target_specialty")] public required string TargetSpecialty { get; init; }
@@ -313,7 +313,7 @@ public sealed class RegisterReferralPrescriptionRequest
 /// <summary>Request payload for registering a physiotherapy prescription.</summary>
 public sealed class RegisterPhysiotherapyPrescriptionRequest
 {
-    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)EP.Tamin.NET.PrescriptionType.Physiotherapy;
+    [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Physiotherapy;
     [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
     [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("physiotherapy_items")] public required IReadOnlyList<PhysiotherapyItem> PhysiotherapyItems { get; init; }

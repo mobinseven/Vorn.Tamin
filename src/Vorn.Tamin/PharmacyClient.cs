@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace EP.Tamin.NET;
+namespace Vorn.Tamin;
 
 /// <summary>
 /// Provides pharmacy dispensing operations (Section 12).

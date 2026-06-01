@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
 
-namespace EP.Tamin.NET;
+namespace Vorn.Tamin;
 
 /// <summary>Translates HTTP responses into <see cref="JsonElement"/> results or typed exceptions.</summary>
 internal static class ResponseHandling
