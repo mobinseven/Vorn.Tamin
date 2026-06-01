@@ -2,7 +2,7 @@ name: NuGet Push
 
 on:
   workflow_dispatch:
-
+  
 permissions:
   contents: read
 
@@ -10,12 +10,14 @@ jobs:
   publish:
     name: Pack & Push to NuGet
     runs-on: ubuntu-latest
+    environment: nuget-production
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
 
@@ -26,7 +28,7 @@ jobs:
         run: dotnet build EP.Tamin.NET.slnx --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test EP.Tamin.NET.slnx --no-build --configuration Release --verbosity normal
+        run: dotnet test EP.Tamin.NET.slnx --no-build --no-restore --configuration Release --verbosity normal
 
       - name: Compute package version
         shell: bash
@@ -34,12 +36,14 @@ jobs:
           set -euo pipefail
 
           version_prefix="$(dotnet msbuild src/EP.Tamin.NET/EP.Tamin.NET.csproj -getProperty:VersionPrefix)"
+
           if [[ -z "${version_prefix}" ]]; then
-            echo "VersionPrefix is empty. Set VersionPrefix in Directory.Build.props." >&2
+            echo "VersionPrefix is empty. Set VersionPrefix in Directory.Build.props or the project file." >&2
             exit 1
           fi
 
           package_version="${version_prefix}.${GITHUB_RUN_NUMBER}"
+
           echo "PACKAGE_VERSION=${package_version}" >> "${GITHUB_ENV}"
           echo "NuGet package version: ${package_version}"
 
@@ -53,8 +57,10 @@ jobs:
           -p:Version=${PACKAGE_VERSION}
 
       - name: Push to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: >
-          dotnet nuget push ./nupkg/*.nupkg
-          --api-key ${{ secrets.NUGET_API_KEY }}
+          dotnet nuget push "./nupkg/*.nupkg"
+          --api-key "$NUGET_API_KEY"
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
