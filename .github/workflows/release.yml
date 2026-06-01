@@ -1,0 +1,639 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tagName:
+        description: "Tag name, for example v1.0.1"
+        required: true
+        type: string
+        default: "v1.0.0"
+
+      force:
+        description: "Force tag overwrite, force remote tag update, and continue through failures"
+        required: false
+        type: boolean
+        default: false
+
+      pack:
+        description: "Pack NuGet packages"
+        required: false
+        type: boolean
+        default: false
+
+      push:
+        description: "Push NuGet packages after packing"
+        required: false
+        type: boolean
+        default: false
+
+      packageSource:
+        description: "NuGet package source"
+        required: false
+        type: string
+        default: "https://api.nuget.org/v3/index.json"
+
+      configuration:
+        description: "Build configuration"
+        required: false
+        type: choice
+        default: "Release"
+        options:
+          - Release
+          - Debug
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure Git identity
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup .NET 10
+        if: ${{ inputs.pack || inputs.push }}
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Tag, pack, and publish
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $TagName = '${{ inputs.tagName }}'
+          $Force = [System.Convert]::ToBoolean('${{ inputs.force }}')
+          $Pack = [System.Convert]::ToBoolean('${{ inputs.pack }}')
+          $PushPackages = [System.Convert]::ToBoolean('${{ inputs.push }}')
+          $PackageSource = '${{ inputs.packageSource }}'
+          $Configuration = '${{ inputs.configuration }}'
+          $SolutionPath = (Get-Location).Path
+
+          if ($PushPackages) {
+            $Pack = $true
+          }
+
+          $version = $TagName -replace '^[vV]', ''
+
+          function Invoke-NativeCommand {
+            param(
+              [Parameter(Mandatory)]
+              [string]$FilePath,
+
+              [Parameter(Mandatory)]
+              [string[]]$Arguments,
+
+              [Parameter(Mandatory)]
+              [string]$WorkingDirectory,
+
+              [switch]$ContinueOnError
+            )
+
+            $oldErrorActionPreference = $ErrorActionPreference
+            $ErrorActionPreference = "Continue"
+
+            try {
+              Push-Location $WorkingDirectory
+
+              try {
+                $output = & $FilePath @Arguments
+                $exitCode = $LASTEXITCODE
+              }
+              finally {
+                Pop-Location
+              }
+            }
+            finally {
+              $ErrorActionPreference = $oldErrorActionPreference
+            }
+
+            if ($exitCode -ne 0 -and -not $ContinueOnError) {
+              throw "$FilePath $($Arguments -join ' ') failed in '$WorkingDirectory' with exit code $exitCode"
+            }
+
+            return [pscustomobject]@{
+              ExitCode = $exitCode
+              Output   = @($output)
+            }
+          }
+
+          function Invoke-Git {
+            param(
+              [Parameter(Mandatory)]
+              [string]$Repo,
+
+              [Parameter(Mandatory)]
+              [string[]]$Arguments,
+
+              [switch]$ContinueOnError
+            )
+
+            $gitArguments = @("-C", $Repo) + $Arguments
+
+            return Invoke-NativeCommand `
+              -FilePath "git" `
+              -Arguments $gitArguments `
+              -WorkingDirectory $Repo `
+              -ContinueOnError:$ContinueOnError
+          }
+
+          function Test-CommandAvailable {
+            param(
+              [Parameter(Mandatory)]
+              [string]$Command
+            )
+
+            $oldErrorActionPreference = $ErrorActionPreference
+            $ErrorActionPreference = "Continue"
+
+            try {
+              & $Command --version 1>$null 2>$null
+              return ($LASTEXITCODE -eq 0)
+            }
+            finally {
+              $ErrorActionPreference = $oldErrorActionPreference
+            }
+          }
+
+          function Get-GitRoot {
+            param(
+              [Parameter(Mandatory)]
+              [string]$Path
+            )
+
+            $oldErrorActionPreference = $ErrorActionPreference
+            $ErrorActionPreference = "Continue"
+
+            try {
+              $root = & git -C $Path rev-parse --show-toplevel 2>$null
+
+              if ($LASTEXITCODE -eq 0 -and $root) {
+                return (Resolve-Path -LiteralPath $root.Trim()).ProviderPath
+              }
+
+              return $null
+            }
+            finally {
+              $ErrorActionPreference = $oldErrorActionPreference
+            }
+          }
+
+          function Test-OriginExists {
+            param(
+              [Parameter(Mandatory)]
+              [string]$Repo
+            )
+
+            $oldErrorActionPreference = $ErrorActionPreference
+            $ErrorActionPreference = "Continue"
+
+            try {
+              & git -C $Repo remote get-url origin 1>$null 2>$null
+              return ($LASTEXITCODE -eq 0)
+            }
+            finally {
+              $ErrorActionPreference = $oldErrorActionPreference
+            }
+          }
+
+          function Test-RemoteTagExists {
+            param(
+              [Parameter(Mandatory)]
+              [string]$Repo,
+
+              [Parameter(Mandatory)]
+              [string]$TagName
+            )
+
+            $oldErrorActionPreference = $ErrorActionPreference
+            $ErrorActionPreference = "Continue"
+
+            try {
+              $remoteTag = & git -C $Repo ls-remote --tags --refs origin "refs/tags/$TagName" 2>$null
+
+              if ($LASTEXITCODE -ne 0) {
+                return $false
+              }
+
+              return [bool]$remoteTag
+            }
+            finally {
+              $ErrorActionPreference = $oldErrorActionPreference
+            }
+          }
+
+          function Add-Note {
+            param(
+              [Parameter(Mandatory)]
+              $Entry,
+
+              [Parameter(Mandatory)]
+              [string]$Note
+            )
+
+            if ($Entry["Notes"]) {
+              $Entry["Notes"] = "$($Entry["Notes"]); $Note"
+            }
+            else {
+              $Entry["Notes"] = $Note
+            }
+          }
+
+          if (-not (Test-CommandAvailable -Command "git")) {
+            Write-Error "Git was not found."
+            exit 1
+          }
+
+          if (($Pack -or $PushPackages) -and -not (Test-CommandAvailable -Command "dotnet")) {
+            Write-Error ".NET SDK was not found."
+            exit 1
+          }
+
+          try {
+            $solutionDir = (Resolve-Path -LiteralPath $SolutionPath).ProviderPath
+          }
+          catch {
+            Write-Error "Solution path does not exist: $SolutionPath"
+            exit 1
+          }
+
+          Write-Host "Scanning solution folder: $solutionDir"
+          Write-Host "Tag: $TagName"
+          Write-Host "Package version: $version"
+          Write-Host "Force: $Force"
+          Write-Host "Pack: $Pack"
+          Write-Host "Push packages: $PushPackages"
+          Write-Host "Package source: $PackageSource"
+
+          $projectFiles = Get-ChildItem -Path $solutionDir -Recurse -File -ErrorAction Stop |
+            Where-Object {
+              $_.Extension -in ".csproj", ".fsproj", ".vbproj" -and
+              $_.FullName -notmatch '[\\/](bin|obj|\.git|\.vs|node_modules)[\\/]'
+            }
+
+          if (-not $projectFiles -or $projectFiles.Count -eq 0) {
+            Write-Error "No project files found under '$solutionDir'."
+            exit 1
+          }
+
+          Write-Host "Found $($projectFiles.Count) project file(s)."
+
+          $projectItems = foreach ($project in $projectFiles) {
+            $repo = Get-GitRoot -Path $project.DirectoryName
+
+            if ($repo) {
+              [pscustomobject]@{
+                ProjectPath = $project.FullName
+                Repo        = $repo
+              }
+            }
+            else {
+              Write-Warning "Project is not inside a Git repo: $($project.FullName)"
+            }
+          }
+
+          $repos = @($projectItems.Repo | Sort-Object -Unique)
+
+          if (-not $repos -or $repos.Count -eq 0) {
+            Write-Error "No Git repositories found for projects under '$solutionDir'."
+            exit 1
+          }
+
+          Write-Host ""
+          Write-Host "Discovered repositories:"
+          $repos | ForEach-Object { Write-Host " - $_" }
+
+          $summary = @()
+
+          foreach ($repo in $repos) {
+            $repoName = Split-Path -Leaf $repo
+            $repoProjects = @($projectItems | Where-Object { $_.Repo -eq $repo } | Select-Object -ExpandProperty ProjectPath)
+
+            $entry = [ordered]@{
+              Repository      = $repoName
+              Path            = $repo
+              TagCreated      = $false
+              TagPushed       = $false
+              PackedProjects  = 0
+              CreatedPackages = 0
+              PushedPackages  = 0
+              Skipped         = $false
+              Notes           = ""
+            }
+
+            Write-Host ""
+            Write-Host "----------------------------------------"
+            Write-Host "Repo: $repo"
+
+            try {
+              $branchResult = Invoke-Git -Repo $repo -Arguments @("rev-parse", "--abbrev-ref", "HEAD") -ContinueOnError:$Force
+
+              if ($branchResult.ExitCode -ne 0) {
+                Write-Warning "Could not read current branch."
+                Add-Note -Entry $entry -Note "Could not read branch"
+
+                if (-not $Force) {
+                  $entry["Skipped"] = $true
+                  continue
+                }
+              }
+              else {
+                $branch = ($branchResult.Output | Select-Object -First 1).Trim()
+
+                if ($branch -ne "main") {
+                  if ($Force) {
+                    Write-Warning "Current branch is '$branch', not 'main'. Continuing because -Force was used."
+                    Add-Note -Entry $entry -Note "Forced on branch '$branch'"
+                  }
+                  else {
+                    Write-Warning "Current branch is '$branch', not 'main'. Use force=true to continue."
+                    $entry["Skipped"] = $true
+                    Add-Note -Entry $entry -Note "Wrong branch: $branch"
+                    continue
+                  }
+                }
+              }
+
+              $statusResult = Invoke-Git -Repo $repo -Arguments @("status", "--porcelain") -ContinueOnError:$Force
+
+              if ($statusResult.ExitCode -ne 0) {
+                Write-Warning "Could not read working tree status."
+                Add-Note -Entry $entry -Note "Could not read status"
+
+                if (-not $Force) {
+                  $entry["Skipped"] = $true
+                  continue
+                }
+              }
+              elseif (@($statusResult.Output).Count -gt 0) {
+                if ($Force) {
+                  Write-Warning "Working tree is not clean. Continuing because force=true was used."
+                  Add-Note -Entry $entry -Note "Forced with dirty working tree"
+                }
+                else {
+                  Write-Warning "Working tree is not clean. Use force=true to continue."
+                  $entry["Skipped"] = $true
+                  Add-Note -Entry $entry -Note "Working tree not clean"
+                  continue
+                }
+              }
+
+              $hasOrigin = Test-OriginExists -Repo $repo
+
+              if (-not $hasOrigin) {
+                Write-Warning "No 'origin' remote found."
+                Add-Note -Entry $entry -Note "No origin remote"
+
+                if (-not $Force) {
+                  $entry["Skipped"] = $true
+                  continue
+                }
+              }
+
+              if ($hasOrigin) {
+                $fetchArgs = if ($Force) {
+                  @("fetch", "--tags", "--force", "origin")
+                }
+                else {
+                  @("fetch", "--tags", "origin")
+                }
+
+                $fetchResult = Invoke-Git -Repo $repo -Arguments $fetchArgs -ContinueOnError:$Force
+
+                if ($fetchResult.ExitCode -ne 0) {
+                  Write-Warning "Failed to fetch tags from origin."
+                  Add-Note -Entry $entry -Note "Fetch tags failed"
+
+                  if (-not $Force) {
+                    $entry["Skipped"] = $true
+                    continue
+                  }
+                }
+
+                $remoteTagExists = Test-RemoteTagExists -Repo $repo -TagName $TagName
+
+                if ($remoteTagExists -and -not $Force) {
+                  Write-Host "Tag '$TagName' already exists on origin. Skipping. Use force=true to overwrite it."
+                  $entry["Skipped"] = $true
+                  Add-Note -Entry $entry -Note "Tag exists on origin"
+                  continue
+                }
+
+                if ($remoteTagExists -and $Force) {
+                  Write-Warning "Tag '$TagName' already exists on origin. It will be force-updated."
+                  Add-Note -Entry $entry -Note "Remote tag force-updated"
+                }
+              }
+
+              $localTagResult = Invoke-Git -Repo $repo -Arguments @("tag", "-l", $TagName) -ContinueOnError:$Force
+              $localTagExists = $localTagResult.Output -contains $TagName
+
+              if ($localTagExists -and -not $Force) {
+                Write-Host "Tag '$TagName' already exists locally. Skipping local tag creation."
+              }
+              else {
+                $tagArgs = if ($Force) {
+                  @("tag", "-f", "-a", $TagName, "-m", "Release $TagName")
+                }
+                else {
+                  @("tag", "-a", $TagName, "-m", "Release $TagName")
+                }
+
+                $tagResult = Invoke-Git -Repo $repo -Arguments $tagArgs -ContinueOnError:$Force
+
+                if ($tagResult.ExitCode -eq 0) {
+                  if ($localTagExists -and $Force) {
+                    Write-Host "Force-updated local tag '$TagName'."
+                  }
+                  else {
+                    Write-Host "Created tag '$TagName'."
+                  }
+
+                  $entry["TagCreated"] = $true
+                }
+                else {
+                  Write-Warning "Failed to create/update local tag '$TagName'."
+                  Add-Note -Entry $entry -Note "Local tag failed"
+
+                  if (-not $Force) {
+                    $entry["Skipped"] = $true
+                    continue
+                  }
+                }
+              }
+
+              if ($hasOrigin) {
+                $pushTagArgs = if ($Force) {
+                  @("push", "origin", "+refs/tags/${TagName}:refs/tags/${TagName}")
+                }
+                else {
+                  @("push", "origin", "refs/tags/${TagName}:refs/tags/${TagName}")
+                }
+
+                $pushTagResult = Invoke-Git -Repo $repo -Arguments $pushTagArgs -ContinueOnError:$Force
+
+                if ($pushTagResult.ExitCode -eq 0) {
+                  Write-Host "Pushed tag '$TagName' to origin."
+                  $entry["TagPushed"] = $true
+                }
+                else {
+                  Write-Warning "Failed to push tag '$TagName' to origin."
+                  Add-Note -Entry $entry -Note "Tag push failed"
+
+                  if (-not $Force) {
+                    $entry["Skipped"] = $true
+                    continue
+                  }
+                }
+              }
+              else {
+                Write-Warning "Skipping tag push because no origin remote exists."
+                Add-Note -Entry $entry -Note "Tag not pushed: no origin"
+              }
+
+              if ($Pack) {
+                $outDir = Join-Path $repo "artifacts\nupkgs"
+                New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+
+                if ($Force) {
+                  Get-ChildItem -Path $outDir -File -ErrorAction SilentlyContinue |
+                    Where-Object {
+                      $_.Name -like "*.$version.nupkg" -or
+                      $_.Name -like "*.$version.snupkg"
+                    } |
+                    Remove-Item -Force -ErrorAction SilentlyContinue
+                }
+
+                $createdPackagesForRepo = @()
+
+                foreach ($projectPath in $repoProjects) {
+                  Write-Host "Packing project: $projectPath"
+
+                  $packStart = (Get-Date).ToUniversalTime().AddSeconds(-2)
+
+                  $packArgs = @(
+                    "pack",
+                    $projectPath,
+                    "-c", $Configuration,
+                    "-o", $outDir,
+                    "/p:PackageVersion=$version",
+                    "/p:NoBuild=false"
+                  )
+
+                  $packResult = Invoke-NativeCommand `
+                    -FilePath "dotnet" `
+                    -Arguments $packArgs `
+                    -WorkingDirectory $repo `
+                    -ContinueOnError:$Force
+
+                  if ($packResult.ExitCode -eq 0) {
+                    $entry["PackedProjects"] = [int]$entry["PackedProjects"] + 1
+
+                    $newPackages = @(Get-ChildItem -Path $outDir -File -ErrorAction SilentlyContinue |
+                      Where-Object {
+                        $_.LastWriteTimeUtc -ge $packStart -and
+                        $_.Name -like "*.$version.nupkg"
+                      } |
+                      Select-Object -ExpandProperty FullName)
+
+                    foreach ($pkg in $newPackages) {
+                      if ($createdPackagesForRepo -notcontains $pkg) {
+                        $createdPackagesForRepo += $pkg
+                      }
+                    }
+
+                    $entry["CreatedPackages"] = $createdPackagesForRepo.Count
+                  }
+                  else {
+                    Write-Warning "dotnet pack failed for: $projectPath"
+                    Add-Note -Entry $entry -Note "Pack failed: $(Split-Path -Leaf $projectPath)"
+
+                    if (-not $Force) {
+                      $entry["Skipped"] = $true
+                      break
+                    }
+                  }
+                }
+
+                if ($PushPackages) {
+                  if (-not $createdPackagesForRepo -or $createdPackagesForRepo.Count -eq 0) {
+                    Write-Warning "No packages were created for repo '$repo'. Nothing to push."
+                    Add-Note -Entry $entry -Note "No packages to push"
+                  }
+                  else {
+                    foreach ($pkgPath in $createdPackagesForRepo) {
+                      Write-Host "Pushing package: $pkgPath"
+
+                      $nugetPushArgs = @(
+                        "nuget",
+                        "push",
+                        $pkgPath,
+                        "--source",
+                        $PackageSource,
+                        "--skip-duplicate"
+                      )
+
+                      if ($env:NUGET_API_KEY) {
+                        $nugetPushArgs += @("--api-key", $env:NUGET_API_KEY)
+                      }
+                      elseif ($PackageSource -like "*nuget.pkg.github.com*" -and $env:GITHUB_TOKEN) {
+                        $nugetPushArgs += @("--api-key", $env:GITHUB_TOKEN)
+                      }
+
+                      $packagePushResult = Invoke-NativeCommand `
+                        -FilePath "dotnet" `
+                        -Arguments $nugetPushArgs `
+                        -WorkingDirectory $repo `
+                        -ContinueOnError:$Force
+
+                      if ($packagePushResult.ExitCode -eq 0) {
+                        $entry["PushedPackages"] = [int]$entry["PushedPackages"] + 1
+                      }
+                      else {
+                        Write-Warning "Failed to push package: $pkgPath"
+                        Add-Note -Entry $entry -Note "Package push failed: $(Split-Path -Leaf $pkgPath)"
+
+                        if (-not $Force) {
+                          $entry["Skipped"] = $true
+                          break
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            catch {
+              Write-Warning "Error processing '$repo': $($_.Exception.Message)"
+              Add-Note -Entry $entry -Note "Error: $($_.Exception.Message)"
+
+              if (-not $Force) {
+                $entry["Skipped"] = $true
+              }
+            }
+            finally {
+              $summary += [pscustomobject]$entry
+            }
+          }
+
+          Write-Host ""
+          Write-Host "===== Run Summary ====="
+          $summary | Format-Table Repository, TagCreated, TagPushed, PackedProjects, CreatedPackages, PushedPackages, Skipped, Notes -AutoSize
