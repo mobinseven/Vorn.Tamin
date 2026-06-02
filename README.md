@@ -59,14 +59,7 @@ Install-Package Vorn.Tamin
 
 ## Prerequisites
 
-| Requirement | Minimum version |
-|---|---|
-| .NET | 10.0 |
-| `Microsoft.Extensions.DependencyInjection.Abstractions` | 10.0.0 |
-| `Microsoft.Extensions.Http` | 10.0.0 |
-| `Microsoft.Extensions.Options` | 10.0.0 |
-
-The three `Microsoft.Extensions.*` packages are transitive dependencies — you do not need to install them separately.
+None.
 
 ---
 
