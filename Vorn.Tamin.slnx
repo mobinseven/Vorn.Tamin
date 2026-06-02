@@ -2,7 +2,7 @@
   <Folder Name="/docs/">
     <File Path="docs/EP-TAMIN-API.md" />
   </Folder>
-  <Folder Name="/Solution Items/">
+  <Folder Name="/items/">
     <File Path="Directory.Build.props" />
   </Folder>
   <Folder Name="/src/">
