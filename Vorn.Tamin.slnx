@@ -4,7 +4,6 @@
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
-    <File Path="tag.ps1" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Vorn.Tamin/Vorn.Tamin.csproj" />
