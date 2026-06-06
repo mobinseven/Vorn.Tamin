@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Vorn.Tamin.Kiota.Models;
 
 namespace Vorn.Tamin.Kiota;
 
@@ -17,21 +18,13 @@ internal interface ITaminKiotaGateway
 
     Task<JsonElement> GetDrugInstructionsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken);
 
-    Task<JsonElement> GetAllowedCountAsync(IReadOnlyDictionary<string, string?> query, CancellationToken cancellationToken);
+    Task<JsonElement> SendPrescriptionAsync(SendEprescRequest request, CancellationToken cancellationToken);
 
-    Task<JsonElement> GetPriceAsync(IReadOnlyDictionary<string, string?> query, CancellationToken cancellationToken);
+    Task<JsonElement> GetPrescriptionAsync(int headerId, string doctorId, CancellationToken cancellationToken);
 
-    Task<JsonElement> SendPrescriptionAsync<TPayload>(TPayload payload, CancellationToken cancellationToken);
+    Task<JsonElement> EditPrescriptionAsync(int headerId, string doctorId, IReadOnlyList<NoteDetailEprsc> details, CancellationToken cancellationToken);
 
-    Task<JsonElement> GetPrescriptionAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken);
+    Task<JsonElement> RemovePrescriptionAsync(int headerId, string doctorId, CancellationToken cancellationToken);
 
-    Task<JsonElement> EditPrescriptionAsync(EditPrescriptionRequest request, CancellationToken cancellationToken);
-
-    Task<JsonElement> RemovePrescriptionAsync(DeletePrescriptionRequest request, CancellationToken cancellationToken);
-
-    Task<JsonElement> CheckPrescriptionWarningAsync(CheckWarningRequest request, CancellationToken cancellationToken);
-
-    Task<JsonElement> GetAsync(TaminGatewayRoute route, IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken);
-
-    Task<JsonElement> PostAsync<TPayload>(TaminGatewayRoute route, TPayload payload, CancellationToken cancellationToken);
+    Task<JsonElement> CheckPrescriptionWarningAsync(DentistRuleRequest request, CancellationToken cancellationToken);
 }

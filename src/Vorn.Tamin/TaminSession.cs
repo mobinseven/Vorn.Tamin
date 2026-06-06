@@ -28,13 +28,13 @@ public sealed class TaminSession
     /// <summary>E-prescription writing, query, and mutation operations.</summary>
     public PrescriptionClient Prescription { get; }
 
-    /// <summary>Patient identity verification and eligibility operations.</summary>
+    /// <summary>Identity operation surface; empty until matching generated Kiota builders exist.</summary>
     public IdentityClient Identity { get; }
 
-    /// <summary>Pharmacy dispensing operations.</summary>
+    /// <summary>Pharmacy operation surface; empty until matching generated Kiota builders exist.</summary>
     public PharmacyClient Pharmacy { get; }
 
-    /// <summary>Paraclinic service delivery operations.</summary>
+    /// <summary>Paraclinic operation surface; empty until matching generated Kiota builders exist.</summary>
     public ParaclinicClient Paraclinic { get; }
 
     internal ITaminKiotaGateway KiotaGateway { get; }

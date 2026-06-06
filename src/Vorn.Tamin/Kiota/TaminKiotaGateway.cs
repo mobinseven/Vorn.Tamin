@@ -1,7 +1,7 @@
 using System.Net.Http.Headers;
-using System.Text;
 using System.Text.Json;
 using Microsoft.Kiota.Abstractions;
+using Vorn.Tamin.Kiota.Models;
 
 namespace Vorn.Tamin.Kiota;
 
@@ -9,7 +9,6 @@ namespace Vorn.Tamin.Kiota;
 internal sealed class TaminKiotaGateway : ITaminKiotaGateway
 {
     private readonly HttpClient _httpClient;
-    private readonly Uri _baseUri;
     private readonly string? _clientId;
     private readonly string? _oauthToken;
     private readonly TaminOpenAPIClient _client;
@@ -17,11 +16,11 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
     public TaminKiotaGateway(HttpClient httpClient, Uri baseUri, string? oauthToken, string? clientId, TaminKiotaClientFactory? clientFactory = null)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _baseUri = baseUri ?? throw new ArgumentNullException(nameof(baseUri));
+        ArgumentNullException.ThrowIfNull(baseUri);
         _clientId = clientId;
         _oauthToken = oauthToken;
 
-        _client = (clientFactory ?? new TaminKiotaClientFactory()).Create(_httpClient, _baseUri);
+        _client = (clientFactory ?? new TaminKiotaClientFactory()).Create(_httpClient, baseUri);
     }
 
     public Task<JsonElement> GetServicesAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
@@ -63,111 +62,52 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         return SendAsync(requestInfo, cancellationToken);
     }
 
-
-    public Task<JsonElement> GetAllowedCountAsync(IReadOnlyDictionary<string, string?> query, CancellationToken cancellationToken)
-        => GetAsync(TaminGatewayRoute.AllowedCount, query, cancellationToken);
-
-    public Task<JsonElement> GetPriceAsync(IReadOnlyDictionary<string, string?> query, CancellationToken cancellationToken)
-        => GetAsync(TaminGatewayRoute.Price, query, cancellationToken);
-
-    public Task<JsonElement> SendPrescriptionAsync<TPayload>(TPayload payload, CancellationToken cancellationToken)
-        => PostAsync(TaminGatewayRoute.PrescriptionDetail, payload, cancellationToken);
-
-
-    public Task<JsonElement> GetPrescriptionAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
-        => GetAsync(TaminGatewayRoute.PrescriptionDetail, query, cancellationToken);
-
-    public Task<JsonElement> EditPrescriptionAsync(EditPrescriptionRequest request, CancellationToken cancellationToken)
-        => PostAsync(TaminGatewayRoute.PrescriptionEdit, request, cancellationToken);
-
-    public Task<JsonElement> RemovePrescriptionAsync(DeletePrescriptionRequest request, CancellationToken cancellationToken)
-        => PostAsync(TaminGatewayRoute.PrescriptionRemove, request, cancellationToken);
-
-    public Task<JsonElement> CheckPrescriptionWarningAsync(CheckWarningRequest request, CancellationToken cancellationToken)
-        => PostAsync(TaminGatewayRoute.PrescriptionWarning, request, cancellationToken);
-
-    public Task<JsonElement> GetAsync(TaminGatewayRoute route, IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
-        => GetEndpointAsync(ResolveEndpoint(route), query, cancellationToken);
-
-    public Task<JsonElement> PostAsync<TPayload>(TaminGatewayRoute route, TPayload payload, CancellationToken cancellationToken)
-        => PostEndpointAsync(ResolveEndpoint(route), payload, cancellationToken);
-
-    private Task<JsonElement> GetEndpointAsync(string endpoint, IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
+    public Task<JsonElement> SendPrescriptionAsync(SendEprescRequest request, CancellationToken cancellationToken)
     {
-        var requestInfo = CreateRequestInformation<object>(Method.GET, endpoint, query, payload: null);
+        ArgumentNullException.ThrowIfNull(request);
+        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.ToPostRequestInformation(request);
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    private Task<JsonElement> PostEndpointAsync<TPayload>(string endpoint, TPayload payload, CancellationToken cancellationToken)
+    public Task<JsonElement> GetPrescriptionAsync(int headerId, string doctorId, CancellationToken cancellationToken)
     {
-        if (payload is null)
-            throw new ArgumentNullException(nameof(payload));
+        if (headerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
+        if (string.IsNullOrWhiteSpace(doctorId))
+            throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
 
-        var requestInfo = CreateRequestInformation(Method.POST, endpoint, query: null, payload);
+        var requestInfo = _client.Interface.Epresc.SendEpresc.V2[headerId][doctorId].ToGetRequestInformation();
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    private static string ResolveEndpoint(TaminGatewayRoute route)
-        => route switch
-        {
-            TaminGatewayRoute.VerifyIdentity => "ws-verify-identity",
-            TaminGatewayRoute.CheckEntitlement => "ws-check-entitlement",
-            TaminGatewayRoute.AllowedCount => "ws-allowed-count",
-            TaminGatewayRoute.Price => "ws-price",
-            TaminGatewayRoute.PrescriptionDetail => "interface/epresc/SendEpresc/v2",
-            TaminGatewayRoute.PrescriptionEdit => "interface/epresc/SendEpresc/v2/edit",
-            TaminGatewayRoute.PrescriptionRemove => "interface/epresc/SendEpresc/v2/remove",
-            TaminGatewayRoute.PrescriptionWarning => "interface/epresc/SendEpresc/v2/check-rules-in-detail",
-            TaminGatewayRoute.PharmacyCheckEntitlement => "darman/check-entitlement",
-            TaminGatewayRoute.PharmacyRegisterPaper => "darman/register-paper",
-            TaminGatewayRoute.PharmacyPrescriptionList => "darman/prescription-list",
-            TaminGatewayRoute.PharmacyPrescriptionDetails => "darman/prescription-details",
-            TaminGatewayRoute.PharmacyReferToDoctor => "darman/refer-to-doctor",
-            TaminGatewayRoute.PharmacyCheckWarnings => "darman/check-warnings",
-            TaminGatewayRoute.PharmacyDispensePaper => "darman/dispense-paper",
-            TaminGatewayRoute.PharmacyDispenseElectronic => "darman/dispense-electronic",
-            TaminGatewayRoute.PharmacyDispenseWithWarning => "darman/dispense-with-warning",
-            TaminGatewayRoute.PharmacyRegisterAuthenticityCode => "darman/register-authenticity-code",
-            TaminGatewayRoute.PharmacyActivateAuthenticityCode => "darman/activate-authenticity-code",
-            TaminGatewayRoute.PharmacyTwoStepDispense => "darman/two-step-dispense",
-            TaminGatewayRoute.PharmacyActivatedBarcode => "darman/activated-barcode",
-            TaminGatewayRoute.PharmacyPrice => "darman/price",
-            TaminGatewayRoute.PharmacyDeleteDispensing => "darman/delete-dispensing",
-            TaminGatewayRoute.ParaclinicCheckEntitlement => "paraclinic/check-entitlement",
-            TaminGatewayRoute.ParaclinicRegisterPaper => "paraclinic/register-paper",
-            TaminGatewayRoute.ParaclinicPrescriptionList => "paraclinic/prescription-list",
-            TaminGatewayRoute.ParaclinicPrescriptionDetails => "paraclinic/prescription-details",
-            TaminGatewayRoute.ParaclinicProvidePaper => "paraclinic/provide-paper",
-            TaminGatewayRoute.ParaclinicProvideElectronic => "paraclinic/provide-electronic",
-            TaminGatewayRoute.ParaclinicProvideWithWarning => "paraclinic/provide-with-warning",
-            TaminGatewayRoute.ParaclinicPrice => "paraclinic/price",
-            TaminGatewayRoute.ParaclinicDeleteDelivery => "paraclinic/delete-delivery",
-            _ => throw new ArgumentOutOfRangeException(nameof(route), route, "Unknown Tamin gateway route.")
-        };
-
-    private RequestInformation CreateRequestInformation<TPayload>(
-        Method method,
-        string endpoint,
-        IReadOnlyDictionary<string, string?>? query,
-        TPayload? payload)
+    public Task<JsonElement> EditPrescriptionAsync(int headerId, string doctorId, IReadOnlyList<NoteDetailEprsc> details, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(endpoint))
-            throw new ArgumentException("Endpoint is required for operations that are not represented by the generated Kiota client.", nameof(endpoint));
+        if (headerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
+        if (string.IsNullOrWhiteSpace(doctorId))
+            throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
+        ArgumentNullException.ThrowIfNull(details);
 
-        var requestInfo = new RequestInformation
-        {
-            HttpMethod = method,
-            URI = BuildUri(endpoint, query)
-        };
-        requestInfo.Headers.TryAdd("Accept", "application/json");
+        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.Edit[headerId][doctorId].ToPostRequestInformation(details.ToList());
+        return SendAsync(requestInfo, cancellationToken);
+    }
 
-        if (payload is not null)
-        {
-            requestInfo.Headers.TryAdd("Content-Type", "application/json");
-            requestInfo.Content = new MemoryStream(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload)));
-        }
+    public Task<JsonElement> RemovePrescriptionAsync(int headerId, string doctorId, CancellationToken cancellationToken)
+    {
+        if (headerId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
+        if (string.IsNullOrWhiteSpace(doctorId))
+            throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
 
-        return requestInfo;
+        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.Remove[headerId][doctorId].ToPostRequestInformation();
+        return SendAsync(requestInfo, cancellationToken);
+    }
+
+    public Task<JsonElement> CheckPrescriptionWarningAsync(DentistRuleRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.CheckRulesInDetail.ToPostRequestInformation(request);
+        return SendAsync(requestInfo, cancellationToken);
     }
 
     private async Task<JsonElement> SendAsync(RequestInformation requestInfo, CancellationToken cancellationToken)
@@ -225,23 +165,6 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         var uri = requestInfo.URI;
         var separator = uri.Query.Length == 0 ? "?" : "&";
         requestInfo.URI = new Uri($"{uri}{separator}{queryString}");
-    }
-
-    private Uri BuildUri(string endpoint, IReadOnlyDictionary<string, string?>? query)
-    {
-        var absolute = new Uri(_baseUri, endpoint.TrimStart('/'));
-        if (query is null || query.Count == 0)
-            return absolute;
-
-        var queryString = string.Join("&", query
-            .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value))
-            .Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value!)}"));
-
-        if (string.IsNullOrEmpty(queryString))
-            return absolute;
-
-        var separator = absolute.Query.Length == 0 ? "?" : "&";
-        return new Uri($"{absolute}{separator}{queryString}");
     }
 
     private static string? ReadQueryValue(IReadOnlyDictionary<string, string?>? query, params string[] keys)
