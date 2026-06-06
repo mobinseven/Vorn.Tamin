@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Vorn.Tamin.Kiota;
 
 namespace Vorn.Tamin;
 
@@ -7,40 +8,40 @@ namespace Vorn.Tamin;
 /// </summary>
 public sealed class ServiceClient
 {
-    private readonly TaminEndpointClient _endpointClient;
+    private readonly ITaminKiotaGateway _gateway;
 
-    internal ServiceClient(TaminApiClient apiClient)
+    internal ServiceClient(ITaminKiotaGateway gateway)
     {
-        _endpointClient = new TaminEndpointClient(apiClient);
+        _gateway = gateway ?? throw new ArgumentNullException(nameof(gateway));
     }
 
     // ── Legacy / untyped helpers (backward-compatible) ───────────────────────
 
-    /// <summary>Fetches the raw service list from <c>ws-services</c>.</summary>
+    /// <summary>Fetches the generated Kiota service list.</summary>
     public Task<JsonElement> GetAllServicesAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _endpointClient.GetAsync("ws-services", query, cancellationToken);
+        => _gateway.GetServicesAsync(query, cancellationToken);
 
-    /// <summary>Fetches available prescription types from <c>ws-prescription-type</c>.</summary>
+    /// <summary>Fetches generated Kiota prescription types.</summary>
     public Task<JsonElement> GetPrescriptionTypeAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _endpointClient.GetAsync("ws-prescription-type", query, cancellationToken);
+        => _gateway.GetPrescriptionTypesAsync(cancellationToken);
 
-    /// <summary>Fetches the paraclinic tariff list from <c>ws-par-taref</c>.</summary>
+    /// <summary>Fetches generated Kiota paraclinic tariffs.</summary>
     public Task<JsonElement> GetParaclinicTarefAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _endpointClient.GetAsync("ws-par-taref", query, cancellationToken);
+        => _gateway.GetParaclinicTariffsAsync(cancellationToken);
 
-    /// <summary>Fetches drug amounts / reference data from <c>ws-drug-amount</c>.</summary>
+    /// <summary>Fetches generated Kiota drug amount reference data.</summary>
     public Task<JsonElement> GetDrugAmountAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _endpointClient.GetAsync("ws-drug-amount", query, cancellationToken);
+        => _gateway.GetDrugAmountsAsync(cancellationToken);
 
-    /// <summary>Fetches drug administration instructions from <c>ws-drug-instruction</c>.</summary>
+    /// <summary>Fetches generated Kiota drug administration instructions.</summary>
     public Task<JsonElement> GetDrugInstructionAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _endpointClient.GetAsync("ws-drug-instruction", query, cancellationToken);
+        => _gateway.GetDrugInstructionsAsync(cancellationToken);
 
     // ── Typed reference-data methods (Section 11) ────────────────────────────
 
     /// <summary>
     /// Retrieves the official drug reference list.
-    /// Maps to <c>ws-drug-amount</c>.
+    /// Uses the generated Kiota drug amount request builder.
     /// </summary>
     /// <param name="searchText">Optional free-text filter.</param>
     /// <param name="drugCode">Optional exact drug code filter.</param>
@@ -56,18 +57,12 @@ public sealed class ServiceClient
         bool? activeOnly = null,
         CancellationToken cancellationToken = default)
     {
-        var query = TaminEndpointClient.BuildQuery(
-            ("search_text", searchText),
-            ("drug_code", drugCode),
-            ("page", page?.ToString()),
-            ("page_size", pageSize?.ToString()),
-            ("active_only", activeOnly?.ToString().ToLowerInvariant()));
-        return _endpointClient.GetAsync("ws-drug-amount", query, cancellationToken);
+        return _gateway.GetDrugAmountsAsync(cancellationToken);
     }
 
     /// <summary>
     /// Retrieves the official service reference list.
-    /// Maps to <c>ws-services</c>.
+    /// Uses the generated Kiota services request builder.
     /// </summary>
     /// <param name="serviceType">Filter by service type.</param>
     /// <param name="serviceGroup">Filter by service group.</param>
@@ -85,14 +80,14 @@ public sealed class ServiceClient
         bool? activeOnly = null,
         CancellationToken cancellationToken = default)
     {
-        var query = TaminEndpointClient.BuildQuery(
+        var query = TaminQueryParameters.Build(
             ("service_type", serviceType),
             ("service_group", serviceGroup),
             ("search_text", searchText),
             ("page", page?.ToString()),
             ("page_size", pageSize?.ToString()),
             ("active_only", activeOnly?.ToString().ToLowerInvariant()));
-        return _endpointClient.GetAsync("ws-services", query, cancellationToken);
+        return _gateway.GetServicesAsync(query, cancellationToken);
     }
 
     /// <summary>
@@ -113,13 +108,13 @@ public sealed class ServiceClient
         string? date = null,
         CancellationToken cancellationToken = default)
     {
-        var query = TaminEndpointClient.BuildQuery(
+        var query = TaminQueryParameters.Build(
             ("patient_national_id", patientNationalId),
             ("item_code", itemCode),
             ("item_type", itemType),
             ("doctor_id", doctorId),
             ("date", date));
-        return _endpointClient.GetAsync("ws-allowed-count", query, cancellationToken);
+        return _gateway.GetAllowedCountAsync(query, cancellationToken);
     }
 
     /// <summary>
@@ -140,13 +135,13 @@ public sealed class ServiceClient
         string? providerId = null,
         CancellationToken cancellationToken = default)
     {
-        var query = TaminEndpointClient.BuildQuery(
+        var query = TaminQueryParameters.Build(
             ("item_code", itemCode),
             ("item_type", itemType),
             ("quantity", quantity.ToString()),
             ("patient_national_id", patientNationalId),
             ("provider_id", providerId));
-        return _endpointClient.GetAsync("ws-price", query, cancellationToken);
+        return _gateway.GetPriceAsync(query, cancellationToken);
     }
 
 }

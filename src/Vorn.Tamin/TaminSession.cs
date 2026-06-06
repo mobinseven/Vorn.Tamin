@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Vorn.Tamin.Kiota;
 
 namespace Vorn.Tamin;
 
@@ -10,7 +11,7 @@ namespace Vorn.Tamin;
 /// </summary>
 public sealed class TaminSession
 {
-    private const string DefaultUrl = "https://ep-test.tamin.ir/api/";
+    private const string DefaultUrl = TaminKiotaClientFactory.DefaultBaseUrl;
 
     /// <summary>The underlying <see cref="HttpClient"/> used for all requests.</summary>
     public HttpClient HttpClient { get; }
@@ -36,7 +37,7 @@ public sealed class TaminSession
     /// <summary>Paraclinic service delivery operations.</summary>
     public ParaclinicClient Paraclinic { get; }
 
-    internal TaminApiClient ApiClient { get; }
+    internal ITaminKiotaGateway KiotaGateway { get; }
 
     /// <summary>
     /// Creates a <see cref="TaminSession"/> using a pre-obtained OAuth token.
@@ -55,18 +56,12 @@ public sealed class TaminSession
         if (needToken && string.IsNullOrWhiteSpace(oauthToken))
             throw new AuthTokenNotSuppliedException();
 
-        if (!string.IsNullOrWhiteSpace(oauthToken))
-            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", oauthToken);
-
-        if (!string.IsNullOrWhiteSpace(clientId))
-            HttpClient.DefaultRequestHeaders.TryAddWithoutValidation("Client-Id", clientId);
-
-        ApiClient = new TaminApiClient(HttpClient, BaseUri);
-        Service = new ServiceClient(ApiClient);
-        Prescription = new PrescriptionClient(ApiClient);
-        Identity = new IdentityClient(ApiClient);
-        Pharmacy = new PharmacyClient(ApiClient);
-        Paraclinic = new ParaclinicClient(ApiClient);
+        KiotaGateway = new TaminKiotaGateway(HttpClient, BaseUri, oauthToken, clientId);
+        Service = new ServiceClient(KiotaGateway);
+        Prescription = new PrescriptionClient(KiotaGateway);
+        Identity = new IdentityClient(KiotaGateway);
+        Pharmacy = new PharmacyClient(KiotaGateway);
+        Paraclinic = new ParaclinicClient(KiotaGateway);
     }
 
     /// <summary>

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Vorn.Tamin.Kiota;
 
 namespace Vorn.Tamin.Extensions;
 
@@ -11,9 +12,9 @@ public sealed class TaminOptions
 {
     /// <summary>
     /// Base URL for the EP.Tamin API.
-    /// Defaults to the sandbox endpoint <c>https://ep-test.tamin.ir/api/</c>.
+    /// Defaults to the generated Kiota endpoint <c>https://soa.tamin.ir/</c>.
     /// </summary>
-    public string BaseUrl { get; set; } = "https://ep-test.tamin.ir/api/";
+    public string BaseUrl { get; set; } = TaminKiotaClientFactory.DefaultBaseUrl;
 
     /// <summary>Client-Id header value issued during API onboarding.</summary>
     public string? ClientId { get; set; }
@@ -44,7 +45,7 @@ public static class TaminServiceCollectionExtensions
     /// <code>
     /// builder.Services.AddTaminClient(o =>
     /// {
-    ///     o.BaseUrl   = "https://ep-test.tamin.ir/api/";
+    ///     o.BaseUrl   = "https://soa.tamin.ir/";
     ///     o.ClientId  = "your-client-id";
     ///     o.OAuthToken = "your-token";
     /// });

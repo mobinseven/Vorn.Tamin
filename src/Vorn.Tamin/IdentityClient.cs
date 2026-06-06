@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Vorn.Tamin.Kiota;
 
 namespace Vorn.Tamin;
 
@@ -7,11 +8,11 @@ namespace Vorn.Tamin;
 /// </summary>
 public sealed class IdentityClient
 {
-    private readonly TaminEndpointClient _endpointClient;
+    private readonly ITaminKiotaGateway _gateway;
 
-    internal IdentityClient(TaminApiClient apiClient)
+    internal IdentityClient(ITaminKiotaGateway gateway)
     {
-        _endpointClient = new TaminEndpointClient(apiClient);
+        _gateway = gateway ?? throw new ArgumentNullException(nameof(gateway));
     }
 
     /// <summary>
@@ -20,7 +21,7 @@ public sealed class IdentityClient
     /// <param name="request">Identity verification parameters.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     public Task<JsonElement> VerifyIdentityAsync(VerifyIdentityRequest request, CancellationToken cancellationToken = default)
-        => _endpointClient.PostAsync("ws-verify-identity", request, cancellationToken);
+        => _gateway.PostAsync(TaminGatewayRoute.VerifyIdentity, request, cancellationToken);
 
     /// <summary>
     /// Checks whether a patient has active treatment coverage (Section 7.2).
@@ -28,5 +29,5 @@ public sealed class IdentityClient
     /// <param name="request">Entitlement check parameters.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     public Task<JsonElement> CheckEntitlementAsync(CheckEntitlementRequest request, CancellationToken cancellationToken = default)
-        => _endpointClient.PostAsync("ws-check-entitlement", request, cancellationToken);
+        => _gateway.PostAsync(TaminGatewayRoute.CheckEntitlement, request, cancellationToken);
 }
