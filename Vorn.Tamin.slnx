@@ -2,9 +2,8 @@
   <Folder Name="/docs/">
     <File Path="docs/EP-TAMIN-API.md" />
   </Folder>
-  <Folder Name="/Solution Items/">
+  <Folder Name="/items/">
     <File Path="Directory.Build.props" />
-    <File Path="tag.ps1" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Vorn.Tamin/Vorn.Tamin.csproj" />
