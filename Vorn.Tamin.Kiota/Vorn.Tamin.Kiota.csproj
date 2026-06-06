@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Kiota.Http.HttpClientLibrary" Version="*" />
+        <PackageReference Include="Microsoft.Kiota.Serialization.Json" Version="*" />
+        <PackageReference Include="Microsoft.Kiota.Authentication.Azure" Version="*" />
+        <PackageReference Include="Microsoft.Kiota.Serialization.Form" Version="*" />
+        <PackageReference Include="Microsoft.Kiota.Serialization.Multipart" Version="*" />
+        <PackageReference Include="Microsoft.Kiota.Serialization.Text" Version="*" />
+
+    </ItemGroup>
+    
+</Project>

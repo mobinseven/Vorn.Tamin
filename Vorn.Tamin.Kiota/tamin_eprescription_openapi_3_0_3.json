@@ -1,0 +1,2827 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Tamin Electronic Prescription Services API",
+    "version": "1.9.4",
+    "description": "OpenAPI specification derived from the Persian technical guide for Social Security Organization (Tamin) electronic prescription services. Production endpoints are used as canonical paths; test endpoints are preserved in x-testUrl / x-testPath vendor extensions where they differ. Where the source document does not define exact response payloads, responses are intentionally broad."
+  },
+  "servers": [
+    {
+      "url": "https://soa.tamin.ir",
+      "description": "Production SOA services"
+    },
+    {
+      "url": "https://account.tamin.ir",
+      "description": "Production authentication services"
+    },
+    {
+      "url": "https://ep-test.tamin.ir",
+      "description": "Test e-prescription services"
+    },
+    {
+      "url": "https://account-pilot.tamin.ir",
+      "description": "Test authentication services"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication"
+    },
+    {
+      "name": "Prescriptions"
+    },
+    {
+      "name": "Eligibility"
+    },
+    {
+      "name": "Reference Data"
+    },
+    {
+      "name": "Dentistry"
+    },
+    {
+      "name": "Referral"
+    },
+    {
+      "name": "Nurse Cartable"
+    },
+    {
+      "name": "Referential Services"
+    },
+    {
+      "name": "Hospitalization"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/server/authorize": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Request authorization code",
+        "operationId": "Get_requestAuthorizationCode",
+        "parameters": [
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Return URL"
+          },
+          {
+            "name": "response_type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "code"
+              ]
+            },
+            "description": "Must be code"
+          },
+          {
+            "name": "client_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Client identifier"
+          },
+          {
+            "name": "code_challenge",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))"
+          },
+          {
+            "name": "code_challenge_method",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "S256"
+              ]
+            },
+            "description": "Must be S256"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Opaque client state echoed in redirect"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login HTML page; after authentication redirects to redirect_uri with code, expires_in, and state.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "302": {
+            "description": "Redirect"
+          }
+        },
+        "x-testUrl": "https://account-pilot.tamin.ir/auth/server/authorize",
+        "security": []
+      }
+    },
+    "/auth/server/token": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Exchange authorization code for access token",
+        "operationId": "Post_exchangeAuthorizationCodeForAccessToken",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorizationCodeTokenRequest"
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://account-pilot.tamin.ir/auth/server/token",
+        "security": []
+      }
+    },
+    "/auth/signout": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Sign out user",
+        "operationId": "Get_signOutUser",
+        "parameters": [
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Return URL after sign out"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sign-out response or redirect",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "302": {
+            "description": "Redirect"
+          }
+        },
+        "x-testUrl": "https://account-pilot.tamin.ir/auth/signout",
+        "security": []
+      }
+    },
+    "/auth/server/v2/token": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Issue or refresh access token",
+        "operationId": "Post_issueOrRefreshAccessToken",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessAndRefreshTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Use grant_type=authorization_code for initial v2 token issue or grant_type=refresh_token for refresh. Schema is flexible because the same endpoint supports both flows.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenV2Request"
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://account-pilot.tamin.ir/auth/server/v2/token",
+        "security": []
+      }
+    },
+    "/interface/epresc/SendEpresc/v2": {
+      "post": {
+        "tags": [
+          "Prescriptions"
+        ],
+        "summary": "Register electronic prescription",
+        "operationId": "Post_registerElectronicPrescription",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendEprescResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEprescRequest"
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/SendEpresc"
+      }
+    },
+    "/interface/epresc/patient/v2/deserve-info/{siamId}/{docId}/{patientId}": {
+      "get": {
+        "tags": [
+          "Eligibility"
+        ],
+        "summary": "Check patient eligibility",
+        "operationId": "Get_checkPatientEligibility",
+        "parameters": [
+          {
+            "name": "siamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Clinic SIAM ID or doctor medical council number when used in office"
+          },
+          {
+            "name": "docId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Doctor medical council code"
+          },
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient national code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/patients/deserve-info/{requestBy}/{siam-id}/{doc-id}/{patient-id}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/{headerID}/{docId}": {
+      "get": {
+        "tags": [
+          "Prescriptions"
+        ],
+        "summary": "Fetch prescription detail",
+        "operationId": "Get_fetchPrescriptionDetail",
+        "parameters": [
+          {
+            "name": "headerID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unique prescription header ID"
+          },
+          {
+            "name": "docId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Doctor medical council code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ep/{headerID}/{docNationalCode}/{docId}/detail"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/remove/{headerID}/{docId}": {
+      "post": {
+        "tags": [
+          "Prescriptions"
+        ],
+        "summary": "Remove prescription",
+        "operationId": "Post_removePrescription",
+        "parameters": [
+          {
+            "name": "headerID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unique prescription header ID"
+          },
+          {
+            "name": "docId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Doctor medical council code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "The source states deletion is possible until the end of the registration day.",
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ep/{headerID}/{docNationalCode}/{docId}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/edit/{headerID}/{docId}": {
+      "post": {
+        "tags": [
+          "Prescriptions"
+        ],
+        "summary": "Edit prescription items",
+        "operationId": "Post_editPrescriptionItems",
+        "parameters": [
+          {
+            "name": "headerID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Unique prescription header ID"
+          },
+          {
+            "name": "docId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Doctor medical council code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Body is an array of prescription detail items. Missing original items are removed, new items are added, and changed items are updated. Each prescription is editable only once and visit/medical-service prescriptions are not editable.",
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ep/update/{headerID}/{docNationalCode}/{docId}",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/NoteDetailEprsc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/prescription-type": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List prescription types",
+        "operationId": "Get_listPrescriptionTypes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PrescType"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ws-prescription-type"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/service-type": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List service types",
+        "operationId": "Get_listServiceTypes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceType"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ws-service-type"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/services": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List services by service type",
+        "operationId": "Get_listServicesByServiceType",
+        "parameters": [
+          {
+            "name": "service-type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Service type code, e.g. 01, 02, 17"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Service"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ws-services?serviceType={SERVICE_TYPE}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/par-taref": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List laboratory subgroup tariff groups",
+        "operationId": "Get_listLaboratorySubgroupTariffGroups",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ParTarefGroup"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ws-par-taref"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/drug-amount": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List drug amounts",
+        "operationId": "Get_listDrugAmounts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TbDrugAmount"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ws-drug-amoun"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/drug-usage": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List drug usage methods",
+        "operationId": "Get_listDrugUsageMethods",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ws-drug-usage"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/drug-instruction": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List drug instructions",
+        "operationId": "Get_listDrugInstructions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DrugInstruction"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ws-drug-instruction"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/ph-plan": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List physiotherapy treatment plans",
+        "operationId": "Get_listPhysiotherapyTreatmentPlans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ws-ph-plan"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/ph-illness": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List physiotherapy illnesses",
+        "operationId": "Get_listPhysiotherapyIllnesses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ws-ph-illness"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/complaint": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List complaints for referral",
+        "operationId": "Get_listComplaintsForReferral",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Complaint"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/complaint"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/icd10/getAll": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List ICD10 initial diagnoses",
+        "operationId": "Get_listIcd10InitialDiagnoses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Icd10"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/icd10/getAll"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/special/getAll": {
+      "get": {
+        "tags": [
+          "Reference Data"
+        ],
+        "summary": "List doctor specialties",
+        "operationId": "Get_listDoctorSpecialties",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reference-data list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Special"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/specials/getAll"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/check-rules-in-detail": {
+      "post": {
+        "tags": [
+          "Dentistry"
+        ],
+        "summary": "Check dentistry business rules",
+        "operationId": "Post_checkDentistryBusinessRules",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DentistRuleRequest"
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/check-rules-in-detail"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/find-dentist-service-name-without-tooth/{dentistType}": {
+      "get": {
+        "tags": [
+          "Dentistry"
+        ],
+        "summary": "Find dental services not tied to a specific tooth",
+        "operationId": "Get_findDentalServicesNotTiedToASpecificTooth",
+        "parameters": [
+          {
+            "name": "dentistType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Dental service type; 1 for health care services, 2 for dental services"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dental services",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Service"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ws-dentist-base/find-dentist-service-name-without-tooth/{dentistType}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/find-dentist-service-name-by-tooth/{selectedTooth}/{patientId}/{toothType}": {
+      "get": {
+        "tags": [
+          "Dentistry"
+        ],
+        "summary": "Find dental services by selected tooth",
+        "operationId": "Get_findDentalServicesBySelectedTooth",
+        "parameters": [
+          {
+            "name": "selectedTooth",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Selected tooth FDI code"
+          },
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient national code"
+          },
+          {
+            "name": "toothType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "1 deciduous, 2 permanent"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dental services",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Service"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ws-dentist-base/find-dentist-service-name-by-tooth/{selectedTooth}/{patientId}/{toothType}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/noteDetailsReferral/count/{nationalCode}/{docId}": {
+      "get": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Fetch open referral count for doctor specialty",
+        "operationId": "Get_fetchOpenReferralCountForDoctorSpecialty",
+        "parameters": [
+          {
+            "name": "nationalCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient national code"
+          },
+          {
+            "name": "docId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Doctor medical council code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountTrackingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/referral/count/{nationalCode}/{docId}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/findNoteReferral/{nationalCode}/{docId}/{trackingCode}": {
+      "get": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Fetch physician referral prescription",
+        "operationId": "Get_fetchPhysicianReferralPrescription",
+        "parameters": [
+          {
+            "name": "nationalCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient national code"
+          },
+          {
+            "name": "docId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Doctor medical council code"
+          },
+          {
+            "name": "trackingCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Referral tracking code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ep/findNoteReferral/{nationalCode}/{docId}/{trackingCode}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/findNoteReferral/{masterId}/{nationalCode}": {
+      "get": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Fetch prescriptions with referral feedback",
+        "operationId": "Get_fetchPrescriptionsWithReferralFeedback",
+        "parameters": [
+          {
+            "name": "masterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Referral master ID from masterParent"
+          },
+          {
+            "name": "nationalCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient national code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ep/findNoteReferral/{masterId}/{nationalCode}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/noteDetailsReferral/referredList/{nationalCode}": {
+      "get": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Get doctor referral list from recent 3 days",
+        "operationId": "Get_getDoctorReferralListFromRecent3Days",
+        "parameters": [
+          {
+            "name": "nationalCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Doctor national code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/referral/referredList/{nationalCode}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/fetchReferralCartable/{docNationalCode}/{patientNationalCode}/{trackingCode}": {
+      "get": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Fetch registered patient referral cartable",
+        "operationId": "Get_fetchRegisteredPatientReferralCartable",
+        "parameters": [
+          {
+            "name": "docNationalCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Doctor national code"
+          },
+          {
+            "name": "patientNationalCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient national code"
+          },
+          {
+            "name": "trackingCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Tracking code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralCartableResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/cartablenoteDetailsReferral/{docNationalCode}/{patientNationalCode}/{trackingCode}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/referralList/{referralId}": {
+      "get": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Get list of registered referral feedback prescriptions",
+        "operationId": "Get_getListOfRegisteredReferralFeedbackPrescriptions",
+        "parameters": [
+          {
+            "name": "referralId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Registered referral ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralFeedbackListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/noteDetailsReferral/forward/{referralId}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/referral/noteDetail/{id}/{masterParent}": {
+      "get": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Get referral feedback detail",
+        "operationId": "Get_getReferralFeedbackDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Feedback/prescription ID; zero means feedback record itself"
+          },
+          {
+            "name": "masterParent",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Master parent ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralNoteDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/noteDetailsReferral/noteheads/{id}/{masterParent}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/patientNoteDetailsReferral/count/{nationalCode}": {
+      "get": {
+        "tags": [
+          "Referral"
+        ],
+        "summary": "Fetch patient open referrals by secretary",
+        "operationId": "Get_fetchPatientOpenReferralsBySecretary",
+        "parameters": [
+          {
+            "name": "nationalCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient national code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientOpenReferralCountResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/referral/count/{nationalCode}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/cartableNurse/getAll/{siamId}/{nationalCode}": {
+      "get": {
+        "tags": [
+          "Nurse Cartable"
+        ],
+        "summary": "Fetch clinic nurse prescriptions",
+        "operationId": "Get_fetchClinicNursePrescriptions",
+        "parameters": [
+          {
+            "name": "siamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Clinic SIAM ID"
+          },
+          {
+            "name": "nationalCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient national code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/cartable-nurse/get-all/{siamId}/{nationalCode}"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/cartableNurse/saveEprsc": {
+      "post": {
+        "tags": [
+          "Nurse Cartable"
+        ],
+        "summary": "Save nurse action on prescription",
+        "operationId": "Post_saveNurseActionOnPrescription",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NurseActionRequest"
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/ep/api/v2/cartable-nurse/save"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/{nationalCode}/{docId}/{trackingCode}/referentialPrescDetail": {
+      "get": {
+        "tags": [
+          "Referential Services"
+        ],
+        "summary": "Fetch referential service prescription",
+        "operationId": "Get_fetchReferentialServicePrescription",
+        "parameters": [
+          {
+            "name": "nationalCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Patient national code"
+          },
+          {
+            "name": "docId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Doctor medical council code"
+          },
+          {
+            "name": "trackingCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Prescription tracking code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/ep/{nationalCode}/{docNatioanlCode}/{docId}/{trackingCode}/detail"
+      }
+    },
+    "/interface/epresc/SendEpresc/v2/hospitalization-order/fetch/{siamId}/{secretaryNationalCode}": {
+      "get": {
+        "tags": [
+          "Hospitalization"
+        ],
+        "summary": "Fetch hospitalization-order prescriptions in clinic",
+        "operationId": "Get_fetchHospitalizationOrderPrescriptionsInClinic",
+        "parameters": [
+          {
+            "name": "siamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Clinic SIAM ID"
+          },
+          {
+            "name": "secretaryNationalCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Secretary national code"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or business-rule validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-testUrl": "https://ep-test.tamin.ir/api/v2/noteDetailsReferral/hospitalization-order/{siam-id}/{secretaryNationalCode}"
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "OAuth2PKCE": {
+        "type": "oauth2",
+        "description": "OAuth 2.0 authorization-code flow with PKCE as described in the source document.",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://account.tamin.ir/auth/server/authorize",
+            "tokenUrl": "https://account.tamin.ir/auth/server/token",
+            "scopes": {}
+          }
+        }
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Bearer access token returned by the token service. Header usage is inferred from OAuth practice."
+      }
+    },
+    "parameters": {},
+    "schemas": {
+      "GenericApiResponse": {
+        "type": "object",
+        "description": "Generic response wrapper used in examples. Many endpoints do not define a complete response schema in the source.",
+        "additionalProperties": true,
+        "properties": {
+          "status": {
+            "type": "integer",
+            "example": 200
+          },
+          "family": {
+            "type": "string",
+            "example": "SUCCESSFUL"
+          },
+          "reason": {
+            "type": "string",
+            "example": "OK"
+          },
+          "data": {
+            "nullable": true
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "status": {
+            "type": "integer"
+          },
+          "family": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "description": "Error model inferred from response examples and validation messages in the source document."
+      },
+      "AuthorizationCodeTokenRequest": {
+        "type": "object",
+        "description": "application/x-www-form-urlencoded token request.",
+        "required": [
+          "redirect_uri",
+          "grant_type",
+          "client_id",
+          "code"
+        ],
+        "properties": {
+          "redirect_uri": {
+            "type": "string",
+            "format": "uri"
+          },
+          "grant_type": {
+            "type": "string",
+            "enum": [
+              "authorization_code",
+              "code_authorization"
+            ],
+            "description": "The PDF prose uses code_authorization/type_grant; cURL examples use authorization_code/grant_type."
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "code_verifier": {
+            "type": "string",
+            "minLength": 43,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9._~-]{43,128}$"
+          },
+          "verifier_code": {
+            "type": "string",
+            "deprecated": true,
+            "description": "Alias name used in older prose."
+          }
+        },
+        "additionalProperties": true
+      },
+      "AuthorizationCodeTokenV2Request": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AuthorizationCodeTokenRequest"
+          }
+        ],
+        "description": "V2 token request; includes audience and returns refresh token."
+      },
+      "RefreshTokenV2Request": {
+        "type": "object",
+        "required": [
+          "grant_type",
+          "client_id",
+          "refresh_token"
+        ],
+        "properties": {
+          "grant_type": {
+            "type": "string",
+            "enum": [
+              "refresh_token",
+              "token_refresh"
+            ]
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          },
+          "token_refresh": {
+            "type": "string",
+            "deprecated": true,
+            "description": "Alias used in the Persian text."
+          },
+          "audience": {
+            "type": "string",
+            "description": "National code or identifier of the entity for whom the token is issued."
+          }
+        },
+        "additionalProperties": true
+      },
+      "AccessTokenResponse": {
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "expires_in": {
+            "type": "integer",
+            "example": 3600
+          },
+          "token_type": {
+            "type": "string",
+            "example": "Bearer"
+          }
+        },
+        "additionalProperties": true
+      },
+      "AccessAndRefreshTokenResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AccessTokenResponse"
+          }
+        ],
+        "properties": {
+          "refresh_token": {
+            "type": "string"
+          },
+          "token_refresh": {
+            "type": "string"
+          },
+          "token_access": {
+            "type": "string"
+          }
+        }
+      },
+      "PrescType": {
+        "type": "object",
+        "required": [
+          "prescTypeId"
+        ],
+        "properties": {
+          "prescTypeId": {
+            "type": "integer",
+            "enum": [
+              1,
+              2,
+              3,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "description": "1 drug, 2 paraclinic, 3 visit, 5 services, 6 referential services, 7 physician referral, 8 referral feedback, 9 hospitalization order"
+          },
+          "prescTypeCode": {
+            "type": "string"
+          },
+          "prescTypeDesc": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "ServiceType": {
+        "type": "object",
+        "properties": {
+          "srvType": {
+            "type": "string",
+            "enum": [
+              "01",
+              "02",
+              "03",
+              "04",
+              "05",
+              "06",
+              "07",
+              "08",
+              "09",
+              "10",
+              "11",
+              "12",
+              "13",
+              "14",
+              "15",
+              "16",
+              "17",
+              "21"
+            ]
+          },
+          "srvTypeDes": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "ParTarefGroup": {
+        "type": "object",
+        "properties": {
+          "parGrpCode": {
+            "type": "string",
+            "enum": [
+              "000",
+              "001",
+              "002",
+              "003",
+              "004"
+            ],
+            "description": "000 unspecified, 001 pathology, 002 genetics, 003 global genetics, 004 medical diagnosis"
+          },
+          "parGrpDesc": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "Service": {
+        "type": "object",
+        "required": [
+          "srvCode"
+        ],
+        "properties": {
+          "srvCode": {
+            "type": "string"
+          },
+          "srvType": {
+            "$ref": "#/components/schemas/ServiceType"
+          },
+          "parTarefGrp": {
+            "$ref": "#/components/schemas/ParTarefGroup"
+          },
+          "terminology": {
+            "type": "string",
+            "description": "If BEHDASHT.thritha is sent, service code follows Ministry of Health coding."
+          },
+          "srvId": {
+            "type": "integer"
+          },
+          "srvName": {
+            "type": "string"
+          },
+          "srvCodeComplete": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "TbDrugAmount": {
+        "type": "object",
+        "properties": {
+          "drugAmntId": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": true
+      },
+      "DrugInstruction": {
+        "type": "object",
+        "properties": {
+          "drugInstId": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": true
+      },
+      "DiagnosisID": {
+        "type": "object",
+        "properties": {
+          "icdId": {
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "description": "The PDF table says integer, while examples use ICD-like strings."
+      },
+      "Complaint": {
+        "type": "object",
+        "properties": {
+          "complaintIDs": {
+            "type": "string",
+            "description": "Comma-separated complaint IDs per formal table."
+          },
+          "id": {
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Used in referral examples."
+          },
+          "code": {
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "englishName": {
+            "type": "string"
+          },
+          "terminology": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "Special": {
+        "type": "object",
+        "properties": {
+          "specCode": {
+            "type": "string"
+          },
+          "specDesc": {
+            "type": "string"
+          },
+          "specGRP": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "Icd10": {
+        "type": "object",
+        "properties": {
+          "icdId": {
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "icdCode": {
+            "type": "string"
+          },
+          "icdName": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "NoteDetailsReferral": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "referralHijriDate": {
+            "type": "string",
+            "pattern": "^\\d{8}$",
+            "example": "14040510"
+          },
+          "patientNationalCode": {
+            "type": "string"
+          },
+          "docSpecReferred": {
+            "$ref": "#/components/schemas/Special"
+          },
+          "message": {
+            "type": "string"
+          },
+          "icd10s": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Icd10"
+            }
+          },
+          "complaints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Complaint"
+            }
+          },
+          "quantity": {
+            "type": "integer",
+            "maximum": 3
+          },
+          "siamId": {
+            "type": "string",
+            "description": "Required for hospitalization-order prescriptions."
+          },
+          "masterParent": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "masterChild": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": true
+      },
+      "NoteDetailEprsc": {
+        "type": "object",
+        "required": [
+          "srvId",
+          "srvQty"
+        ],
+        "properties": {
+          "noteDetailsEprscId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "srvId": {
+            "$ref": "#/components/schemas/Service"
+          },
+          "srvQty": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "timesAday": {
+            "$ref": "#/components/schemas/TbDrugAmount"
+          },
+          "dose": {
+            "type": "string"
+          },
+          "repeat": {
+            "type": "string",
+            "description": "Drug repeat period; repeat count cannot exceed 3 according to notes."
+          },
+          "dateDo": {
+            "type": "string",
+            "pattern": "^\\d{8}$"
+          },
+          "drugInstruction": {
+            "$ref": "#/components/schemas/DrugInstruction"
+          },
+          "illnessId": {
+            "type": "string",
+            "description": "Physiotherapy illness ID; multiple values comma-separated."
+          },
+          "planId": {
+            "type": "string",
+            "description": "Physiotherapy plan ID; multiple values comma-separated."
+          },
+          "referenceStatus": {
+            "type": "integer"
+          },
+          "isDentalService": {
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "0",
+                  "1"
+                ]
+              },
+              {
+                "type": "integer",
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          },
+          "toothId": {
+            "type": "string",
+            "description": "FDI tooth code when service depends on a tooth."
+          },
+          "noteDetailDrug": {
+            "$ref": "#/components/schemas/DiagnosisID"
+          }
+        },
+        "additionalProperties": true
+      },
+      "SendEprescRequest": {
+        "type": "object",
+        "required": [
+          "patient",
+          "prescDate",
+          "docId",
+          "docNationalCode",
+          "docMobileNo",
+          "prescType"
+        ],
+        "properties": {
+          "patient": {
+            "type": "string",
+            "description": "Patient national code."
+          },
+          "mobile": {
+            "type": "string",
+            "description": "Patient mobile number; appears in examples and validation notes."
+          },
+          "prescDate": {
+            "type": "string",
+            "pattern": "^\\d{8}$",
+            "example": "14030717"
+          },
+          "expireDate": {
+            "type": "string",
+            "pattern": "^\\d{8}$",
+            "example": "14030815"
+          },
+          "docId": {
+            "type": "string",
+            "description": "Medical council number without symbols; midwives use * for Persian letter م."
+          },
+          "docNationalCode": {
+            "type": "string",
+            "description": "Doctor national code; foreign doctors use FDA-prefixed FIDA code."
+          },
+          "docMobileNo": {
+            "type": "string"
+          },
+          "prescType": {
+            "$ref": "#/components/schemas/PrescType"
+          },
+          "comments": {
+            "type": "string"
+          },
+          "noteDetailEprscs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoteDetailEprsc"
+            }
+          },
+          "noteDetailsReferralList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoteDetailsReferral"
+            }
+          },
+          "referralFeedbackId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "noteHeadEprscSupplementary": {
+            "$ref": "#/components/schemas/Complaint"
+          },
+          "clientId": {
+            "type": "string",
+            "description": "Required in the test environment; send doctor national code according to PDF."
+          },
+          "creatorType": {
+            "type": "string"
+          },
+          "siamId": {
+            "type": "string",
+            "description": "Required for clinic/hospital/nurse or hospitalization scenarios."
+          }
+        },
+        "additionalProperties": true
+      },
+      "SendEprescResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/GenericApiResponse"
+          }
+        ],
+        "properties": {
+          "ID_EPRSC_head": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique prescription header ID mentioned as output of registration service."
+          },
+          "trackingCode": {
+            "type": "string"
+          }
+        }
+      },
+      "DentistRuleRequest": {
+        "type": "object",
+        "required": [
+          "patientId",
+          "srvId",
+          "docId"
+        ],
+        "properties": {
+          "patientId": {
+            "type": "string"
+          },
+          "srvId": {
+            "$ref": "#/components/schemas/Service"
+          },
+          "docId": {
+            "type": "string"
+          },
+          "toothId": {
+            "type": "string"
+          },
+          "allGridData": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GridData"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "GridData": {
+        "type": "object",
+        "required": [
+          "srvId"
+        ],
+        "properties": {
+          "srvId": {
+            "$ref": "#/components/schemas/Service"
+          },
+          "toothId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "CountTrackingResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/GenericApiResponse"
+          }
+        ],
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "trackingCode": {
+            "type": "string"
+          }
+        }
+      },
+      "ReferralCartableResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/GenericApiResponse"
+          }
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "list": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ReferralCartableItem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ReferralCartableItem": {
+        "type": "object",
+        "properties": {
+          "noteHeadId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "referralId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "patientID": {
+            "type": "string"
+          },
+          "docID": {
+            "type": "string"
+          },
+          "prescDate": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "prescType": {
+            "$ref": "#/components/schemas/PrescType"
+          },
+          "masterChild": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "referralDate": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer",
+                "format": "int64"
+              }
+            ]
+          },
+          "specCodeReferral": {
+            "type": "string"
+          },
+          "specDescReferral": {
+            "type": "string"
+          },
+          "specCodeReferred": {
+            "type": "string"
+          },
+          "specDescReferred": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "ReferralFeedbackListResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/GenericApiResponse"
+          }
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "list": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/NoteDetailsReferral"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ReferralNoteDetailResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/GenericApiResponse"
+          }
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer"
+              },
+              "list": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SendEprescRequest"
+                }
+              }
+            }
+          }
+        }
+      },
+      "PatientOpenReferralCountResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/GenericApiResponse"
+          }
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "noteDetailsReferrals": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Special"
+                }
+              },
+              "count": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "NurseActionRequest": {
+        "type": "object",
+        "required": [
+          "siamId",
+          "noteDetailsEprscIds",
+          "nurseNationalCode"
+        ],
+        "properties": {
+          "siamId": {
+            "type": "string"
+          },
+          "noteDetailsEprscIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "nurseNationalCode": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "x-source": {
+    "document": "مستندات فنی پیاده سازی سرویس های نسخه نویسی سازمان تامین اجتماعی.pdf",
+    "notes": [
+      "Derived from uploaded Persian PDF technical guide.",
+      "Canonical paths are production paths; test paths may differ and are recorded in x-testUrl.",
+      "Incomplete response contracts are modeled as GenericApiResponse."
+    ]
+  }
+}
