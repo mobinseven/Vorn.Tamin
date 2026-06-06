@@ -357,21 +357,19 @@ public sealed class PrescriptionListFilter
 
 // ── Prescription Mutation DTOs (Section 10) ───────────────────────────────────
 
-/// <summary>Request payload for editing an existing prescription.</summary>
+/// <summary>Request payload for editing an existing prescription through the generated Kiota edit builder.</summary>
 public sealed class EditPrescriptionRequest
 {
-    [JsonPropertyName("prescription_id")] public required string PrescriptionId { get; init; }
-    [JsonPropertyName("tracking_code")] public required string TrackingCode { get; init; }
+    [JsonPropertyName("header_id")] public required int HeaderId { get; init; }
+    [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
     [JsonPropertyName("edited_items")] public required IReadOnlyList<object> EditedItems { get; init; }
-    [JsonPropertyName("edit_reason")] public required string EditReason { get; init; }
 }
 
-/// <summary>Request payload for deleting an existing prescription.</summary>
+/// <summary>Request payload for deleting an existing prescription through the generated Kiota remove builder.</summary>
 public sealed class DeletePrescriptionRequest
 {
-    [JsonPropertyName("prescription_id")] public required string PrescriptionId { get; init; }
-    [JsonPropertyName("tracking_code")] public required string TrackingCode { get; init; }
-    [JsonPropertyName("delete_reason")] public required string DeleteReason { get; init; }
+    [JsonPropertyName("header_id")] public required int HeaderId { get; init; }
+    [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
 }
 
 // ── Reference Data DTOs (Section 11) ─────────────────────────────────────────

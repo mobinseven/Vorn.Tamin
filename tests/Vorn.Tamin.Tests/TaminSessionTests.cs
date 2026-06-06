@@ -32,13 +32,13 @@ public class TaminSessionTests
         var result = await session.Service.GetAllServicesAsync(new Dictionary<string, string?> { ["serviceType"] = "17" });
 
         Assert.NotNull(captured);
-        Assert.Equal("https://ep-test.tamin.ir/api/ws-services?serviceType=17", captured!.RequestUri!.ToString());
+        Assert.Equal("https://soa.tamin.ir/interface/epresc/SendEpresc/v2/services?service-type=17", captured!.RequestUri!.ToString());
         Assert.Equal(JsonValueKind.Array, result.ValueKind);
         Assert.Equal(1, result[0].GetProperty("id").GetInt32());
     }
 
     [Fact]
-    public async Task PrescriptionClient_UsesExpectedEndpointForCreate()
+    public async Task PrescriptionClient_UsesExpectedEndpointForRegisterVisit()
     {
         HttpRequestMessage? captured = null;
         var handler = new StubHandler((request, _) =>
@@ -51,11 +51,17 @@ public class TaminSessionTests
         });
 
         var session = new TaminSession(new HttpClient(handler), "token");
-        var result = await session.Prescription.CreatePrescriptionAsync(new { patient = "x" });
+        var result = await session.Prescription.RegisterVisitPrescriptionAsync(new RegisterVisitPrescriptionRequest
+        {
+            DoctorId = "D1",
+            PatientNationalId = "1234567890",
+            VisitDate = "2024-01-01",
+            ClinicId = "C1"
+        });
 
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Equal("https://ep-test.tamin.ir/api/interface/epresc/SendEpresc", captured.RequestUri!.ToString());
+        Assert.Equal("https://soa.tamin.ir/interface/epresc/SendEpresc/v2", captured.RequestUri!.ToString());
         Assert.True(result[0].GetProperty("ok").GetBoolean());
     }
 
@@ -88,7 +94,31 @@ public class TaminSessionTests
         await session.Service.GetAllServicesAsync();
 
         Assert.NotNull(captured);
-        Assert.True(captured!.Headers.TryGetValues("Client-Id", out _));
+        Assert.True(captured!.Headers.TryGetValues("Client-Id", out var values));
+        Assert.Equal("my-client", values.Single());
+    }
+
+    [Fact]
+    public async Task Session_DoesNotMutateDefaultRequestHeaders()
+    {
+        HttpRequestMessage? captured = null;
+        var handler = new StubHandler((request, _) =>
+        {
+            captured = request;
+            return Task.FromResult(OkResponse());
+        });
+        var httpClient = new HttpClient(handler);
+
+        var session = new TaminSession(httpClient, "token", clientId: "my-client");
+        await session.Service.GetAllServicesAsync();
+
+        Assert.Null(httpClient.DefaultRequestHeaders.Authorization);
+        Assert.False(httpClient.DefaultRequestHeaders.Contains("Client-Id"));
+        Assert.NotNull(captured);
+        Assert.Equal("Bearer", captured!.Headers.Authorization?.Scheme);
+        Assert.Equal("token", captured.Headers.Authorization?.Parameter);
+        Assert.True(captured.Headers.TryGetValues("Client-Id", out var values));
+        Assert.Equal("my-client", values.Single());
     }
 
     [Fact]
@@ -110,48 +140,6 @@ public class TaminSessionTests
     }
 
     // ── New sub-clients ───────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task IdentityClient_VerifyIdentity_PostsToExpectedEndpoint()
-    {
-        HttpRequestMessage? captured = null;
-        var handler = new StubHandler((request, _) =>
-        {
-            captured = request;
-            return Task.FromResult(OkResponse());
-        });
-
-        var session = new TaminSession(new HttpClient(handler), "token");
-        await session.Identity.VerifyIdentityAsync(new VerifyIdentityRequest { NationalId = "1234567890" });
-
-        Assert.NotNull(captured);
-        Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Contains("ws-verify-identity", captured.RequestUri!.ToString());
-    }
-
-    [Fact]
-    public async Task IdentityClient_CheckEntitlement_PostsToExpectedEndpoint()
-    {
-        HttpRequestMessage? captured = null;
-        var handler = new StubHandler((request, _) =>
-        {
-            captured = request;
-            return Task.FromResult(OkResponse());
-        });
-
-        var session = new TaminSession(new HttpClient(handler), "token");
-        await session.Identity.CheckEntitlementAsync(new CheckEntitlementRequest
-        {
-            NationalId = "1234567890",
-            ProviderId = "p1",
-            VisitDate = "2024-01-01",
-            ServiceType = "clinic"
-        });
-
-        Assert.NotNull(captured);
-        Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Contains("ws-check-entitlement", captured.RequestUri!.ToString());
-    }
 
     [Fact]
     public async Task PrescriptionClient_RegisterDrugPrescription_PostsToExpectedEndpoint()
@@ -185,7 +173,7 @@ public class TaminSessionTests
         {
             var body = await request.Content!.ReadAsStringAsync();
             using var document = JsonDocument.Parse(body);
-            prescriptionTypes.Add(document.RootElement.GetProperty("prescription_type").GetInt32());
+            prescriptionTypes.Add(document.RootElement.GetProperty("prescType").GetProperty("prescTypeId").GetInt32());
             return OkResponse();
         });
 
@@ -261,10 +249,9 @@ public class TaminSessionTests
         var session = new TaminSession(new HttpClient(handler), "token");
         await session.Prescription.EditElectronicPrescriptionAsync(new EditPrescriptionRequest
         {
-            PrescriptionId = "P001",
-            TrackingCode = "T001",
-            EditedItems = [],
-            EditReason = "correction"
+            HeaderId = 1001,
+            DoctorId = "D1",
+            EditedItems = []
         });
 
         Assert.NotNull(captured);
@@ -285,39 +272,13 @@ public class TaminSessionTests
         var session = new TaminSession(new HttpClient(handler), "token");
         await session.Prescription.DeleteElectronicPrescriptionAsync(new DeletePrescriptionRequest
         {
-            PrescriptionId = "P001",
-            TrackingCode = "T001",
-            DeleteReason = "error"
+            HeaderId = 1001,
+            DoctorId = "D1"
         });
 
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Contains("delete", captured.RequestUri!.ToString());
-    }
-
-    [Fact]
-    public async Task PrescriptionClient_GetPrescriptionList_BuildsQueryCorrectly()
-    {
-        HttpRequestMessage? captured = null;
-        var handler = new StubHandler((request, _) =>
-        {
-            captured = request;
-            return Task.FromResult(OkResponse());
-        });
-
-        var session = new TaminSession(new HttpClient(handler), "token");
-        await session.Prescription.GetPrescriptionListAsync(new PrescriptionListFilter
-        {
-            DoctorId = "D1",
-            PatientNationalId = "1234567890",
-            PrescriptionType = PrescriptionType.Drug
-        });
-
-        Assert.NotNull(captured);
-        Assert.Equal(HttpMethod.Get, captured!.Method);
-        var uri = captured.RequestUri!.ToString();
-        Assert.Contains("doctor_id=D1", uri);
-        Assert.Contains("prescription_type=1", uri);
+        Assert.Contains("remove", captured.RequestUri!.ToString());
     }
 
     [Fact]
@@ -335,13 +296,13 @@ public class TaminSessionTests
 
         Assert.NotNull(captured);
         var uri = captured!.RequestUri!.ToString();
-        Assert.Contains("ws-drug-amount", uri);
+        Assert.Contains("interface/epresc/SendEpresc/v2/drug-amount", uri);
         Assert.Contains("search_text=aspirin", uri);
         Assert.Contains("active_only=true", uri);
     }
 
     [Fact]
-    public async Task ServiceClient_GetAllowedCount_UsesCorrectEndpoint()
+    public async Task ServiceClient_GetServiceList_BuildsQueryCorrectly()
     {
         HttpRequestMessage? captured = null;
         var handler = new StubHandler((request, _) =>
@@ -351,16 +312,27 @@ public class TaminSessionTests
         });
 
         var session = new TaminSession(new HttpClient(handler), "token");
-        await session.Service.GetAllowedCountAsync("1234567890", "DR001", "drug", "D1");
+        await session.Service.GetServiceListAsync(
+            serviceType: "1",
+            serviceGroup: "lab",
+            searchText: "cbc",
+            page: 2,
+            pageSize: 25,
+            activeOnly: true);
 
         Assert.NotNull(captured);
         var uri = captured!.RequestUri!.ToString();
-        Assert.Contains("ws-allowed-count", uri);
-        Assert.Contains("item_code=DR001", uri);
+        Assert.Contains("interface/epresc/SendEpresc/v2/services", uri);
+        Assert.Contains("service-type=1", uri);
+        Assert.Contains("service_group=lab", uri);
+        Assert.Contains("search_text=cbc", uri);
+        Assert.Contains("page=2", uri);
+        Assert.Contains("page_size=25", uri);
+        Assert.Contains("active_only=true", uri);
     }
 
     [Fact]
-    public async Task ServiceClient_GetPrice_UsesCorrectEndpoint()
+    public async Task ServiceClient_LegacyReferenceData_ForwardsQueryParameters()
     {
         HttpRequestMessage? captured = null;
         var handler = new StubHandler((request, _) =>
@@ -370,59 +342,12 @@ public class TaminSessionTests
         });
 
         var session = new TaminSession(new HttpClient(handler), "token");
-        await session.Service.GetPriceAsync("DR001", "drug", 2);
+        await session.Service.GetDrugInstructionAsync(new Dictionary<string, string?> { ["search_text"] = "daily" });
 
         Assert.NotNull(captured);
         var uri = captured!.RequestUri!.ToString();
-        Assert.Contains("ws-price", uri);
-        Assert.Contains("item_code=DR001", uri);
-        Assert.Contains("quantity=2", uri);
-    }
-
-    [Fact]
-    public async Task PharmacyClient_DispenseElectronic_UsesCorrectEndpoint()
-    {
-        HttpRequestMessage? captured = null;
-        var handler = new StubHandler((request, _) =>
-        {
-            captured = request;
-            return Task.FromResult(OkResponse());
-        });
-
-        var session = new TaminSession(new HttpClient(handler), "token");
-        await session.Pharmacy.DispenseElectronicPrescriptionAsync(new DispensePrescriptionRequest
-        {
-            PrescriptionId = "P001",
-            TrackingCode = "T001",
-            DispensedItems = []
-        });
-
-        Assert.NotNull(captured);
-        Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Contains("darman/dispense-electronic", captured.RequestUri!.ToString());
-    }
-
-    [Fact]
-    public async Task ParaclinicClient_ProvideElectronic_UsesCorrectEndpoint()
-    {
-        HttpRequestMessage? captured = null;
-        var handler = new StubHandler((request, _) =>
-        {
-            captured = request;
-            return Task.FromResult(OkResponse());
-        });
-
-        var session = new TaminSession(new HttpClient(handler), "token");
-        await session.Paraclinic.ProvideElectronicPrescriptionServiceAsync(new ProvideServiceRequest
-        {
-            PrescriptionId = "P001",
-            TrackingCode = "T001",
-            DeliveredItems = []
-        });
-
-        Assert.NotNull(captured);
-        Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Contains("paraclinic/provide-electronic", captured.RequestUri!.ToString());
+        Assert.Contains("interface/epresc/SendEpresc/v2/drug-instruction", uri);
+        Assert.Contains("search_text=daily", uri);
     }
 
     [Fact]
@@ -445,7 +370,18 @@ public class TaminSessionTests
 
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Contains("warning", captured.RequestUri!.ToString());
+        Assert.Contains("check-rules-in-detail", captured.RequestUri!.ToString());
+    }
+
+
+    [Fact]
+    public void UnsupportedFriendlyProviderMethods_AreRemoved()
+    {
+        Assert.Null(typeof(ServiceClient).GetMethod("GetAllowedCountAsync"));
+        Assert.Null(typeof(ServiceClient).GetMethod("GetPriceAsync"));
+        Assert.DoesNotContain(typeof(IdentityClient).GetMethods(), IsDeclaredPublicInstanceMethod);
+        Assert.DoesNotContain(typeof(PharmacyClient).GetMethods(), IsDeclaredPublicInstanceMethod);
+        Assert.DoesNotContain(typeof(ParaclinicClient).GetMethods(), IsDeclaredPublicInstanceMethod);
     }
 
     // ── Exception completeness ────────────────────────────────────────────────
@@ -480,6 +416,12 @@ public class TaminSessionTests
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private static bool IsDeclaredPublicInstanceMethod(System.Reflection.MethodInfo method)
+        => method.DeclaringType != typeof(object)
+            && method.IsPublic
+            && !method.IsStatic
+            && !method.IsSpecialName;
 
     private static HttpResponseMessage OkResponse() =>
         new(HttpStatusCode.OK)
