@@ -23,19 +23,19 @@ public sealed class ServiceClient
 
     /// <summary>Fetches generated Kiota prescription types.</summary>
     public Task<JsonElement> GetPrescriptionTypeAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _gateway.GetPrescriptionTypesAsync(cancellationToken);
+        => _gateway.GetPrescriptionTypesAsync(query, cancellationToken);
 
     /// <summary>Fetches generated Kiota paraclinic tariffs.</summary>
     public Task<JsonElement> GetParaclinicTarefAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _gateway.GetParaclinicTariffsAsync(cancellationToken);
+        => _gateway.GetParaclinicTariffsAsync(query, cancellationToken);
 
     /// <summary>Fetches generated Kiota drug amount reference data.</summary>
     public Task<JsonElement> GetDrugAmountAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _gateway.GetDrugAmountsAsync(cancellationToken);
+        => _gateway.GetDrugAmountsAsync(query, cancellationToken);
 
     /// <summary>Fetches generated Kiota drug administration instructions.</summary>
     public Task<JsonElement> GetDrugInstructionAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _gateway.GetDrugInstructionsAsync(cancellationToken);
+        => _gateway.GetDrugInstructionsAsync(query, cancellationToken);
 
     // ── Typed reference-data methods (Section 11) ────────────────────────────
 
@@ -57,7 +57,13 @@ public sealed class ServiceClient
         bool? activeOnly = null,
         CancellationToken cancellationToken = default)
     {
-        return _gateway.GetDrugAmountsAsync(cancellationToken);
+        var query = TaminQueryParameters.Build(
+            ("search_text", searchText),
+            ("drug_code", drugCode),
+            ("page", page?.ToString()),
+            ("page_size", pageSize?.ToString()),
+            ("active_only", activeOnly?.ToString().ToLowerInvariant()));
+        return _gateway.GetDrugAmountsAsync(query, cancellationToken);
     }
 
     /// <summary>

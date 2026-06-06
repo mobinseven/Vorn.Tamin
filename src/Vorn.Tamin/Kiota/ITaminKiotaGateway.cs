@@ -9,13 +9,13 @@ internal interface ITaminKiotaGateway
 {
     Task<JsonElement> GetServicesAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken);
 
-    Task<JsonElement> GetPrescriptionTypesAsync(CancellationToken cancellationToken);
+    Task<JsonElement> GetPrescriptionTypesAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken);
 
-    Task<JsonElement> GetParaclinicTariffsAsync(CancellationToken cancellationToken);
+    Task<JsonElement> GetParaclinicTariffsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken);
 
-    Task<JsonElement> GetDrugAmountsAsync(CancellationToken cancellationToken);
+    Task<JsonElement> GetDrugAmountsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken);
 
-    Task<JsonElement> GetDrugInstructionsAsync(CancellationToken cancellationToken);
+    Task<JsonElement> GetDrugInstructionsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken);
 
     Task<JsonElement> GetAllowedCountAsync(IReadOnlyDictionary<string, string?> query, CancellationToken cancellationToken);
 

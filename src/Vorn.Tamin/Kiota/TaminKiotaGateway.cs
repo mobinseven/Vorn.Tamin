@@ -2,7 +2,6 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Kiota.Abstractions;
-using Vorn.Tamin.Mapping;
 
 namespace Vorn.Tamin.Kiota;
 
@@ -12,6 +11,7 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
     private readonly HttpClient _httpClient;
     private readonly Uri _baseUri;
     private readonly string? _clientId;
+    private readonly string? _oauthToken;
     private readonly TaminOpenAPIClient _client;
 
     public TaminKiotaGateway(HttpClient httpClient, Uri baseUri, string? oauthToken, string? clientId, TaminKiotaClientFactory? clientFactory = null)
@@ -19,12 +19,7 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _baseUri = baseUri ?? throw new ArgumentNullException(nameof(baseUri));
         _clientId = clientId;
-
-        if (!string.IsNullOrWhiteSpace(oauthToken))
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", oauthToken);
-
-        if (!string.IsNullOrWhiteSpace(clientId))
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Client-Id", clientId);
+        _oauthToken = oauthToken;
 
         _client = (clientFactory ?? new TaminKiotaClientFactory()).Create(_httpClient, _baseUri);
     }
@@ -36,30 +31,35 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         {
             config.QueryParameters.ServiceType = serviceType;
         });
+        AddQueryParameters(requestInfo, query, "service-type", "service_type", "serviceType");
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    public Task<JsonElement> GetPrescriptionTypesAsync(CancellationToken cancellationToken)
+    public Task<JsonElement> GetPrescriptionTypesAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.PrescriptionType.ToGetRequestInformation();
+        AddQueryParameters(requestInfo, query);
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    public Task<JsonElement> GetParaclinicTariffsAsync(CancellationToken cancellationToken)
+    public Task<JsonElement> GetParaclinicTariffsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.ParTaref.ToGetRequestInformation();
+        AddQueryParameters(requestInfo, query);
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    public Task<JsonElement> GetDrugAmountsAsync(CancellationToken cancellationToken)
+    public Task<JsonElement> GetDrugAmountsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.DrugAmount.ToGetRequestInformation();
+        AddQueryParameters(requestInfo, query);
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    public Task<JsonElement> GetDrugInstructionsAsync(CancellationToken cancellationToken)
+    public Task<JsonElement> GetDrugInstructionsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.DrugInstruction.ToGetRequestInformation();
+        AddQueryParameters(requestInfo, query);
         return SendAsync(requestInfo, cancellationToken);
     }
 
@@ -71,11 +71,7 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         => GetAsync(TaminGatewayRoute.Price, query, cancellationToken);
 
     public Task<JsonElement> SendPrescriptionAsync<TPayload>(TPayload payload, CancellationToken cancellationToken)
-    {
-        var request = TaminRequestMapper.ToSendEprescRequest(payload);
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.ToPostRequestInformation(request);
-        return SendAsync(requestInfo, cancellationToken);
-    }
+        => PostAsync(TaminGatewayRoute.PrescriptionDetail, payload, cancellationToken);
 
 
     public Task<JsonElement> GetPrescriptionAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
@@ -204,6 +200,31 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         requestInfo.Headers.TryAdd("Request-Id", Guid.NewGuid().ToString());
         if (!string.IsNullOrWhiteSpace(_clientId))
             requestInfo.Headers.TryAdd("Client-Id", _clientId);
+        if (!string.IsNullOrWhiteSpace(_oauthToken))
+            requestInfo.Headers.TryAdd("Authorization", $"Bearer {_oauthToken}");
+    }
+
+    private static void AddQueryParameters(RequestInformation requestInfo, IReadOnlyDictionary<string, string?>? query, params string[] excludedKeys)
+    {
+        if (query is null || query.Count == 0)
+            return;
+
+        var excluded = excludedKeys.Length == 0
+            ? null
+            : new HashSet<string>(excludedKeys, StringComparer.OrdinalIgnoreCase);
+
+        var queryString = string.Join("&", query
+            .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key)
+                && !string.IsNullOrWhiteSpace(kvp.Value)
+                && excluded?.Contains(kvp.Key) != true)
+            .Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value!)}"));
+
+        if (string.IsNullOrEmpty(queryString))
+            return;
+
+        var uri = requestInfo.URI;
+        var separator = uri.Query.Length == 0 ? "?" : "&";
+        requestInfo.URI = new Uri($"{uri}{separator}{queryString}");
     }
 
     private Uri BuildUri(string endpoint, IReadOnlyDictionary<string, string?>? query)

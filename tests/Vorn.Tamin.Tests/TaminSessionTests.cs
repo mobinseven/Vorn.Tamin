@@ -88,7 +88,31 @@ public class TaminSessionTests
         await session.Service.GetAllServicesAsync();
 
         Assert.NotNull(captured);
-        Assert.True(captured!.Headers.TryGetValues("Client-Id", out _));
+        Assert.True(captured!.Headers.TryGetValues("Client-Id", out var values));
+        Assert.Equal("my-client", values.Single());
+    }
+
+    [Fact]
+    public async Task Session_DoesNotMutateDefaultRequestHeaders()
+    {
+        HttpRequestMessage? captured = null;
+        var handler = new StubHandler((request, _) =>
+        {
+            captured = request;
+            return Task.FromResult(OkResponse());
+        });
+        var httpClient = new HttpClient(handler);
+
+        var session = new TaminSession(httpClient, "token", clientId: "my-client");
+        await session.Service.GetAllServicesAsync();
+
+        Assert.Null(httpClient.DefaultRequestHeaders.Authorization);
+        Assert.False(httpClient.DefaultRequestHeaders.Contains("Client-Id"));
+        Assert.NotNull(captured);
+        Assert.Equal("Bearer", captured!.Headers.Authorization?.Scheme);
+        Assert.Equal("token", captured.Headers.Authorization?.Parameter);
+        Assert.True(captured.Headers.TryGetValues("Client-Id", out var values));
+        Assert.Equal("my-client", values.Single());
     }
 
     [Fact]
@@ -336,6 +360,57 @@ public class TaminSessionTests
         Assert.NotNull(captured);
         var uri = captured!.RequestUri!.ToString();
         Assert.Contains("interface/epresc/SendEpresc/v2/drug-amount", uri);
+        Assert.Contains("search_text=aspirin", uri);
+        Assert.Contains("active_only=true", uri);
+    }
+
+    [Fact]
+    public async Task ServiceClient_GetServiceList_BuildsQueryCorrectly()
+    {
+        HttpRequestMessage? captured = null;
+        var handler = new StubHandler((request, _) =>
+        {
+            captured = request;
+            return Task.FromResult(OkResponse());
+        });
+
+        var session = new TaminSession(new HttpClient(handler), "token");
+        await session.Service.GetServiceListAsync(
+            serviceType: "1",
+            serviceGroup: "lab",
+            searchText: "cbc",
+            page: 2,
+            pageSize: 25,
+            activeOnly: true);
+
+        Assert.NotNull(captured);
+        var uri = captured!.RequestUri!.ToString();
+        Assert.Contains("interface/epresc/SendEpresc/v2/services", uri);
+        Assert.Contains("service-type=1", uri);
+        Assert.Contains("service_group=lab", uri);
+        Assert.Contains("search_text=cbc", uri);
+        Assert.Contains("page=2", uri);
+        Assert.Contains("page_size=25", uri);
+        Assert.Contains("active_only=true", uri);
+    }
+
+    [Fact]
+    public async Task ServiceClient_LegacyReferenceData_ForwardsQueryParameters()
+    {
+        HttpRequestMessage? captured = null;
+        var handler = new StubHandler((request, _) =>
+        {
+            captured = request;
+            return Task.FromResult(OkResponse());
+        });
+
+        var session = new TaminSession(new HttpClient(handler), "token");
+        await session.Service.GetDrugInstructionAsync(new Dictionary<string, string?> { ["search_text"] = "daily" });
+
+        Assert.NotNull(captured);
+        var uri = captured!.RequestUri!.ToString();
+        Assert.Contains("interface/epresc/SendEpresc/v2/drug-instruction", uri);
+        Assert.Contains("search_text=daily", uri);
     }
 
     [Fact]
