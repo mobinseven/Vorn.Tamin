@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Vorn.Tamin.Kiota;
 
 namespace Vorn.Tamin;
 
@@ -7,34 +8,34 @@ namespace Vorn.Tamin;
 /// </summary>
 public sealed class ServiceClient
 {
-    private readonly TaminEndpointClient _endpointClient;
+    private readonly ITaminKiotaGateway _gateway;
 
-    internal ServiceClient(TaminApiClient apiClient)
+    internal ServiceClient(ITaminKiotaGateway gateway)
     {
-        _endpointClient = new TaminEndpointClient(apiClient);
+        _gateway = gateway ?? throw new ArgumentNullException(nameof(gateway));
     }
 
     // ── Legacy / untyped helpers (backward-compatible) ───────────────────────
 
     /// <summary>Fetches the raw service list from <c>ws-services</c>.</summary>
     public Task<JsonElement> GetAllServicesAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _endpointClient.GetAsync("ws-services", query, cancellationToken);
+        => _gateway.GetAsync("ws-services", query, cancellationToken);
 
     /// <summary>Fetches available prescription types from <c>ws-prescription-type</c>.</summary>
     public Task<JsonElement> GetPrescriptionTypeAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _endpointClient.GetAsync("ws-prescription-type", query, cancellationToken);
+        => _gateway.GetAsync("ws-prescription-type", query, cancellationToken);
 
     /// <summary>Fetches the paraclinic tariff list from <c>ws-par-taref</c>.</summary>
     public Task<JsonElement> GetParaclinicTarefAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _endpointClient.GetAsync("ws-par-taref", query, cancellationToken);
+        => _gateway.GetAsync("ws-par-taref", query, cancellationToken);
 
     /// <summary>Fetches drug amounts / reference data from <c>ws-drug-amount</c>.</summary>
     public Task<JsonElement> GetDrugAmountAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _endpointClient.GetAsync("ws-drug-amount", query, cancellationToken);
+        => _gateway.GetAsync("ws-drug-amount", query, cancellationToken);
 
     /// <summary>Fetches drug administration instructions from <c>ws-drug-instruction</c>.</summary>
     public Task<JsonElement> GetDrugInstructionAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _endpointClient.GetAsync("ws-drug-instruction", query, cancellationToken);
+        => _gateway.GetAsync("ws-drug-instruction", query, cancellationToken);
 
     // ── Typed reference-data methods (Section 11) ────────────────────────────
 
@@ -56,13 +57,13 @@ public sealed class ServiceClient
         bool? activeOnly = null,
         CancellationToken cancellationToken = default)
     {
-        var query = TaminEndpointClient.BuildQuery(
+        var query = TaminQueryParameters.Build(
             ("search_text", searchText),
             ("drug_code", drugCode),
             ("page", page?.ToString()),
             ("page_size", pageSize?.ToString()),
             ("active_only", activeOnly?.ToString().ToLowerInvariant()));
-        return _endpointClient.GetAsync("ws-drug-amount", query, cancellationToken);
+        return _gateway.GetAsync("ws-drug-amount", query, cancellationToken);
     }
 
     /// <summary>
@@ -85,14 +86,14 @@ public sealed class ServiceClient
         bool? activeOnly = null,
         CancellationToken cancellationToken = default)
     {
-        var query = TaminEndpointClient.BuildQuery(
+        var query = TaminQueryParameters.Build(
             ("service_type", serviceType),
             ("service_group", serviceGroup),
             ("search_text", searchText),
             ("page", page?.ToString()),
             ("page_size", pageSize?.ToString()),
             ("active_only", activeOnly?.ToString().ToLowerInvariant()));
-        return _endpointClient.GetAsync("ws-services", query, cancellationToken);
+        return _gateway.GetAsync("ws-services", query, cancellationToken);
     }
 
     /// <summary>
@@ -113,13 +114,13 @@ public sealed class ServiceClient
         string? date = null,
         CancellationToken cancellationToken = default)
     {
-        var query = TaminEndpointClient.BuildQuery(
+        var query = TaminQueryParameters.Build(
             ("patient_national_id", patientNationalId),
             ("item_code", itemCode),
             ("item_type", itemType),
             ("doctor_id", doctorId),
             ("date", date));
-        return _endpointClient.GetAsync("ws-allowed-count", query, cancellationToken);
+        return _gateway.GetAsync("ws-allowed-count", query, cancellationToken);
     }
 
     /// <summary>
@@ -140,13 +141,13 @@ public sealed class ServiceClient
         string? providerId = null,
         CancellationToken cancellationToken = default)
     {
-        var query = TaminEndpointClient.BuildQuery(
+        var query = TaminQueryParameters.Build(
             ("item_code", itemCode),
             ("item_type", itemType),
             ("quantity", quantity.ToString()),
             ("patient_national_id", patientNationalId),
             ("provider_id", providerId));
-        return _endpointClient.GetAsync("ws-price", query, cancellationToken);
+        return _gateway.GetAsync("ws-price", query, cancellationToken);
     }
 
 }

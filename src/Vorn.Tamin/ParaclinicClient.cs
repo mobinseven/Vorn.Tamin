@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Vorn.Tamin.Kiota;
 
 namespace Vorn.Tamin;
 
@@ -7,54 +8,54 @@ namespace Vorn.Tamin;
 /// </summary>
 public sealed class ParaclinicClient
 {
-    private readonly TaminEndpointClient _endpointClient;
+    private readonly ITaminKiotaGateway _gateway;
 
-    internal ParaclinicClient(TaminApiClient apiClient)
+    internal ParaclinicClient(ITaminKiotaGateway gateway)
     {
-        _endpointClient = new TaminEndpointClient(apiClient, "paraclinic");
+        _gateway = gateway ?? throw new ArgumentNullException(nameof(gateway));
     }
 
     /// <summary>Checks patient treatment entitlement (Section 13.2).</summary>
     public Task<JsonElement> CheckEntitlementAsync(CheckEntitlementRequest request, CancellationToken cancellationToken = default)
-        => _endpointClient.PostAsync("check-entitlement", request, cancellationToken);
+        => _gateway.PostAsync("paraclinic/check-entitlement", request, cancellationToken);
 
     /// <summary>Registers a paper prescription, when required by provider type and workflow (Section 13.3).</summary>
     public Task<JsonElement> RegisterPaperPrescriptionAsync(RegisterPaperPrescriptionRequest request, CancellationToken cancellationToken = default)
-        => _endpointClient.PostAsync("register-paper", request, cancellationToken);
+        => _gateway.PostAsync("paraclinic/register-paper", request, cancellationToken);
 
     /// <summary>Fetches paraclinic prescriptions waiting for service delivery (Section 13.4).</summary>
     public Task<JsonElement> GetPrescriptionListAsync(IReadOnlyDictionary<string, string?>? query = null, CancellationToken cancellationToken = default)
-        => _endpointClient.GetAsync("prescription-list", query, cancellationToken);
+        => _gateway.GetAsync("paraclinic/prescription-list", query, cancellationToken);
 
     /// <summary>Fetches item-level service details for a prescription (Section 13.5).</summary>
     public Task<JsonElement> GetPrescriptionDetailsAsync(string prescriptionId, string trackingCode, CancellationToken cancellationToken = default)
     {
-        var query = TaminEndpointClient.BuildQuery(("prescription_id", prescriptionId), ("tracking_code", trackingCode));
-        return _endpointClient.GetAsync("prescription-details", query, cancellationToken);
+        var query = TaminQueryParameters.Build(("prescription_id", prescriptionId), ("tracking_code", trackingCode));
+        return _gateway.GetAsync("paraclinic/prescription-details", query, cancellationToken);
     }
 
     /// <summary>Registers delivery of a service from a paper prescription (Section 13.6).</summary>
     public Task<JsonElement> ProvidePaperPrescriptionServiceAsync(ProvideServiceRequest request, CancellationToken cancellationToken = default)
-        => _endpointClient.PostAsync("provide-paper", request, cancellationToken);
+        => _gateway.PostAsync("paraclinic/provide-paper", request, cancellationToken);
 
     /// <summary>Registers delivery of an electronic paraclinic service (Section 13.7).</summary>
     public Task<JsonElement> ProvideElectronicPrescriptionServiceAsync(ProvideServiceRequest request, CancellationToken cancellationToken = default)
-        => _endpointClient.PostAsync("provide-electronic", request, cancellationToken);
+        => _gateway.PostAsync("paraclinic/provide-electronic", request, cancellationToken);
 
     /// <summary>
     /// Registers delivery where warnings exist and continuation is allowed (Section 13.8).
     /// </summary>
     public Task<JsonElement> ProvideServiceWithWarningAsync(ProvideServiceRequest request, CancellationToken cancellationToken = default)
-        => _endpointClient.PostAsync("provide-with-warning", request, cancellationToken);
+        => _gateway.PostAsync("paraclinic/provide-with-warning", request, cancellationToken);
 
     /// <summary>Shows tariff, insurance share, and patient share for a service (Section 13.9).</summary>
     public Task<JsonElement> GetPriceAsync(string prescriptionId, string trackingCode, CancellationToken cancellationToken = default)
     {
-        var query = TaminEndpointClient.BuildQuery(("prescription_id", prescriptionId), ("tracking_code", trackingCode));
-        return _endpointClient.GetAsync("price", query, cancellationToken);
+        var query = TaminQueryParameters.Build(("prescription_id", prescriptionId), ("tracking_code", trackingCode));
+        return _gateway.GetAsync("paraclinic/price", query, cancellationToken);
     }
 
     /// <summary>Deletes or cancels a service delivery record where allowed (Section 13.10).</summary>
     public Task<JsonElement> DeleteServiceDeliveryRecordAsync(DeletePrescriptionRequest request, CancellationToken cancellationToken = default)
-        => _endpointClient.PostAsync("delete-delivery", request, cancellationToken);
+        => _gateway.PostAsync("paraclinic/delete-delivery", request, cancellationToken);
 }

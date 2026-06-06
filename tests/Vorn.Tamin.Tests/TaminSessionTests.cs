@@ -32,7 +32,7 @@ public class TaminSessionTests
         var result = await session.Service.GetAllServicesAsync(new Dictionary<string, string?> { ["serviceType"] = "17" });
 
         Assert.NotNull(captured);
-        Assert.Equal("https://ep-test.tamin.ir/api/ws-services?serviceType=17", captured!.RequestUri!.ToString());
+        Assert.Equal("https://soa.tamin.ir/ws-services?serviceType=17", captured!.RequestUri!.ToString());
         Assert.Equal(JsonValueKind.Array, result.ValueKind);
         Assert.Equal(1, result[0].GetProperty("id").GetInt32());
     }
@@ -55,7 +55,7 @@ public class TaminSessionTests
 
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Equal("https://ep-test.tamin.ir/api/interface/epresc/SendEpresc", captured.RequestUri!.ToString());
+        Assert.Equal("https://soa.tamin.ir/interface/epresc/SendEpresc", captured.RequestUri!.ToString());
         Assert.True(result[0].GetProperty("ok").GetBoolean());
     }
 
