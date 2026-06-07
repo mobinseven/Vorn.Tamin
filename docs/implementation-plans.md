@@ -1,8 +1,8 @@
 # Practical implementation plans
 
-This document converts `docs/guidance.md` into implementation workstreams. The plans are intentionally combined so that each remaining plan can be run at the same time as the others with a distinct owner and without overlapping responsibilities.
+This document converts `docs/guidance.md` into implementation workstreams.
 
-## Parallel plan map
+## Plan map
 
 | Plan | Owner responsibility | Primary outputs | Must not own |
 |---|---|---|---|
@@ -13,7 +13,7 @@ This document converts `docs/guidance.md` into implementation workstreams. The p
 
 ## Shared interface agreement
 
-Before parallel work starts, the owners must agree on these small contracts and then avoid editing each other's internals:
+Before work starts, the implementor must agree:
 
 1. Route consumers ask for a route by `environment` and `operation`.
 2. Workflow clients pass provider-bound payloads through serializer and validator abstractions before transport.
