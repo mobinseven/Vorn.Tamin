@@ -35,7 +35,9 @@ A .NET 10 client SDK for selected EP.Tamin electronic prescription API endpoints
 |---|---|---|
 | Session construction with a pre-obtained token | **Implemented** | `new TaminSession(...)` |
 | Runtime login | **Implemented** | `TaminSession.CreateAsync(...)` |
-| Token refresh | **Implemented** | `TaminSession.RefreshTokenAsync(...)` |
+| Token refresh | **Implemented** | `TaminSession.RefreshTokenAsync(...)`, `AuthClient.RefreshTokenV2Async(...)` |
+| PKCE authorization URL and token exchange | **Implemented** | `AuthClient`, `PkceChallenge` |
+| Operation-level environment routes | **Implemented** | `TaminEnvironmentRoutes`, `TaminOperation` |
 | Token validation | **Implemented** | `TaminSession.ValidateTokenAsync(...)` |
 | Production / sandbox endpoint selection | **Implemented** | `TaminEndpoint.Production`, `TaminEndpoint.Sandbox` |
 | Dependency injection registration | **Implemented** | `AddTaminClient(...)`, `TaminOptions` |
@@ -215,6 +217,42 @@ var session = await TaminSession.CreateAsync(
     providerIdentifier: "provider-id");
 ```
 
+### PKCE authorization URL and token exchange
+
+`AuthClient` owns the practical OAuth/PKCE boundary. The caller must generate and persist both the PKCE verifier and the `state` value before redirecting the user; the SDK intentionally does not store either value. Token and refresh calls are sent as `application/x-www-form-urlencoded`, matching the provider token endpoints.
+
+```csharp
+using System.Security.Cryptography;
+
+var auth = new AuthClient(new HttpClient(), TaminEndpoint.Sandbox);
+var pkce = PkceChallenge.Create();
+var state = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
+
+Uri authorizeUrl = auth.CreateAuthorizationUrl(
+    clientId: "YOUR_CLIENT_ID",
+    redirectUri: new Uri("https://your-app.example/callback"),
+    pkce: pkce,
+    state: state);
+
+// After callback: first verify the returned state against your stored state, then exchange the code.
+TokenResult token = await auth.ExchangeCodeAsync(
+    clientId: "YOUR_CLIENT_ID",
+    code: "AUTHORIZATION_CODE",
+    redirectUri: new Uri("https://your-app.example/callback"),
+    pkce: pkce);
+```
+
+### Operation-level environment routing
+
+Production and sandbox are not modeled as a single global `baseUrl` replacement. `TaminEnvironmentRoutes` resolves routes by `TaminEndpoint` and `TaminOperation` because provider routes differ by operation, including path spelling and parameter order. For example, the service-list route resolves to `https://soa.tamin.ir/interface/epresc/SendEpresc/v2/services` in production and `https://ep-test.tamin.ir/api/v2/ws-services` in sandbox. Unsupported environment/operation pairs throw `TaminRouteNotDefinedException` instead of falling back to an accidental URL.
+
+```csharp
+var routes = new TaminEnvironmentRoutes();
+Uri sandboxServices = routes
+    .Resolve(TaminEndpoint.Sandbox, TaminOperation.GetServices)
+    .Uri;
+```
+
 ### Refresh a token
 
 ```csharp
@@ -223,6 +261,22 @@ TokenResult refreshed = await session.RefreshTokenAsync(
     clientId: "YOUR_CLIENT_ID");
 
 string? newToken = refreshed.AccessToken ?? refreshed.Data;
+```
+
+For the provider v2 refresh endpoint, use the PKCE auth client so the refresh request is sent as form data and includes the required `audience` field:
+
+```csharp
+TokenResult refreshedV2 = await auth.RefreshTokenV2Async(
+    clientId: "YOUR_CLIENT_ID",
+    refreshToken: "REFRESH_TOKEN",
+    audience: "NATIONAL_CODE_OR_AUDIENCE");
+```
+
+### Sign out
+
+```csharp
+Uri signOutUrl = auth.CreateSignOutUrl(new Uri("https://your-app.example/signed-out"));
+await auth.SignOutAsync(new Uri("https://your-app.example/signed-out"));
 ```
 
 ### Validate a token
