@@ -58,7 +58,7 @@ Create the environment and authentication foundation that every workflow can use
 - Routes: `TaminEnvironmentRoutes`.
 - Operation names: `TaminOperation`.
 - PKCE verifier/challenge rules: `PkceChallenge`.
-- Token storage: outside this plan unless an explicit token-store port already exists.
+- Token storage and PKCE state storage: outside this plan unless an explicit store port already exists.
 
 ### Command/query split
 
