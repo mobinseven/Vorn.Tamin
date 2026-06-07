@@ -110,6 +110,19 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         return SendAsync(requestInfo, cancellationToken);
     }
 
+    public Task<JsonElement> GetEligibilityAsync(string requestBy, string siamId, string doctorId, string patientNationalCode, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(siamId))
+            throw new ArgumentException("SIAM ID is required.", nameof(siamId));
+        if (string.IsNullOrWhiteSpace(doctorId))
+            throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
+        if (string.IsNullOrWhiteSpace(patientNationalCode))
+            throw new ArgumentException("Patient national code is required.", nameof(patientNationalCode));
+
+        var requestInfo = _client.Interface.Epresc.Patient.V2.DeserveInfo[siamId][doctorId][patientNationalCode].ToGetRequestInformation();
+        return SendAsync(requestInfo, cancellationToken);
+    }
+
     private async Task<JsonElement> SendAsync(RequestInformation requestInfo, CancellationToken cancellationToken)
     {
         AddCommonHeaders(requestInfo);

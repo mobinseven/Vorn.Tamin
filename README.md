@@ -15,17 +15,18 @@ A .NET 10 client SDK for selected EP.Tamin electronic prescription API endpoints
 2. [Installation](#installation)
 3. [Prerequisites](#prerequisites)
 4. [Quick-start](#quick-start)
-5. [Dependency injection setup](#dependency-injection-setup)
-6. [Authentication](#authentication)
-7. [Reference data](#reference-data)
-8. [Prescription operations](#prescription-operations)
-9. [Parsing API responses](#parsing-api-responses)
-10. [Error handling](#error-handling)
-11. [Artifact inventory](#artifact-inventory)
-12. [Limitations & compatibility notes](#limitations--compatibility-notes)
-13. [Contributing](#contributing)
-14. [Changelog](#changelog)
-15. [License](#license)
+5. [Role-aware workflows](#role-aware-workflows)
+6. [Dependency injection setup](#dependency-injection-setup)
+7. [Authentication](#authentication)
+8. [Reference data](#reference-data)
+9. [Prescription operations](#prescription-operations)
+10. [Parsing API responses](#parsing-api-responses)
+11. [Error handling](#error-handling)
+12. [Artifact inventory](#artifact-inventory)
+13. [Limitations & compatibility notes](#limitations--compatibility-notes)
+14. [Contributing](#contributing)
+15. [Changelog](#changelog)
+16. [License](#license)
 
 ---
 
@@ -41,7 +42,8 @@ A .NET 10 client SDK for selected EP.Tamin electronic prescription API endpoints
 | Token validation | **Implemented** | `TaminSession.ValidateTokenAsync(...)` |
 | Production / sandbox endpoint selection | **Implemented** | `TaminEndpoint.Production`, `TaminEndpoint.Sandbox` |
 | Dependency injection registration | **Implemented** | `AddTaminClient(...)`, `TaminOptions` |
-| Reference data: services | **Implemented** | `session.Service.GetServiceListAsync(...)`, `GetAllServicesAsync(...)` |
+| Role-aware facade | **Implemented** | `new TaminClient(session)`, `session.Doctor`, `session.Secretary`, `session.Nurse` |
+| Reference data: services | **Implemented** | `session.ReferenceData.GetServiceListAsync(...)`, `session.Service.GetServiceListAsync(...)`, `GetAllServicesAsync(...)` |
 | Reference data: prescription types | **Implemented** | `session.Service.GetPrescriptionTypeAsync(...)` |
 | Reference data: paraclinic tariffs | **Implemented** | `session.Service.GetParaclinicTarefAsync(...)` |
 | Reference data: drug amounts/list | **Implemented** | `session.Service.GetDrugListAsync(...)`, `GetDrugAmountAsync(...)` |
@@ -49,8 +51,12 @@ A .NET 10 client SDK for selected EP.Tamin electronic prescription API endpoints
 | Prescription writing | **Implemented** | `RegisterVisitPrescriptionAsync`, `RegisterDrugPrescriptionAsync`, `RegisterParaclinicPrescriptionAsync`, `RegisterMedicalServicePrescriptionAsync`, `RegisterReferralPrescriptionAsync`, `RegisterPhysiotherapyPrescriptionAsync` |
 | Prescription lookup | **Implemented** | `session.Prescription.GetRegisteredPrescriptionAsync(...)` |
 | Prescription edit/delete | **Implemented** | `EditElectronicPrescriptionAsync(...)`, `DeleteElectronicPrescriptionAsync(...)` |
-| Prescription warning check | **Implemented** | `CheckPrescriptionWarningAsync(...)` |
-| Identity verification and eligibility | **Not implemented** | `session.Identity` exists only as an empty placeholder. |
+| Prescription warning check | **Implemented** | `session.Dentistry.CheckRulesAsync(...)`, `CheckPrescriptionWarningAsync(...)` |
+| Referral workflow | **Partially implemented** | `session.Doctor.Referrals.RegisterPrescriptionAsync(...)`; feedback/count/detail operations fail with `TaminWorkflowNotImplementedException`. |
+| Eligibility lookup | **Implemented** | `session.Secretary.Eligibility.LookupPrivatePracticeAsync(...)` |
+| Nurse workflow | **Explicitly not implemented** | `session.Nurse` methods fail with `TaminWorkflowNotImplementedException`. |
+| Hospitalization workflow | **Explicitly not implemented** | `session.Secretary.Hospitalization` methods fail with `TaminWorkflowNotImplementedException`. |
+| Identity verification | **Not implemented** | `session.Identity` exists only as an empty placeholder. |
 | Pharmacy dispensing | **Not implemented** | `session.Pharmacy` exists only as an empty placeholder. |
 | Paraclinic service delivery | **Not implemented** | `session.Paraclinic` exists only as an empty placeholder. |
 | Allowed-count and pricing helpers | **Not implemented** | No public methods are exposed in this version. |
@@ -135,7 +141,96 @@ JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(
     });
 ```
 
-> **Not implemented:** identity verification, pharmacy dispensing, and paraclinic delivery are not available in this version. Do not use older examples that call methods such as `session.Identity.VerifyIdentityAsync(...)`, `session.Pharmacy.DispenseElectronicPrescriptionAsync(...)`, or `session.Paraclinic.ProvideElectronicPrescriptionServiceAsync(...)`.
+> **Not implemented:** identity verification, pharmacy dispensing, paraclinic delivery, nurse action submission, and hospitalization submission are not available in this version. Unavailable role workflows fail with `TaminWorkflowNotImplementedException` instead of appearing usable.
+
+---
+
+## Role-aware workflows
+
+`TaminClient` is a role-aware facade over `TaminSession`. Existing session clients remain available for compatibility, while new code can group operations by provider role.
+
+```csharp
+var tamin = new TaminClient(session);
+
+// Doctor workflow: medication prescription.
+JsonElement medication = await tamin.Doctor.Prescriptions.RegisterDrugPrescriptionAsync(
+    new RegisterDrugPrescriptionRequest
+    {
+        DoctorId = "doctor-id",
+        PatientNationalId = "1234567890",
+        VisitDate = "14030601",
+        DrugItems = [new DrugItem { DrugCode = "DR001", Quantity = 1 }]
+    });
+
+// Doctor workflow: paraclinical laboratory prescription.
+JsonElement laboratory = await tamin.Doctor.Prescriptions.RegisterParaclinicPrescriptionAsync(
+    new RegisterParaclinicPrescriptionRequest
+    {
+        DoctorId = "doctor-id",
+        PatientNationalId = "1234567890",
+        VisitDate = "14030601",
+        ServiceItems = [new ServiceItem { ServiceCode = "LAB001", ServiceGroup = "laboratory", Quantity = 1 }]
+    });
+
+// Doctor workflow: referral prescription.
+JsonElement referral = await tamin.Doctor.Referrals.RegisterPrescriptionAsync(
+    new RegisterReferralPrescriptionRequest
+    {
+        DoctorId = "doctor-id",
+        PatientNationalId = "1234567890",
+        TargetSpecialty = "cardiology",
+        TargetProviderType = "specialist",
+        Reason = "consultation",
+        VisitDate = "14030601"
+    });
+
+// Doctor workflow: dental rule check.
+JsonElement dentalWarnings = await tamin.Doctor.Dentistry.CheckRulesAsync(
+    new CheckWarningRequest
+    {
+        DoctorId = "doctor-id",
+        PatientNationalId = "1234567890",
+        PrescriptionItems = [new { serviceCode = "DENT001", toothId = "11" }]
+    });
+
+// Secretary workflow: eligibility lookup.
+JsonElement eligibility = await tamin.Secretary.Eligibility.LookupPrivatePracticeAsync(
+    new EligibilityLookupRequest
+    {
+        SiamId = "clinic-siam-id",
+        DoctorId = "doctor-id",
+        DoctorNationalCode = "0012345678",
+        PatientNationalCode = "1234567890"
+    });
+
+// Nurse and hospitalization workflows are intentionally explicit until their generated adapters are wired.
+try
+{
+    await tamin.Nurse.GetTodoListAsync(new NurseTodoListRequest
+    {
+        SiamId = "clinic-siam-id",
+        PatientNationalCode = "1234567890"
+    });
+}
+catch (TaminWorkflowNotImplementedException ex)
+{
+    Console.WriteLine(ex.WorkflowName);
+}
+
+try
+{
+    await tamin.Secretary.Hospitalization.GetSecretaryListAsync(new HospitalizationSecretaryListRequest
+    {
+        SiamId = "clinic-siam-id",
+        SecretaryNationalCode = "0012345678"
+    });
+}
+catch (TaminWorkflowNotImplementedException ex)
+{
+    Console.WriteLine(ex.WorkflowName);
+}
+```
+
 
 ---
 
@@ -520,12 +615,17 @@ catch (ServerError)
 
 | Artifact | Status | Description |
 |---|---|---|
+| `TaminClient` | Implemented | Role-aware facade over `TaminSession`. |
 | `TaminSession` | Implemented | Main entry point. Creates domain clients and selects production or sandbox generated gateways. |
 | `TaminSession.CreateAsync` | Implemented | Creates a session and optionally performs login. |
 | `TaminSession.RefreshTokenAsync` | Implemented | Refreshes a bearer token. |
 | `TaminSession.ValidateTokenAsync` | Implemented | Validates an access token. |
-| `ServiceClient` (`session.Service`) | Implemented | Reference data and service lookups. |
+| `ReferenceDataClient` (`session.ReferenceData`) | Implemented | Reference-data queries. |
+| `ServiceClient` (`session.Service`) | Implemented | Backward-compatible reference-data and service lookups. |
 | `PrescriptionClient` (`session.Prescription`) | Implemented | Prescription registration, lookup, mutation, and warning checks. |
+| `DoctorClient` (`session.Doctor`) | Implemented | Doctor-facing prescription, dental, referral, and reference-data workflows. |
+| `SecretaryClient` (`session.Secretary`) | Implemented | Secretary-facing eligibility and hospitalization workflow grouping. |
+| `NurseClient` (`session.Nurse`) | Explicitly not implemented | Nurse methods fail with `TaminWorkflowNotImplementedException` until adapters are wired. |
 | `IdentityClient` (`session.Identity`) | Not implemented | Placeholder only; no public operation methods. |
 | `PharmacyClient` (`session.Pharmacy`) | Not implemented | Placeholder only; no public operation methods. |
 | `ParaclinicClient` (`session.Paraclinic`) | Not implemented | Placeholder only; no public operation methods. |
@@ -550,6 +650,11 @@ catch (ServerError)
 | `EditPrescriptionRequest` | Implemented | Prescription mutation |
 | `DeletePrescriptionRequest` | Implemented | Prescription mutation |
 | `CheckWarningRequest` | Implemented | Warning services |
+| `EligibilityLookupRequest` | Implemented | Eligibility lookup |
+| `NurseTodoListRequest` | Explicitly not implemented | Nurse workflow request shape |
+| `NurseActionWorkflowRequest` | Explicitly not implemented | Nurse workflow request shape |
+| `HospitalizationCreateRequest` | Explicitly not implemented | Hospitalization workflow request shape |
+| `HospitalizationSecretaryListRequest` | Explicitly not implemented | Hospitalization workflow request shape |
 | `PrescriptionType` | Implemented | Prescription writing |
 | Identity, entitlement, pharmacy, paraclinic dispensing, pricing, and typed reference result DTOs | Not implemented | Use `JsonElement` or wait for generated endpoint support. |
 
@@ -562,7 +667,7 @@ catch (ServerError)
 - **Manual `HttpClient` ownership:** when constructing `TaminSession` directly, supply and manage your own `HttpClient` lifetime.
 - **`JsonElement` return type:** client methods return raw unwrapped payloads to stay compatible with EP.Tamin response changes.
 - **No automatic token refresh:** monitor token expiry and call `RefreshTokenAsync` from your application policy.
-- **Not implemented placeholders:** `IdentityClient`, `PharmacyClient`, and `ParaclinicClient` are intentionally empty until generated Kiota builders exist for those endpoint groups.
+- **Not implemented placeholders:** `IdentityClient`, `PharmacyClient`, and `ParaclinicClient` are intentionally empty until generated Kiota builders exist for those endpoint groups. Nurse, referral feedback/count/detail, and hospitalization methods throw `TaminWorkflowNotImplementedException` so unavailable role workflows are explicit.
 
 ---
 

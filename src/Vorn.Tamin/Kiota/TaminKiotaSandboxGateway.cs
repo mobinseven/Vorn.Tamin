@@ -121,6 +121,17 @@ internal sealed class TaminKiotaSandboxGateway : ITaminKiotaGateway
         return SendAsync(requestInfo, cancellationToken);
     }
 
+    public Task<JsonElement> GetEligibilityAsync(string requestBy, string siamId, string doctorId, string patientNationalCode, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(requestBy, nameof(requestBy));
+        ArgumentException.ThrowIfNullOrWhiteSpace(siamId, nameof(siamId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(doctorId, nameof(doctorId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(patientNationalCode, nameof(patientNationalCode));
+
+        var requestInfo = _client.Api.V2.Patients.DeserveInfo[requestBy][siamId][doctorId][patientNationalCode].ToGetRequestInformation();
+        return SendAsync(requestInfo, cancellationToken);
+    }
+
     private static void ReplaceBody(RequestInformation requestInfo, Stream content)
     {
         requestInfo.Content = content;
