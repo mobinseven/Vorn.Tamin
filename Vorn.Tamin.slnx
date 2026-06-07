@@ -3,8 +3,9 @@
     <File Path="Directory.Build.props" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/Vorn.Tamin/Vorn.Tamin.csproj" />
     <Project Path="src/Vorn.Tamin.Kiota/Vorn.Tamin.Kiota.csproj" Id="d5377239-d081-4865-937b-3cf9115e1fca" />
+    <Project Path="src/Vorn.Tamin/Vorn.Tamin.csproj" />
+    <Project Path="Vorn.Tamin.Kiota.Sandbox/Vorn.Tamin.Kiota.Sandbox.csproj" Id="5b780355-214e-4596-9b30-ea01dea3330c" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Vorn.Tamin.Tests/Vorn.Tamin.Tests.csproj" />
