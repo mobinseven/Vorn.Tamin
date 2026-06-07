@@ -175,3 +175,54 @@ public class TemporaryServiceError : Exception
         : base(message ?? "External service temporarily unavailable.", inner) { }
 }
 
+
+/// <summary>Thrown when no route exists for an environment and operation pair.</summary>
+public sealed class TaminRouteNotDefinedException : Exception
+{
+    /// <summary>Environment requested by the caller.</summary>
+    public TaminEndpoint Environment { get; }
+
+    /// <summary>Operation requested by the caller, when known.</summary>
+    public TaminOperation? Operation { get; }
+
+    /// <inheritdoc />
+    public TaminRouteNotDefinedException(TaminEndpoint environment, TaminOperation? operation)
+        : base(operation is null
+            ? $"No EP.Tamin route is defined for environment '{environment}'."
+            : $"No EP.Tamin route is defined for environment '{environment}' and operation '{operation}'.")
+    {
+        Environment = environment;
+        Operation = operation;
+    }
+}
+
+/// <summary>Thrown when an authentication request fails and operation context must be preserved.</summary>
+public sealed class TaminAuthRequestException : Exception
+{
+    /// <summary>Environment in which the auth request failed.</summary>
+    public TaminEndpoint Environment { get; }
+
+    /// <summary>Authentication operation that failed.</summary>
+    public TaminOperation Operation { get; }
+
+    /// <summary>HTTP status code returned by the provider, when available.</summary>
+    public HttpStatusCode? StatusCode { get; }
+
+    /// <summary>Raw provider response body, when available.</summary>
+    public string? Content { get; }
+
+    /// <inheritdoc />
+    public TaminAuthRequestException(
+        TaminEndpoint environment,
+        TaminOperation operation,
+        HttpStatusCode? statusCode,
+        string? content,
+        Exception? inner = null)
+        : base($"EP.Tamin authentication operation '{operation}' failed in environment '{environment}'.", inner)
+    {
+        Environment = environment;
+        Operation = operation;
+        StatusCode = statusCode;
+        Content = content;
+    }
+}
