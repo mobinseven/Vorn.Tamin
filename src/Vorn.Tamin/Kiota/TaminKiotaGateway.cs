@@ -11,7 +11,7 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
     private readonly HttpClient _httpClient;
     private readonly string? _clientId;
     private readonly string? _oauthToken;
-    private readonly TaminOpenAPIClient _client;
+    private readonly TaminKiotaClient _client;
 
     public TaminKiotaGateway(HttpClient httpClient, Uri baseUri, string? oauthToken, string? clientId, TaminKiotaClientFactory? clientFactory = null)
     {

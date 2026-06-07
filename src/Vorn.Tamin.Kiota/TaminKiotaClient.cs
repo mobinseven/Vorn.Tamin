@@ -18,7 +18,7 @@ namespace Vorn.Tamin.Kiota
     /// The main entry point of the SDK, exposes the configuration and the fluent API.
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
-    public partial class TaminOpenAPIClient : BaseRequestBuilder
+    public partial class TaminKiotaClient : BaseRequestBuilder
     {
         /// <summary>The auth property</summary>
         public global::Vorn.Tamin.Kiota.Auth.AuthRequestBuilder Auth
@@ -31,10 +31,10 @@ namespace Vorn.Tamin.Kiota
             get => new global::Vorn.Tamin.Kiota.Interface.InterfaceRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
-        /// Instantiates a new <see cref="global::Vorn.Tamin.Kiota.TaminOpenAPIClient"/> and sets the default values.
+        /// Instantiates a new <see cref="global::Vorn.Tamin.Kiota.TaminKiotaClient"/> and sets the default values.
         /// </summary>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public TaminOpenAPIClient(IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}", new Dictionary<string, object>())
+        public TaminKiotaClient(IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}", new Dictionary<string, object>())
         {
             ApiClientBuilder.RegisterDefaultSerializer<JsonSerializationWriterFactory>();
             ApiClientBuilder.RegisterDefaultSerializer<TextSerializationWriterFactory>();

@@ -9,7 +9,7 @@ internal sealed class TaminKiotaClientFactory
 {
     public const string DefaultBaseUrl = "https://soa.tamin.ir/";
 
-    public TaminOpenAPIClient Create(HttpClient httpClient, Uri baseUri)
+    public TaminKiotaClient Create(HttpClient httpClient, Uri baseUri)
     {
         if (httpClient is null)
             throw new ArgumentNullException(nameof(httpClient));
@@ -24,6 +24,6 @@ internal sealed class TaminKiotaClientFactory
             observabilityOptions: null);
         adapter.BaseUrl = baseUri.ToString().TrimEnd('/');
 
-        return new TaminOpenAPIClient(adapter);
+        return new TaminKiotaClient(adapter);
     }
 }
