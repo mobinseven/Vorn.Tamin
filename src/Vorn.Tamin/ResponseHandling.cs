@@ -33,7 +33,7 @@ internal static class ResponseHandling
             return doc.RootElement.Clone();
         }
 
-        var providerError = new TaminErrorNormalizer().Normalize(operationName, environment, statusCode, reasonPhrase, content);
+        var providerError = TaminErrorNormalizer.Shared.Normalize(operationName, environment, statusCode, reasonPhrase, content);
 
         if (status == 400) throw new BadRequest(statusCode, reasonPhrase, content, providerError);
         if (status == 401) throw new UnauthorizedAccess(statusCode, reasonPhrase, content, providerError);

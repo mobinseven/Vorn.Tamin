@@ -7,6 +7,18 @@ namespace Vorn.Tamin;
 /// <summary>Converts EP.Tamin provider failures into normalized SDK error metadata.</summary>
 public sealed class TaminErrorNormalizer
 {
+    /// <summary>Shared stateless instance of the normalizer.</summary>
+    public static readonly TaminErrorNormalizer Shared = new();
+
+    private static readonly Regex WhitespaceRegex = new("\\s+", RegexOptions.Compiled);
+
+    private static readonly string[] MessagePropertyNames =
+    [
+        "message", "error", "reason", "reasonText", "data", "detail", "title"
+    ];
+
+    private static readonly TaminErrorRule TemporaryProviderServiceRule = new("temporary-provider-service", TaminErrorCategory.Retryable, _ => true);
+
     private static readonly IReadOnlyList<TaminErrorRule> Rules =
     [
         new("invalid-prescription-service-pair", TaminErrorCategory.ClientPreventable, ContainsAll("presctype", "srvtype")),
@@ -35,11 +47,13 @@ public sealed class TaminErrorNormalizer
         string? providerBody)
     {
         var providerMessage = ExtractProviderMessage(providerBody) ?? reasonPhrase;
-        var searchable = NormalizeText(string.Join(' ', providerMessage, providerBody, reasonPhrase));
-        var rule = Rules.FirstOrDefault(candidate => candidate.IsMatch(searchable));
+        var searchable = NormalizeText(string.Join(' ', providerMessage, reasonPhrase));
+        var rule = Rules.FirstOrDefault(candidate =>
+            candidate.IsMatch(searchable) ||
+            (!string.IsNullOrWhiteSpace(providerBody) && candidate.IsMatch(providerBody)));
 
         if (rule is null && statusCode is >= HttpStatusCode.InternalServerError)
-            rule = new TaminErrorRule("temporary-provider-service", TaminErrorCategory.Retryable, _ => true);
+            rule = TemporaryProviderServiceRule;
 
         var category = rule?.Category ?? TaminErrorCategory.UnknownProviderError;
         var code = rule?.Code ?? "unknown-provider-error";
@@ -76,7 +90,7 @@ public sealed class TaminErrorNormalizer
         if (element.ValueKind != JsonValueKind.Object)
             return element.ValueKind == JsonValueKind.String ? element.GetString() : null;
 
-        foreach (var propertyName in new[] { "message", "error", "reason", "reasonText", "data", "detail", "title" })
+        foreach (var propertyName in MessagePropertyNames)
         {
             if (!element.TryGetProperty(propertyName, out var property))
                 continue;
@@ -93,7 +107,7 @@ public sealed class TaminErrorNormalizer
     }
 
     private static string NormalizeText(string value)
-        => Regex.Replace(value, "\\s+", " ").Trim().ToLowerInvariant();
+        => WhitespaceRegex.Replace(value, " ").Trim();
 
     private static Func<string, bool> ContainsAny(params string[] terms)
         => text => terms.Any(term => text.Contains(term, StringComparison.OrdinalIgnoreCase));
