@@ -1,6 +1,6 @@
 # Practical implementation plans
 
-This document converts `docs/guidance.md` into implementation workstreams.
+This document converts `docs/guidance.md` into implementation workstreams. The workstreams are now finalized; Plan D has been implemented with normalized provider-error metadata, support documentation, compatibility notes, and tests.
 
 ## Plan map
 
@@ -184,6 +184,10 @@ Workflow clients must not reach into internals of generated clients or concrete 
 
 Make provider failures and specification inconsistencies understandable, typed, and supportable.
 
+### Final status
+
+Implemented. Provider HTTP failures now expose `TaminProviderError` metadata through `ConnectionError.ProviderError`, known provider messages are categorized by `TaminErrorNormalizer`, README support guidance documents prevention/normalization/escalation, and tests cover catalog mapping plus documentation anchors.
+
 ### Scope
 
 1. Build a normalized error catalog for known provider failures: invalid `prescType`/`srvType` pairings, missing laboratory subgroup, null or negative quantities, doctor enrollment/activation problems, doctor national-code/mobile mismatch, empty payloads, missing or malformed patient mobile numbers, invalid patient national codes, unknown `srvCode`, missing or invalid prescription types, duplicates, date format errors, future dates, and invalid `drugAmntId` or `drugInstId`.
@@ -201,7 +205,10 @@ Make provider failures and specification inconsistencies understandable, typed, 
 | `TaminErrorNormalizer` | Adapter | Convert provider failures into typed SDK errors. |
 | `TaminErrorCategory` | Value definition | Classify normalized errors by remediation path. |
 | `TaminProviderError` | Data transfer shape | Preserve raw provider failure details and normalized context. |
+| `ConnectionError.ProviderError` | Data transfer boundary | Surface normalized provider failure details on existing HTTP exceptions without replacing HTTP status-specific exception types. |
 | README compatibility section | Documentation | Explain provider version, naming, typing, dental, and route inconsistencies. |
+| README support section | Documentation | Explain how consumers prevent, normalize, and escalate provider failures. |
+| `ErrorNormalizationTests` | Test | Verify error-catalog mappings, response-context preservation, and documentation anchors. |
 
 ### Dependency direction
 
@@ -213,7 +220,9 @@ The normalizer can know provider message patterns, but provider business validat
 
 - Error mapping: `TaminErrorNormalizer`.
 - Remediation categories: `TaminErrorCategory`.
+- Raw provider failure context: `TaminProviderError`, surfaced through `ConnectionError.ProviderError`.
 - Provider discrepancy documentation: README compatibility section.
+- Support workflow documentation: README error-handling section.
 
 ### Command/query split
 

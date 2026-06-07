@@ -31,42 +31,42 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
             config.QueryParameters.ServiceType = serviceType;
         });
         AddQueryParameters(requestInfo, query, "service-type", "service_type", "serviceType");
-        return SendAsync(requestInfo, cancellationToken);
+        return SendAsync(requestInfo, "GetServices", cancellationToken);
     }
 
     public Task<JsonElement> GetPrescriptionTypesAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.PrescriptionType.ToGetRequestInformation();
         AddQueryParameters(requestInfo, query);
-        return SendAsync(requestInfo, cancellationToken);
+        return SendAsync(requestInfo, "GetPrescriptionTypes", cancellationToken);
     }
 
     public Task<JsonElement> GetParaclinicTariffsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.ParTaref.ToGetRequestInformation();
         AddQueryParameters(requestInfo, query);
-        return SendAsync(requestInfo, cancellationToken);
+        return SendAsync(requestInfo, "GetParaclinicTariffs", cancellationToken);
     }
 
     public Task<JsonElement> GetDrugAmountsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.DrugAmount.ToGetRequestInformation();
         AddQueryParameters(requestInfo, query);
-        return SendAsync(requestInfo, cancellationToken);
+        return SendAsync(requestInfo, "GetDrugAmounts", cancellationToken);
     }
 
     public Task<JsonElement> GetDrugInstructionsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.DrugInstruction.ToGetRequestInformation();
         AddQueryParameters(requestInfo, query);
-        return SendAsync(requestInfo, cancellationToken);
+        return SendAsync(requestInfo, "GetDrugInstructions", cancellationToken);
     }
 
     public Task<JsonElement> SendPrescriptionAsync(SendEprescRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.ToPostRequestInformation(request);
-        return SendAsync(requestInfo, cancellationToken);
+        return SendAsync(requestInfo, "SendPrescription", cancellationToken);
     }
 
     public Task<JsonElement> GetPrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, CancellationToken cancellationToken)
@@ -77,7 +77,7 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
             throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
 
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2[headerId][doctorId].ToGetRequestInformation();
-        return SendAsync(requestInfo, cancellationToken);
+        return SendAsync(requestInfo, "GetPrescription", cancellationToken);
     }
 
     public Task<JsonElement> EditPrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, IReadOnlyList<NoteDetailEprsc> details, CancellationToken cancellationToken)
@@ -89,7 +89,7 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         ArgumentNullException.ThrowIfNull(details);
 
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.Edit[headerId][doctorId].ToPostRequestInformation(details.ToList());
-        return SendAsync(requestInfo, cancellationToken);
+        return SendAsync(requestInfo, "EditPrescription", cancellationToken);
     }
 
     public Task<JsonElement> RemovePrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, CancellationToken cancellationToken)
@@ -100,14 +100,14 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
             throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
 
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.Remove[headerId][doctorId].ToPostRequestInformation();
-        return SendAsync(requestInfo, cancellationToken);
+        return SendAsync(requestInfo, "RemovePrescription", cancellationToken);
     }
 
     public Task<JsonElement> CheckPrescriptionWarningAsync(DentistRuleRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         var requestInfo = _client.Interface.Epresc.SendEpresc.V2.CheckRulesInDetail.ToPostRequestInformation(request);
-        return SendAsync(requestInfo, cancellationToken);
+        return SendAsync(requestInfo, "CheckPrescriptionWarning", cancellationToken);
     }
 
     public Task<JsonElement> GetEligibilityAsync(string requestBy, string siamId, string doctorId, string patientNationalCode, CancellationToken cancellationToken)
@@ -120,10 +120,10 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
             throw new ArgumentException("Patient national code is required.", nameof(patientNationalCode));
 
         var requestInfo = _client.Interface.Epresc.Patient.V2.DeserveInfo[siamId][doctorId][patientNationalCode].ToGetRequestInformation();
-        return SendAsync(requestInfo, cancellationToken);
+        return SendAsync(requestInfo, "GetEligibility", cancellationToken);
     }
 
-    private async Task<JsonElement> SendAsync(RequestInformation requestInfo, CancellationToken cancellationToken)
+    private async Task<JsonElement> SendAsync(RequestInformation requestInfo, string operationName, CancellationToken cancellationToken)
     {
         AddCommonHeaders(requestInfo);
 
@@ -148,7 +148,7 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         var content = response.Content is not null
             ? await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false)
             : string.Empty;
-        return ResponseHandling.Handle(response.StatusCode, response.ReasonPhrase, content);
+        return ResponseHandling.Handle(response.StatusCode, response.ReasonPhrase, content, operationName, TaminEndpoint.Production);
     }
 
     private void AddCommonHeaders(RequestInformation requestInfo)

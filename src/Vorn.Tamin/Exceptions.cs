@@ -75,39 +75,47 @@ public class ConnectionError : Exception
     public string? ReasonPhrase { get; }
     /// <summary>Raw response body.</summary>
     public string? Content { get; }
+    /// <summary>Normalized provider failure metadata, when the SDK could create it.</summary>
+    public TaminProviderError? ProviderError { get; }
 
     /// <inheritdoc />
-    public ConnectionError(HttpStatusCode? statusCode, string? reasonPhrase, string? content, string? message = null)
+    public ConnectionError(
+        HttpStatusCode? statusCode,
+        string? reasonPhrase,
+        string? content,
+        string? message = null,
+        TaminProviderError? providerError = null)
         : base(message ?? "Failed.")
     {
         StatusCode = statusCode;
         ReasonPhrase = reasonPhrase;
         Content = content;
+        ProviderError = providerError;
     }
 }
 
 /// <summary>3xx redirection response.</summary>
-public class Redirection : ConnectionError { public Redirection(HttpStatusCode? s, string? r, string? c) : base(s, r, c) { } }
+public class Redirection : ConnectionError { public Redirection(HttpStatusCode? s, string? r, string? c, TaminProviderError? e = null) : base(s, r, c, providerError: e) { } }
 /// <summary>4xx client error response.</summary>
-public class ClientError : ConnectionError { public ClientError(HttpStatusCode? s, string? r, string? c) : base(s, r, c) { } }
+public class ClientError : ConnectionError { public ClientError(HttpStatusCode? s, string? r, string? c, TaminProviderError? e = null) : base(s, r, c, providerError: e) { } }
 /// <summary>400 Bad Request.</summary>
-public class BadRequest : ClientError { public BadRequest(HttpStatusCode? s, string? r, string? c) : base(s, r, c) { } }
+public class BadRequest : ClientError { public BadRequest(HttpStatusCode? s, string? r, string? c, TaminProviderError? e = null) : base(s, r, c, e) { } }
 /// <summary>401 Unauthorized.</summary>
-public class UnauthorizedAccess : ClientError { public UnauthorizedAccess(HttpStatusCode? s, string? r, string? c) : base(s, r, c) { } }
+public class UnauthorizedAccess : ClientError { public UnauthorizedAccess(HttpStatusCode? s, string? r, string? c, TaminProviderError? e = null) : base(s, r, c, e) { } }
 /// <summary>403 Forbidden.</summary>
-public class ForbiddenAccess : ClientError { public ForbiddenAccess(HttpStatusCode? s, string? r, string? c) : base(s, r, c) { } }
+public class ForbiddenAccess : ClientError { public ForbiddenAccess(HttpStatusCode? s, string? r, string? c, TaminProviderError? e = null) : base(s, r, c, e) { } }
 /// <summary>404 Not Found.</summary>
-public class ResourceNotFound : ClientError { public ResourceNotFound(HttpStatusCode? s, string? r, string? c) : base(s, r, c) { } }
+public class ResourceNotFound : ClientError { public ResourceNotFound(HttpStatusCode? s, string? r, string? c, TaminProviderError? e = null) : base(s, r, c, e) { } }
 /// <summary>405 Method Not Allowed.</summary>
-public class MethodNotAllowed : ClientError { public MethodNotAllowed(HttpStatusCode? s, string? r, string? c) : base(s, r, c) { } }
+public class MethodNotAllowed : ClientError { public MethodNotAllowed(HttpStatusCode? s, string? r, string? c, TaminProviderError? e = null) : base(s, r, c, e) { } }
 /// <summary>409 Conflict.</summary>
-public class ResourceConflict : ClientError { public ResourceConflict(HttpStatusCode? s, string? r, string? c) : base(s, r, c) { } }
+public class ResourceConflict : ClientError { public ResourceConflict(HttpStatusCode? s, string? r, string? c, TaminProviderError? e = null) : base(s, r, c, e) { } }
 /// <summary>410 Gone.</summary>
-public class ResourceGone : ClientError { public ResourceGone(HttpStatusCode? s, string? r, string? c) : base(s, r, c) { } }
+public class ResourceGone : ClientError { public ResourceGone(HttpStatusCode? s, string? r, string? c, TaminProviderError? e = null) : base(s, r, c, e) { } }
 /// <summary>422 Unprocessable Entity.</summary>
-public class ResourceInvalid : ClientError { public ResourceInvalid(HttpStatusCode? s, string? r, string? c) : base(s, r, c) { } }
+public class ResourceInvalid : ClientError { public ResourceInvalid(HttpStatusCode? s, string? r, string? c, TaminProviderError? e = null) : base(s, r, c, e) { } }
 /// <summary>5xx server error response.</summary>
-public class ServerError : ConnectionError { public ServerError(HttpStatusCode? s, string? r, string? c) : base(s, r, c) { } }
+public class ServerError : ConnectionError { public ServerError(HttpStatusCode? s, string? r, string? c, TaminProviderError? e = null) : base(s, r, c, providerError: e) { } }
 
 // ── Domain / business error categories (Section 16 of EP-TAMIN-API.md) ─────
 
