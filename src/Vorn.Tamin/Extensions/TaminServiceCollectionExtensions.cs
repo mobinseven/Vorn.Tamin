@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Vorn.Tamin.Kiota;
 
 namespace Vorn.Tamin.Extensions;
 
@@ -68,7 +67,7 @@ public static class TaminServiceCollectionExtensions
             var httpClient = factory.CreateClient("TaminClient");
 
             var baseUri = new Uri(string.IsNullOrWhiteSpace(options.BaseUrl)
-                ? DefaultBaseUrl(options.Endpoint)
+                ? TaminSession.DefaultBaseUrl(options.Endpoint)
                 : options.BaseUrl);
 
             if (!string.IsNullOrWhiteSpace(options.OAuthToken))
@@ -82,11 +81,4 @@ public static class TaminServiceCollectionExtensions
         return services;
     }
 
-    private static string DefaultBaseUrl(TaminEndpoint endpoint)
-        => endpoint switch
-        {
-            TaminEndpoint.Production => TaminKiotaClientFactory.DefaultBaseUrl,
-            TaminEndpoint.Sandbox => TaminKiotaSandboxClientFactory.DefaultBaseUrl,
-            _ => throw new ArgumentOutOfRangeException(nameof(endpoint), endpoint, "Unsupported Tamin endpoint.")
-        };
 }

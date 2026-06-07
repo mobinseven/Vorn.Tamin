@@ -224,7 +224,7 @@ public sealed class TaminSession
             _ => throw new ArgumentOutOfRangeException(nameof(endpoint), endpoint, "Unsupported Tamin endpoint.")
         };
 
-    private static string DefaultBaseUrl(TaminEndpoint endpoint)
+    internal static string DefaultBaseUrl(TaminEndpoint endpoint)
         => endpoint switch
         {
             TaminEndpoint.Production => TaminKiotaClientFactory.DefaultBaseUrl,
