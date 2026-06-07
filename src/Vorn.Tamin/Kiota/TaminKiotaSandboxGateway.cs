@@ -2,31 +2,33 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Kiota.Abstractions;
 using Vorn.Tamin.Kiota.Models;
+using SandboxModels = Vorn.Tamin.Kiota.Sandbox.Models;
 
 namespace Vorn.Tamin.Kiota;
 
-/// <summary>Translates friendly SDK operations into generated Kiota request-builder calls and executes them with common headers.</summary>
-internal sealed class TaminKiotaGateway : ITaminKiotaGateway
+/// <summary>Translates friendly SDK operations into generated sandbox Kiota request-builder calls and executes them with common headers.</summary>
+internal sealed class TaminKiotaSandboxGateway : ITaminKiotaGateway
 {
     private readonly HttpClient _httpClient;
     private readonly string? _clientId;
     private readonly string? _oauthToken;
-    private readonly TaminKiotaClient _client;
+    private readonly Sandbox.TaminKiotaSandboxClient _client;
+    private readonly KiotaBodySerializer _bodySerializer = new();
 
-    public TaminKiotaGateway(HttpClient httpClient, Uri baseUri, string? oauthToken, string? clientId, TaminKiotaClientFactory? clientFactory = null)
+    public TaminKiotaSandboxGateway(HttpClient httpClient, Uri baseUri, string? oauthToken, string? clientId, TaminKiotaSandboxClientFactory? clientFactory = null)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         ArgumentNullException.ThrowIfNull(baseUri);
         _clientId = clientId;
         _oauthToken = oauthToken;
 
-        _client = (clientFactory ?? new TaminKiotaClientFactory()).Create(_httpClient, baseUri);
+        _client = (clientFactory ?? new TaminKiotaSandboxClientFactory()).Create(_httpClient, baseUri);
     }
 
     public Task<JsonElement> GetServicesAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
         var serviceType = ReadQueryValue(query, "service-type", "service_type", "serviceType");
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.Services.ToGetRequestInformation(config =>
+        var requestInfo = _client.Api.V2.WsServices.ToGetRequestInformation(config =>
         {
             config.QueryParameters.ServiceType = serviceType;
         });
@@ -36,28 +38,28 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
 
     public Task<JsonElement> GetPrescriptionTypesAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.PrescriptionType.ToGetRequestInformation();
+        var requestInfo = _client.Api.V2.WsPrescriptionType.ToGetRequestInformation();
         AddQueryParameters(requestInfo, query);
         return SendAsync(requestInfo, cancellationToken);
     }
 
     public Task<JsonElement> GetParaclinicTariffsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.ParTaref.ToGetRequestInformation();
+        var requestInfo = _client.Api.V2.WsParTaref.ToGetRequestInformation();
         AddQueryParameters(requestInfo, query);
         return SendAsync(requestInfo, cancellationToken);
     }
 
     public Task<JsonElement> GetDrugAmountsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.DrugAmount.ToGetRequestInformation();
+        var requestInfo = _client.Api.V2.WsDrugAmoun.ToGetRequestInformation();
         AddQueryParameters(requestInfo, query);
         return SendAsync(requestInfo, cancellationToken);
     }
 
     public Task<JsonElement> GetDrugInstructionsAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken)
     {
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.DrugInstruction.ToGetRequestInformation();
+        var requestInfo = _client.Api.V2.WsDrugInstruction.ToGetRequestInformation();
         AddQueryParameters(requestInfo, query);
         return SendAsync(requestInfo, cancellationToken);
     }
@@ -65,7 +67,8 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
     public Task<JsonElement> SendPrescriptionAsync(SendEprescRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.ToPostRequestInformation(request);
+        var requestInfo = _client.Api.V2.SendEpresc.ToPostRequestInformation(new SandboxModels.SendEprescRequest());
+        ReplaceBody(requestInfo, _bodySerializer.Serialize(request));
         return SendAsync(requestInfo, cancellationToken);
     }
 
@@ -73,10 +76,12 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
     {
         if (headerId <= 0)
             throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
+        if (string.IsNullOrWhiteSpace(doctorNationalCode))
+            throw new ArgumentException("Doctor national code is required.", nameof(doctorNationalCode));
         if (string.IsNullOrWhiteSpace(doctorId))
             throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
 
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2[headerId][doctorId].ToGetRequestInformation();
+        var requestInfo = _client.Api.V2.Ep[headerId][doctorNationalCode][doctorId].Detail.ToGetRequestInformation();
         return SendAsync(requestInfo, cancellationToken);
     }
 
@@ -84,11 +89,14 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
     {
         if (headerId <= 0)
             throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
+        if (string.IsNullOrWhiteSpace(doctorNationalCode))
+            throw new ArgumentException("Doctor national code is required.", nameof(doctorNationalCode));
         if (string.IsNullOrWhiteSpace(doctorId))
             throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
         ArgumentNullException.ThrowIfNull(details);
 
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.Edit[headerId][doctorId].ToPostRequestInformation(details.ToList());
+        var requestInfo = _client.Api.V2.Ep.Update[headerId][doctorNationalCode][doctorId].ToPostRequestInformation([]);
+        ReplaceBody(requestInfo, _bodySerializer.SerializeCollection(details));
         return SendAsync(requestInfo, cancellationToken);
     }
 
@@ -96,18 +104,28 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
     {
         if (headerId <= 0)
             throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
+        if (string.IsNullOrWhiteSpace(doctorNationalCode))
+            throw new ArgumentException("Doctor national code is required.", nameof(doctorNationalCode));
         if (string.IsNullOrWhiteSpace(doctorId))
             throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
 
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.Remove[headerId][doctorId].ToPostRequestInformation();
+        var requestInfo = _client.Api.V2.Ep[headerId][doctorNationalCode][doctorId].ToPostRequestInformation();
         return SendAsync(requestInfo, cancellationToken);
     }
 
     public Task<JsonElement> CheckPrescriptionWarningAsync(DentistRuleRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.CheckRulesInDetail.ToPostRequestInformation(request);
+        var requestInfo = _client.Api.V2.CheckRulesInDetail.ToPostRequestInformation(new SandboxModels.DentistRuleRequest());
+        ReplaceBody(requestInfo, _bodySerializer.Serialize(request));
         return SendAsync(requestInfo, cancellationToken);
+    }
+
+    private static void ReplaceBody(RequestInformation requestInfo, Stream content)
+    {
+        requestInfo.Content = content;
+        requestInfo.Headers.Remove("Content-Type");
+        requestInfo.Headers.TryAdd("Content-Type", "application/json");
     }
 
     private async Task<JsonElement> SendAsync(RequestInformation requestInfo, CancellationToken cancellationToken)

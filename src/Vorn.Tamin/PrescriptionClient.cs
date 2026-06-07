@@ -44,9 +44,9 @@ public sealed class PrescriptionClient
 
     // ── Section 9: Prescription Query ────────────────────────────────────────
 
-    /// <summary>Retrieves a registered prescription by generated Kiota header and doctor path parameters.</summary>
-    public Task<JsonElement> GetRegisteredPrescriptionAsync(int headerId, string doctorId, CancellationToken cancellationToken = default)
-        => _gateway.GetPrescriptionAsync(headerId, doctorId, cancellationToken);
+    /// <summary>Retrieves a registered prescription by generated Kiota header, doctor national code, and NPI path parameters.</summary>
+    public Task<JsonElement> GetRegisteredPrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, CancellationToken cancellationToken = default)
+        => _gateway.GetPrescriptionAsync(headerId, doctorNationalCode, doctorId, cancellationToken);
 
     // ── Section 10: Prescription Mutation ────────────────────────────────────
 
@@ -54,14 +54,14 @@ public sealed class PrescriptionClient
     public Task<JsonElement> EditElectronicPrescriptionAsync(EditPrescriptionRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return _gateway.EditPrescriptionAsync(request.HeaderId, request.DoctorId, TaminRequestMapper.ToNoteDetails(request.EditedItems), cancellationToken);
+        return _gateway.EditPrescriptionAsync(request.HeaderId, request.DoctorNationalCode, request.DoctorId, TaminRequestMapper.ToNoteDetails(request.EditedItems), cancellationToken);
     }
 
     /// <summary>Cancels or deletes a registered electronic prescription through the generated remove builder.</summary>
     public Task<JsonElement> DeleteElectronicPrescriptionAsync(DeletePrescriptionRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return _gateway.RemovePrescriptionAsync(request.HeaderId, request.DoctorId, cancellationToken);
+        return _gateway.RemovePrescriptionAsync(request.HeaderId, request.DoctorNationalCode, request.DoctorId, cancellationToken);
     }
 
     // ── Section 14: Warning Services ─────────────────────────────────────────

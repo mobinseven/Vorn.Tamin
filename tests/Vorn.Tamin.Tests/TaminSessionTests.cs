@@ -78,6 +78,114 @@ public class TaminSessionTests
         await Assert.ThrowsAsync<BadRequest>(() => session.Service.GetAllServicesAsync());
     }
 
+
+    [Fact]
+    public async Task Session_WithSandboxEndpoint_UsesSandboxClientEndpoint()
+    {
+        HttpRequestMessage? captured = null;
+        var handler = new StubHandler((request, _) =>
+        {
+            captured = request;
+            return Task.FromResult(OkResponse());
+        });
+
+        var session = new TaminSession(new HttpClient(handler), "token", endpoint: TaminEndpoint.Sandbox);
+        await session.Service.GetAllServicesAsync(new Dictionary<string, string?> { ["serviceType"] = "17" });
+
+        Assert.NotNull(captured);
+        Assert.Equal("https://ep-test.tamin.ir/api/v2/ws-services?serviceType=17", captured!.RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task PrescriptionClient_WithSandboxEndpoint_PostsThroughSandboxClientEndpoint()
+    {
+        HttpRequestMessage? captured = null;
+        var handler = new StubHandler((request, _) =>
+        {
+            captured = request;
+            return Task.FromResult(OkResponse());
+        });
+
+        var session = new TaminSession(new HttpClient(handler), "token", endpoint: TaminEndpoint.Sandbox);
+        await session.Prescription.RegisterDrugPrescriptionAsync(new RegisterDrugPrescriptionRequest
+        {
+            DoctorId = "D1",
+            PatientNationalId = "1234567890",
+            VisitDate = "2024-01-01",
+            DrugItems = []
+        });
+
+        Assert.NotNull(captured);
+        Assert.Equal(HttpMethod.Post, captured!.Method);
+        Assert.Equal("https://ep-test.tamin.ir/api/v2/SendEpresc", captured.RequestUri!.ToString());
+    }
+
+
+    [Fact]
+    public async Task PrescriptionClient_WithSandboxEndpoint_GetsPrescriptionWithNationalCodeAndNpi()
+    {
+        HttpRequestMessage? captured = null;
+        var handler = new StubHandler((request, _) =>
+        {
+            captured = request;
+            return Task.FromResult(OkResponse());
+        });
+
+        var session = new TaminSession(new HttpClient(handler), "token", endpoint: TaminEndpoint.Sandbox);
+        await session.Prescription.GetRegisteredPrescriptionAsync(1001, "NAT1", "D1");
+
+        Assert.NotNull(captured);
+        Assert.Equal(HttpMethod.Get, captured!.Method);
+        Assert.Equal("https://ep-test.tamin.ir/api/v2/ep/1001/NAT1/D1/detail", captured.RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task PrescriptionClient_WithSandboxEndpoint_EditsPrescriptionWithNationalCodeAndNpi()
+    {
+        HttpRequestMessage? captured = null;
+        var handler = new StubHandler((request, _) =>
+        {
+            captured = request;
+            return Task.FromResult(OkResponse());
+        });
+
+        var session = new TaminSession(new HttpClient(handler), "token", endpoint: TaminEndpoint.Sandbox);
+        await session.Prescription.EditElectronicPrescriptionAsync(new EditPrescriptionRequest
+        {
+            HeaderId = 1001,
+            DoctorNationalCode = "NAT1",
+            DoctorId = "D1",
+            EditedItems = []
+        });
+
+        Assert.NotNull(captured);
+        Assert.Equal(HttpMethod.Post, captured!.Method);
+        Assert.Equal("https://ep-test.tamin.ir/api/v2/ep/update/1001/NAT1/D1", captured.RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task PrescriptionClient_WithSandboxEndpoint_DeletesPrescriptionWithNationalCodeAndNpi()
+    {
+        HttpRequestMessage? captured = null;
+        var handler = new StubHandler((request, _) =>
+        {
+            captured = request;
+            return Task.FromResult(OkResponse());
+        });
+
+        var session = new TaminSession(new HttpClient(handler), "token", endpoint: TaminEndpoint.Sandbox);
+        await session.Prescription.DeleteElectronicPrescriptionAsync(new DeletePrescriptionRequest
+        {
+            HeaderId = 1001,
+            DoctorNationalCode = "NAT1",
+            DoctorId = "D1"
+        });
+
+        Assert.NotNull(captured);
+        Assert.Equal(HttpMethod.Post, captured!.Method);
+        Assert.Equal("https://ep-test.tamin.ir/api/v2/ep/1001/NAT1/D1", captured.RequestUri!.ToString());
+    }
+
     // ── Common headers ────────────────────────────────────────────────────────
 
     [Fact]
@@ -250,6 +358,7 @@ public class TaminSessionTests
         await session.Prescription.EditElectronicPrescriptionAsync(new EditPrescriptionRequest
         {
             HeaderId = 1001,
+            DoctorNationalCode = "NAT1",
             DoctorId = "D1",
             EditedItems = []
         });
@@ -273,6 +382,7 @@ public class TaminSessionTests
         await session.Prescription.DeleteElectronicPrescriptionAsync(new DeletePrescriptionRequest
         {
             HeaderId = 1001,
+            DoctorNationalCode = "NAT1",
             DoctorId = "D1"
         });
 

@@ -11,8 +11,6 @@ namespace Vorn.Tamin;
 /// </summary>
 public sealed class TaminSession
 {
-    private const string DefaultUrl = TaminKiotaClientFactory.DefaultBaseUrl;
-
     /// <summary>The underlying <see cref="HttpClient"/> used for all requests.</summary>
     public HttpClient HttpClient { get; }
 
@@ -44,19 +42,26 @@ public sealed class TaminSession
     /// </summary>
     /// <param name="httpClient">The <see cref="HttpClient"/> to use.</param>
     /// <param name="oauthToken">****** Required unless <paramref name="needToken"/> is <c>false</c>.</param>
-    /// <param name="baseUri">Override the base URI (defaults to the sandbox endpoint).</param>
+    /// <param name="baseUri">Override the base URI (defaults to the selected endpoint).</param>
     /// <param name="needToken">When <c>true</c> (default), throws if no token is supplied.</param>
     /// <param name="clientId">Optional Client-Id header value issued during API onboarding.</param>
-    public TaminSession(HttpClient httpClient, string? oauthToken = null, Uri? baseUri = null, bool needToken = true, string? clientId = null)
+    /// <param name="endpoint">Generated endpoint surface to use for request builders.</param>
+    public TaminSession(
+        HttpClient httpClient,
+        string? oauthToken = null,
+        Uri? baseUri = null,
+        bool needToken = true,
+        string? clientId = null,
+        TaminEndpoint endpoint = TaminEndpoint.Production)
     {
         HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        BaseUri = EnsureTrailingSlash(baseUri ?? new Uri(DefaultUrl));
+        BaseUri = EnsureTrailingSlash(baseUri ?? new Uri(DefaultBaseUrl(endpoint)));
         ClientId = clientId;
 
         if (needToken && string.IsNullOrWhiteSpace(oauthToken))
             throw new AuthTokenNotSuppliedException();
 
-        KiotaGateway = new TaminKiotaGateway(HttpClient, BaseUri, oauthToken, clientId);
+        KiotaGateway = CreateGateway(endpoint, HttpClient, BaseUri, oauthToken, clientId);
         Service = new ServiceClient(KiotaGateway);
         Prescription = new PrescriptionClient(KiotaGateway);
         Identity = new IdentityClient(KiotaGateway);
@@ -69,7 +74,7 @@ public sealed class TaminSession
     /// </summary>
     /// <param name="httpClient">The <see cref="HttpClient"/> to use.</param>
     /// <param name="oauthToken">Pre-obtained bearer token. When supplied, login is skipped.</param>
-    /// <param name="baseUri">Override the base URI (defaults to the sandbox endpoint).</param>
+    /// <param name="baseUri">Override the base URI (defaults to the selected endpoint).</param>
     /// <param name="username">Username for the login flow.</param>
     /// <param name="password">Password for the login flow.</param>
     /// <param name="otp">One-time password, when two-step verification is required.</param>
@@ -77,6 +82,7 @@ public sealed class TaminSession
     /// <param name="clientId">Optional Client-Id header value issued during API onboarding.</param>
     /// <param name="needToken">When <c>true</c> (default), throws if authentication cannot be established.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="endpoint">Generated endpoint surface to use for request builders.</param>
     public static async Task<TaminSession> CreateAsync(
         HttpClient httpClient,
         string? oauthToken = null,
@@ -87,9 +93,10 @@ public sealed class TaminSession
         string? providerIdentifier = null,
         string? clientId = null,
         bool needToken = true,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        TaminEndpoint endpoint = TaminEndpoint.Production)
     {
-        var normalizedBaseUri = EnsureTrailingSlash(baseUri ?? new Uri(DefaultUrl));
+        var normalizedBaseUri = EnsureTrailingSlash(baseUri ?? new Uri(DefaultBaseUrl(endpoint)));
 
         if (needToken && string.IsNullOrWhiteSpace(oauthToken))
         {
@@ -99,7 +106,7 @@ public sealed class TaminSession
             oauthToken = await LoginAsync(httpClient, normalizedBaseUri, username, password, otp, providerIdentifier, cancellationToken).ConfigureAwait(false);
         }
 
-        return new TaminSession(httpClient, oauthToken, normalizedBaseUri, needToken, clientId);
+        return new TaminSession(httpClient, oauthToken, normalizedBaseUri, needToken, clientId, endpoint);
     }
 
     /// <summary>
@@ -208,6 +215,22 @@ public sealed class TaminSession
             doc.RootElement.TryGetProperty("family", out var familyNode) ? familyNode.ToString() : null,
             doc.RootElement.TryGetProperty("reason", out var reasonNode) ? reasonNode.ToString() : null);
     }
+
+    private static ITaminKiotaGateway CreateGateway(TaminEndpoint endpoint, HttpClient httpClient, Uri baseUri, string? oauthToken, string? clientId)
+        => endpoint switch
+        {
+            TaminEndpoint.Production => new TaminKiotaGateway(httpClient, baseUri, oauthToken, clientId),
+            TaminEndpoint.Sandbox => new TaminKiotaSandboxGateway(httpClient, baseUri, oauthToken, clientId),
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint), endpoint, "Unsupported Tamin endpoint.")
+        };
+
+    internal static string DefaultBaseUrl(TaminEndpoint endpoint)
+        => endpoint switch
+        {
+            TaminEndpoint.Production => TaminKiotaClientFactory.DefaultBaseUrl,
+            TaminEndpoint.Sandbox => TaminKiotaSandboxClientFactory.DefaultBaseUrl,
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint), endpoint, "Unsupported Tamin endpoint.")
+        };
 
     private static Uri EnsureTrailingSlash(Uri uri)
     {
