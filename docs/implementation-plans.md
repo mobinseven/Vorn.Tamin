@@ -119,7 +119,7 @@ Validation and serialization are pure query-style operations: they return conver
 ### Failure handling
 
 - Return structured validation failures rather than raw strings.
-- Reject ISO dates unless explicitly converted into the provider Jalali format first.
+- Reject ISO dates by returning a structured validation failure unless explicitly converted into the provider Jalali format first.
 - Reject unsafe numeric coercion for string-code fields.
 - Do not silently ignore unknown prescription-type rules.
 
