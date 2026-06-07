@@ -15,11 +15,18 @@ public sealed partial class TaminProviderSerializer
         return value!.Trim();
     }
 
+    /// <summary>Checks whether the value is an eight-character Jalali date string.</summary>
+    public bool IsValidJalaliDate(string? value)
+        => !string.IsNullOrWhiteSpace(value) && JalaliDateRegex().IsMatch(value.Trim());
+
     /// <summary>Returns an eight-character Jalali date string after rejecting ISO/Gregorian-looking dates.</summary>
     public string SerializeJalaliDate(string? value, string field)
     {
+        if (IsValidJalaliDate(value))
+            return value!.Trim();
+
         var failures = ValidateText(value, field);
-        if (failures.Count == 0 && !JalaliDateRegex().IsMatch(value!.Trim()))
+        if (failures.Count == 0)
         {
             failures.Add(new ValidationFailure(
                 field,
@@ -27,10 +34,7 @@ public sealed partial class TaminProviderSerializer
                 "Provider dates must be eight Jalali digits such as 14030501; ISO dates must be converted before calling the SDK."));
         }
 
-        if (failures.Count > 0)
-            throw new TaminValidationException(failures);
-
-        return value!.Trim();
+        throw new TaminValidationException(failures);
     }
 
     /// <summary>Returns an optional provider code, preserving the original code characters when present.</summary>

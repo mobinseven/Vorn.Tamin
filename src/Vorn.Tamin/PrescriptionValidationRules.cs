@@ -165,17 +165,22 @@ public sealed class PrescriptionValidationRules
 
     private void AddJalaliDate(List<ValidationFailure> failures, string? value, string field)
     {
-        try
+        if (string.IsNullOrWhiteSpace(value))
         {
-            _serializer.SerializeJalaliDate(value, field);
+            failures.Add(new ValidationFailure(field, "required", "A provider-bound string value is required."));
+            return;
         }
-        catch (TaminValidationException ex)
+
+        if (!_serializer.IsValidJalaliDate(value))
         {
-            failures.AddRange(ex.Failures);
+            failures.Add(new ValidationFailure(
+                field,
+                "jalali-date-shape",
+                "Provider dates must be eight Jalali digits such as 14030501; ISO dates must be converted before calling the SDK."));
         }
     }
 
-    private static void AddServiceItems(List<ValidationFailure> failures, IReadOnlyList<ServiceItem> items, string field, bool requireGroup, bool requireEffectiveDate)
+    private void AddServiceItems(List<ValidationFailure> failures, IReadOnlyList<ServiceItem> items, string field, bool requireGroup, bool requireEffectiveDate)
     {
         AddRequiredItems(failures, items, field);
         if (items is null)
@@ -188,8 +193,10 @@ public sealed class PrescriptionValidationRules
             AddPositive(failures, item.Quantity, $"{field}[{index}].quantity");
             if (requireGroup)
                 AddRequired(failures, item.ServiceGroup, $"{field}[{index}].service_group");
-            if (requireEffectiveDate && string.IsNullOrWhiteSpace(item.EffectiveDate))
+            if (requireEffectiveDate)
                 AddRequired(failures, item.EffectiveDate, $"{field}[{index}].effective_date");
+            if (!string.IsNullOrWhiteSpace(item.EffectiveDate))
+                AddJalaliDate(failures, item.EffectiveDate, $"{field}[{index}].effective_date");
         }
     }
 
@@ -217,7 +224,10 @@ public sealed class PrescriptionValidationRules
             return;
 
         var trimmed = value.Trim();
-        if (trimmed.Length != 11 || !trimmed.All(char.IsDigit) || !trimmed.StartsWith("09", StringComparison.Ordinal))
+        if (trimmed.Length != 11 || !trimmed.All(IsLatinDigit) || !trimmed.StartsWith("09", StringComparison.Ordinal))
             failures.Add(new ValidationFailure(field, "mobile-shape", "Mobile numbers must be 11 digits and start with 09."));
     }
+
+    private static bool IsLatinDigit(char value)
+        => value is >= '0' and <= '9';
 }

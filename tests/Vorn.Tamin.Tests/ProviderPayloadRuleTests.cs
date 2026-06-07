@@ -16,6 +16,17 @@ public sealed class ProviderPayloadRuleTests
         Assert.Equal("001-AB09", result);
     }
 
+
+    [Fact]
+    public void ProviderSerializer_ReportsJalaliValidityWithoutThrowing()
+    {
+        var serializer = new TaminProviderSerializer();
+
+        Assert.True(serializer.IsValidJalaliDate("14030601"));
+        Assert.False(serializer.IsValidJalaliDate("2026-06-01"));
+        Assert.False(serializer.IsValidJalaliDate(null));
+    }
+
     [Fact]
     public void ProviderSerializer_RejectsIsoDateBeforeTransport()
     {
@@ -80,6 +91,34 @@ public sealed class ProviderPayloadRuleTests
         var failures = rules.Validate(request);
 
         Assert.Contains(failures, failure => failure.Field == "service_items[0].service_group" && failure.Code == "required");
+    }
+
+
+    [Fact]
+    public void PrescriptionValidationRules_RejectProvidedServiceEffectiveDateWhenNotJalali()
+    {
+        var rules = new PrescriptionValidationRules();
+        var request = new RegisterMedicalServicePrescriptionRequest
+        {
+            DoctorId = "D-001",
+            PatientNationalId = "1234567890",
+            VisitDate = "14030601",
+            ServiceItems = [new ServiceItem { ServiceCode = "SVC-001", Quantity = 1, EffectiveDate = "2026-06-01" }]
+        };
+
+        var failures = rules.Validate(request);
+
+        Assert.Contains(failures, failure => failure.Field == "service_items[0].effective_date" && failure.Code == "jalali-date-shape");
+    }
+
+    [Fact]
+    public void PrescriptionValidationRules_RejectsNonLatinDigitsForMobileNumbers()
+    {
+        var rules = new PrescriptionValidationRules();
+
+        var failures = rules.ValidateDoctorEnrollmentFields("D-001", "1234567890", "۰۹۱۲۳۴۵۶۷۸۹");
+
+        Assert.Contains(failures, failure => failure.Field == "docMobileNo" && failure.Code == "mobile-shape");
     }
 
     [Fact]
