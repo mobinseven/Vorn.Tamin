@@ -563,6 +563,39 @@ if (taminResponse?.Success == true)
 | `InvalidConfigException` | A configuration value is present but invalid. |
 | `TaminValidationException` | Provider-bound values fail structured client-side validation before transport. |
 
+### Normalized provider errors
+
+Every HTTP error derived from `ConnectionError` exposes a `ProviderError` property when the SDK can normalize the provider response. `TaminProviderError` preserves the raw HTTP status, reason phrase, provider body, extracted provider message, operation, and environment so support teams can reconcile failures without losing the original provider payload.
+
+`TaminErrorNormalizer` maps known provider failures into `TaminErrorCategory` values:
+
+| Category | Use it for | Typical action |
+|---|---|---|
+| `ClientPreventable` | Invalid `prescType`/`srvType` pairs, missing laboratory subgroup, null or negative quantities, empty payloads, missing or malformed patient mobile numbers, invalid patient national codes, unknown `srvCode`, missing/invalid prescription types, date format errors, future dates, and invalid `drugAmntId`/`drugInstId`. | Fix request data before resending. |
+| `SupportRequired` | Doctor enrollment/activation failures and doctor national-code/mobile mismatches. | Escalate with onboarding or provider-support evidence. |
+| `Retryable` | Temporary provider failures and duplicate-submission risk. | Do not blindly resubmit state-changing calls; check existing prescription state first. |
+| `ProviderContractMismatch` | Responses that reflect documented provider specification conflicts such as `id_client` versus `client_id` or string-versus-number ambiguity. | Capture the raw provider body and reconcile against the provider specification. |
+| `UnknownProviderError` | Any provider message outside the current catalog. | Preserve the raw payload and decide whether a new catalog rule is justified. |
+
+### Prevent, normalize, escalate
+
+1. **Prevent:** run SDK validation before transport; prescription clients already validate provider-bound request shapes and throw `TaminValidationException` before sending invalid payloads.
+2. **Normalize:** catch `ConnectionError` and inspect `ex.ProviderError` for the normalized code, category, operation, environment, status, and raw body.
+3. **Escalate:** for `SupportRequired`, `ProviderContractMismatch`, or unknown errors, include `ProviderError.Code`, `OperationName`, `Environment`, `StatusCode`, and `ProviderBody` in support tickets.
+
+```csharp
+try
+{
+    JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(request);
+}
+catch (ConnectionError ex) when (ex.ProviderError is { } providerError)
+{
+    Console.WriteLine($"{providerError.Category}: {providerError.Code}");
+    Console.WriteLine($"{providerError.OperationName} / {providerError.Environment}");
+    Console.WriteLine(providerError.ProviderBody);
+}
+```
+
 ### HTTP exceptions
 
 All HTTP error responses throw a subclass of `ConnectionError`. The base class exposes `StatusCode`, `ReasonPhrase`, and `Content`.
@@ -599,7 +632,7 @@ catch (TaminValidationException ex)
 }
 catch (ResourceInvalid ex)
 {
-    Console.WriteLine($"Provider validation failed: {ex.Content}");
+    Console.WriteLine($"Provider validation failed: {ex.ProviderError?.Code ?? ex.Content}");
 }
 catch (ServerError)
 {
@@ -668,6 +701,17 @@ catch (ServerError)
 - **`JsonElement` return type:** client methods return raw unwrapped payloads to stay compatible with EP.Tamin response changes.
 - **No automatic token refresh:** monitor token expiry and call `RefreshTokenAsync` from your application policy.
 - **Not implemented placeholders:** `IdentityClient`, `PharmacyClient`, and `ParaclinicClient` are intentionally empty until generated Kiota builders exist for those endpoint groups. Nurse, referral feedback/count/detail, and hospitalization methods throw `TaminWorkflowNotImplementedException` so unavailable role workflows are explicit.
+
+### Provider compatibility notes
+
+The EP.Tamin provider materials contain specification inconsistencies that affect code generation, request construction, and support diagnosis:
+
+- **Version labels:** provider materials reference both version `1.9.4` and version `1.9.3`; verify the table, example, business note, and error section before treating a field as stable.
+- **Client identifier naming:** authentication examples and notes may use both `id_client` and `client_id`. The SDK sends the documented operation-specific shape, but support escalation should mention the exact field name used in the failed payload.
+- **String-versus-number ambiguity:** provider tables sometimes describe numeric values while examples carry string values. The SDK preserves provider-bound identifiers as strings where leading zeros or code semantics matter.
+- **Dental flag typing:** `isDentalService` appears with string/numeric ambiguity, so callers should not assume boolean coercion unless a specific provider operation documents it consistently.
+- **Sandbox route discrepancies:** sandbox paths and spellings can differ from production paths, including `api/v2/ws-services`, `api/v2/SendEpresc`, and prescription detail/update path segments. `TaminEnvironmentRoutes` keeps operation-level routes instead of deriving sandbox URLs from production URLs.
+- **Cross-section reconciliation:** payloads and routes must be reconciled across provider tables, JSON examples, business notes, and error sections. Do not generate behavior from a single table when another provider section contradicts it.
 
 ---
 
