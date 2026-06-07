@@ -3,54 +3,75 @@
 [![NuGet Version](https://img.shields.io/nuget/v/vorn.tamin?style=flat-square)](https://www.nuget.org/packages/Vorn.Tamin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-A .NET 10 client SDK for the [EP.Tamin](https://ep.tamin.ir) electronic prescription API of the Social Security Insurance of Iran (سازمان تأمین اجتماعی). 
+A .NET 10 client SDK for selected EP.Tamin electronic prescription API endpoints of the Social Security Insurance of Iran (سازمان تأمین اجتماعی).
+
+> **Implementation status:** the new version is Kiota-backed and currently exposes only the endpoint groups listed as **Implemented** below. Older README examples for identity, pharmacy dispensing, paraclinic delivery, pricing, and some response DTOs described planned or previous surfaces and are now explicitly marked **Not implemented** until matching generated request builders are available.
 
 ---
 
 ## Table of contents
 
-1. [What problem does this solve?](#what-problem-does-this-solve)
+1. [Implementation status](#implementation-status)
 2. [Installation](#installation)
 3. [Prerequisites](#prerequisites)
 4. [Quick-start](#quick-start)
 5. [Dependency injection setup](#dependency-injection-setup)
 6. [Authentication](#authentication)
-7. [Reference data (`session.Service`)](#reference-data-sessionservice)
-8. [Identity & eligibility (`session.Identity`)](#identity--eligibility-sessionidentity)
-9. [E-prescription writing (`session.Prescription`)](#e-prescription-writing-sessionprescription)
-10. [Prescription query & mutation (`session.Prescription`)](#prescription-query--mutation-sessionprescription)
-11. [Warning services (`session.Prescription`)](#warning-services-sessionprescription)
-12. [Pharmacy dispensing (`session.Pharmacy`)](#pharmacy-dispensing-sessionpharmacy)
-13. [Paraclinic service delivery (`session.Paraclinic`)](#paraclinic-service-delivery-sessionparaclinic)
-14. [Parsing API responses](#parsing-api-responses)
-15. [Error handling](#error-handling)
-16. [Artifact inventory](#artifact-inventory)
-17. [Limitations & compatibility notes](#limitations--compatibility-notes)
-18. [Contributing](#contributing)
-19. [Changelog](#changelog)
-20. [License](#license)
+7. [Reference data](#reference-data)
+8. [Prescription operations](#prescription-operations)
+9. [Parsing API responses](#parsing-api-responses)
+10. [Error handling](#error-handling)
+11. [Artifact inventory](#artifact-inventory)
+12. [Limitations & compatibility notes](#limitations--compatibility-notes)
+13. [Contributing](#contributing)
+14. [Changelog](#changelog)
+15. [License](#license)
 
 ---
 
-## What problem does this solve?
+## Implementation status
 
-Calling the EP.Tamin REST API from .NET requires assembling authentication headers, serialising request/response bodies, handling custom status envelopes, mapping HTTP status codes to typed exceptions, and managing per-request tracing identifiers. **Vorn.Tamin** encapsulates all of that in a single, lightweight SDK so you can focus on your application logic.
+| Area | Status | Public surface |
+|---|---|---|
+| Session construction with a pre-obtained token | **Implemented** | `new TaminSession(...)` |
+| Runtime login | **Implemented** | `TaminSession.CreateAsync(...)` |
+| Token refresh | **Implemented** | `TaminSession.RefreshTokenAsync(...)` |
+| Token validation | **Implemented** | `TaminSession.ValidateTokenAsync(...)` |
+| Production / sandbox endpoint selection | **Implemented** | `TaminEndpoint.Production`, `TaminEndpoint.Sandbox` |
+| Dependency injection registration | **Implemented** | `AddTaminClient(...)`, `TaminOptions` |
+| Reference data: services | **Implemented** | `session.Service.GetServiceListAsync(...)`, `GetAllServicesAsync(...)` |
+| Reference data: prescription types | **Implemented** | `session.Service.GetPrescriptionTypeAsync(...)` |
+| Reference data: paraclinic tariffs | **Implemented** | `session.Service.GetParaclinicTarefAsync(...)` |
+| Reference data: drug amounts/list | **Implemented** | `session.Service.GetDrugListAsync(...)`, `GetDrugAmountAsync(...)` |
+| Reference data: drug instructions | **Implemented** | `session.Service.GetDrugInstructionAsync(...)` |
+| Prescription writing | **Implemented** | `RegisterVisitPrescriptionAsync`, `RegisterDrugPrescriptionAsync`, `RegisterParaclinicPrescriptionAsync`, `RegisterMedicalServicePrescriptionAsync`, `RegisterReferralPrescriptionAsync`, `RegisterPhysiotherapyPrescriptionAsync` |
+| Prescription lookup | **Implemented** | `session.Prescription.GetRegisteredPrescriptionAsync(...)` |
+| Prescription edit/delete | **Implemented** | `EditElectronicPrescriptionAsync(...)`, `DeleteElectronicPrescriptionAsync(...)` |
+| Prescription warning check | **Implemented** | `CheckPrescriptionWarningAsync(...)` |
+| Identity verification and eligibility | **Not implemented** | `session.Identity` exists only as an empty placeholder. |
+| Pharmacy dispensing | **Not implemented** | `session.Pharmacy` exists only as an empty placeholder. |
+| Paraclinic service delivery | **Not implemented** | `session.Paraclinic` exists only as an empty placeholder. |
+| Allowed-count and pricing helpers | **Not implemented** | No public methods are exposed in this version. |
+| Strong typed response DTOs for reference, identity, pharmacy, and paraclinic flows | **Not implemented** | Methods currently return `JsonElement`. |
 
 ---
 
 ## Installation
 
 ### dotnet CLI
+
 ```bash
 dotnet add package Vorn.Tamin
 ```
 
 ### Package Manager Console
+
 ```powershell
 Install-Package Vorn.Tamin
 ```
 
 ### PackageReference
+
 ```xml
 <PackageReference Include="Vorn.Tamin" Version="*" />
 ```
@@ -59,53 +80,60 @@ Install-Package Vorn.Tamin
 
 ## Prerequisites
 
-None.
+- .NET 10 SDK.
+- EP.Tamin credentials or a pre-obtained bearer token.
+- A `Client-Id` value when your EP.Tamin onboarding requires that header.
 
 ---
 
 ## Quick-start
 
 ```csharp
-using Vorn.Tamin;
 using System.Text.Json;
+using Vorn.Tamin;
 
-// ── Option A: pre-obtained bearer token ──────────────────────────────────────
+// Option A: pre-obtained bearer token.
 var session = new TaminSession(
     new HttpClient(),
     oauthToken: "YOUR_TOKEN",
-    clientId:   "YOUR_CLIENT_ID");          // Client-Id header issued at API onboarding
+    clientId: "YOUR_CLIENT_ID",
+    endpoint: TaminEndpoint.Production);
 
-// ── Option B: log in with username / password (+ optional OTP) ───────────────
-var session = await TaminSession.CreateAsync(
+// Option B: log in with username / password (+ optional OTP/provider identifier).
+var loggedInSession = await TaminSession.CreateAsync(
     new HttpClient(),
-    username:            "your-username",
-    password:            "your-password",
-    otp:                 "123456",          // omit if OTP is not required
-    providerIdentifier:  "prov-id",        // omit if not required
-    clientId:            "YOUR_CLIENT_ID",
-    baseUri:             new Uri("https://ep.tamin.ir/api/")); // production
+    username: "your-username",
+    password: "your-password",
+    otp: "123456",
+    providerIdentifier: "prov-id",
+    clientId: "YOUR_CLIENT_ID",
+    endpoint: TaminEndpoint.Sandbox);
 
-// ── Reference data ────────────────────────────────────────────────────────────
+// Reference data.
 JsonElement drugs = await session.Service.GetDrugListAsync(
-    searchText: "amoxicillin", activeOnly: true);
+    searchText: "amoxicillin",
+    activeOnly: true);
 
-// ── Verify patient identity ───────────────────────────────────────────────────
-JsonElement identity = await session.Identity.VerifyIdentityAsync(
-    new VerifyIdentityRequest { NationalId = "1234567890" });
-
-// ── Register a drug prescription ─────────────────────────────────────────────
+// Register a drug prescription.
 JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(
     new RegisterDrugPrescriptionRequest
     {
-        DoctorId          = "doctor-id",
+        DoctorId = "doctor-id",
         PatientNationalId = "1234567890",
-        VisitDate         = "2024-06-01",
-        DrugItems         =
+        VisitDate = "2026-06-01",
+        DrugItems =
         [
-            new DrugItem { DrugCode = "DR001", Quantity = 2, DosageInstruction = "twice daily" }
+            new DrugItem
+            {
+                DrugCode = "DR001",
+                Quantity = 2,
+                DosageInstruction = "twice daily"
+            }
         ]
     });
 ```
+
+> **Not implemented:** identity verification, pharmacy dispensing, and paraclinic delivery are not available in this version. Do not use older examples that call methods such as `session.Identity.VerifyIdentityAsync(...)`, `session.Pharmacy.DispenseElectronicPrescriptionAsync(...)`, or `session.Paraclinic.ProvideElectronicPrescriptionServiceAsync(...)`.
 
 ---
 
@@ -114,44 +142,43 @@ JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(
 Register the SDK in `Program.cs` or `Startup.cs`:
 
 ```csharp
+using Vorn.Tamin;
 using Vorn.Tamin.Extensions;
 
 builder.Services.AddTaminClient(o =>
 {
-    o.BaseUrl    = "https://ep-test.tamin.ir/api/"; // sandbox (default); set production URL for live
-    o.ClientId   = "YOUR_CLIENT_ID";
-    o.OAuthToken = "YOUR_TOKEN";                    // supply a token -OR- set Username + Password below
-    // o.Username = "your-username";
-    // o.Password = "your-password";
+    o.Endpoint = TaminEndpoint.Sandbox;
+    o.BaseUrl = "https://ep-test.tamin.ir/api/"; // optional; defaults from Endpoint when blank
+    o.ClientId = "YOUR_CLIENT_ID";
+    o.OAuthToken = "YOUR_TOKEN"; // optional; omit when a token is acquired elsewhere
 });
 ```
 
-`TaminSession` is registered as a **scoped** service backed by `IHttpClientFactory`. Inject it normally:
+`TaminSession` is registered as a scoped service backed by `IHttpClientFactory`:
 
 ```csharp
-public class PrescriptionService(TaminSession tamin)
+public sealed class PrescriptionIssuer(TaminSession tamin)
 {
-    public async Task<JsonElement> IssueAsync(string doctorId, string patientId, string visitDate)
-        => await tamin.Prescription.RegisterDrugPrescriptionAsync(
-               new RegisterDrugPrescriptionRequest
-               {
-                   DoctorId          = doctorId,
-                   PatientNationalId = patientId,
-                   VisitDate         = visitDate,
-                   DrugItems         = [new DrugItem { DrugCode = "DR001", Quantity = 1 }]
-               });
+    public Task<JsonElement> IssueAsync(string doctorId, string patientId, string visitDate)
+        => tamin.Prescription.RegisterDrugPrescriptionAsync(
+            new RegisterDrugPrescriptionRequest
+            {
+                DoctorId = doctorId,
+                PatientNationalId = patientId,
+                VisitDate = visitDate,
+                DrugItems = [new DrugItem { DrugCode = "DR001", Quantity = 1 }]
+            });
 }
 ```
 
 ### `appsettings.json` binding
 
-You can bind `TaminOptions` from configuration:
-
 ```json
 {
   "Tamin": {
-    "BaseUrl":    "https://ep.tamin.ir/api/",
-    "ClientId":   "YOUR_CLIENT_ID",
+    "Endpoint": "Sandbox",
+    "BaseUrl": "https://ep-test.tamin.ir/api/",
+    "ClientId": "YOUR_CLIENT_ID",
     "OAuthToken": "YOUR_TOKEN"
   }
 }
@@ -171,18 +198,21 @@ builder.Services.AddTaminClient(
 ```csharp
 var session = new TaminSession(
     new HttpClient(),
-    oauthToken: "YOUR_TOKEN");
+    oauthToken: "YOUR_TOKEN",
+    clientId: "YOUR_CLIENT_ID");
 ```
 
 ### Log in at runtime
 
-`TaminSession.CreateAsync` performs a POST to `/ws/api/auth/login` and stores the returned token:
+`TaminSession.CreateAsync` posts credentials to the configured endpoint and stores the returned token for the generated Kiota gateway:
 
 ```csharp
 var session = await TaminSession.CreateAsync(
     new HttpClient(),
     username: "user",
-    password: "pass");
+    password: "pass",
+    otp: "123456",
+    providerIdentifier: "provider-id");
 ```
 
 ### Refresh a token
@@ -190,7 +220,7 @@ var session = await TaminSession.CreateAsync(
 ```csharp
 TokenResult refreshed = await session.RefreshTokenAsync(
     refreshToken: "REFRESH_TOKEN",
-    clientId:     "YOUR_CLIENT_ID");
+    clientId: "YOUR_CLIENT_ID");
 
 string? newToken = refreshed.AccessToken ?? refreshed.Data;
 ```
@@ -204,447 +234,135 @@ if (status.Valid)
     Console.WriteLine($"Expires at {status.ExpiresAt}");
 ```
 
-### Key types
-
-| Type | Description |
-|---|---|
-| `TokenResult` | Returned by `RefreshTokenAsync`. Contains `AccessToken`, `RefreshToken`, `ExpiresIn`, `UserRoles`. |
-| `ValidateTokenResult` | Returned by `ValidateTokenAsync`. Contains `Valid`, `ExpiresAt`, `UserInfo`. |
-
 ---
 
-## Reference data (`session.Service`)
+## Reference data
 
-`session.Service` is a `ServiceClient` instance. All methods return `JsonElement` for maximum flexibility.
+`session.Service` is a `ServiceClient`. Methods return `JsonElement` so callers can handle EP.Tamin schema changes without waiting for a package update.
 
-### Search the drug catalogue
+### Typed query helpers
 
 ```csharp
 JsonElement drugs = await session.Service.GetDrugListAsync(
     searchText: "aspirin",
     activeOnly: true,
-    page:       1,
-    pageSize:   20);
-```
+    page: 1,
+    pageSize: 20);
 
-### Search the service catalogue
-
-```csharp
 JsonElement services = await session.Service.GetServiceListAsync(
     serviceGroup: "imaging",
-    activeOnly:   true);
+    activeOnly: true);
 ```
 
-### Check allowed quantities/limits
-
-```csharp
-JsonElement limit = await session.Service.GetAllowedCountAsync(
-    patientNationalId: "1234567890",
-    itemCode:          "DR001",
-    itemType:          "drug",
-    doctorId:          "doctor-id",
-    date:              "2024-06-01");
-```
-
-### Get price breakdown
-
-```csharp
-JsonElement price = await session.Service.GetPriceAsync(
-    itemCode:          "DR001",
-    itemType:          "drug",
-    quantity:          2,
-    patientNationalId: "1234567890");
-```
-
-### Additional reference endpoints
+### Raw generated endpoint helpers
 
 | Method | Description |
 |---|---|
-| `GetAllServicesAsync(query)` | Raw service list (legacy; use `GetServiceListAsync` for typed parameters) |
-| `GetPrescriptionTypeAsync(query)` | Official prescription-type reference table |
-| `GetParaclinicTarefAsync(query)` | Paraclinic tariff table |
-| `GetDrugAmountAsync(query)` | Drug amounts / reference data (legacy; use `GetDrugListAsync`) |
-| `GetDrugInstructionAsync(query)` | Drug administration instructions |
+| `GetAllServicesAsync(query)` | Generated service list endpoint. |
+| `GetPrescriptionTypeAsync(query)` | Generated prescription type endpoint. |
+| `GetParaclinicTarefAsync(query)` | Generated paraclinic tariff endpoint. |
+| `GetDrugAmountAsync(query)` | Generated drug amount endpoint. |
+| `GetDrugInstructionAsync(query)` | Generated drug instruction endpoint. |
+
+> **Not implemented:** previous README references to `GetAllowedCountAsync(...)` and `GetPriceAsync(...)` do not apply to this version.
 
 ---
 
-## Identity & eligibility (`session.Identity`)
+## Prescription operations
 
-### Verify patient identity
+`session.Prescription` is a `PrescriptionClient` for implemented e-prescription flows backed by generated Kiota request builders.
+
+### Register prescriptions
 
 ```csharp
-JsonElement result = await session.Identity.VerifyIdentityAsync(
-    new VerifyIdentityRequest
-    {
-        NationalId          = "1234567890",
-        BirthDate           = "1370-01-01",  // optional
-        MobileNumber        = "09121234567", // optional
-        ForeignerIdentifier = null           // for foreign patients
-    });
+await session.Prescription.RegisterVisitPrescriptionAsync(new RegisterVisitPrescriptionRequest
+{
+    DoctorId = "doctor-id",
+    PatientNationalId = "1234567890",
+    VisitDate = "2026-06-01",
+    ClinicId = "clinic-id"
+});
+
+await session.Prescription.RegisterDrugPrescriptionAsync(new RegisterDrugPrescriptionRequest
+{
+    DoctorId = "doctor-id",
+    PatientNationalId = "1234567890",
+    VisitDate = "2026-06-01",
+    DrugItems = [new DrugItem { DrugCode = "DR001", Quantity = 2 }]
+});
+
+await session.Prescription.RegisterParaclinicPrescriptionAsync(new RegisterParaclinicPrescriptionRequest
+{
+    DoctorId = "doctor-id",
+    PatientNationalId = "1234567890",
+    VisitDate = "2026-06-01",
+    ServiceItems = [new ServiceItem { ServiceCode = "LAB001", Quantity = 1 }]
+});
 ```
 
-### Check treatment entitlement
+Other implemented registration methods are:
+
+- `RegisterMedicalServicePrescriptionAsync(...)`
+- `RegisterReferralPrescriptionAsync(...)`
+- `RegisterPhysiotherapyPrescriptionAsync(...)`
+
+### Query, edit, delete, and warnings
 
 ```csharp
-JsonElement entitlement = await session.Identity.CheckEntitlementAsync(
-    new CheckEntitlementRequest
-    {
-        NationalId  = "1234567890",
-        ProviderId  = "clinic-id",
-        VisitDate   = "2024-06-01",
-        ServiceType = "clinic"
-    });
-```
-
----
-
-## E-prescription writing (`session.Prescription`)
-
-All registration methods post to the EP.Tamin prescribing endpoint and return a `JsonElement`. The `prescription_type` discriminator is set automatically by each request type.
-
-### Visit-only prescription
-
-```csharp
-JsonElement r = await session.Prescription.RegisterVisitPrescriptionAsync(
-    new RegisterVisitPrescriptionRequest
-    {
-        DoctorId          = "doctor-id",
-        PatientNationalId = "1234567890",
-        VisitDate         = "2024-06-01",
-        ClinicId          = "clinic-id",
-        DiagnosisCode     = "J06.9"
-    });
-```
-
-### Drug prescription
-
-```csharp
-JsonElement r = await session.Prescription.RegisterDrugPrescriptionAsync(
-    new RegisterDrugPrescriptionRequest
-    {
-        DoctorId          = "doctor-id",
-        PatientNationalId = "1234567890",
-        VisitDate         = "2024-06-01",
-        DrugItems         =
-        [
-            new DrugItem
-            {
-                DrugCode          = "DR001",
-                Quantity          = 2,
-                DosageInstruction = "twice daily",
-                Frequency         = "BID",
-                Duration          = "7 days",
-                Route             = "oral"
-            }
-        ]
-    });
-```
-
-### Paraclinic prescription (lab, imaging, diagnostics)
-
-```csharp
-JsonElement r = await session.Prescription.RegisterParaclinicPrescriptionAsync(
-    new RegisterParaclinicPrescriptionRequest
-    {
-        DoctorId          = "doctor-id",
-        PatientNationalId = "1234567890",
-        VisitDate         = "2024-06-01",
-        ServiceItems      =
-        [
-            new ServiceItem { ServiceCode = "LAB001", Quantity = 1, ServiceGroup = "lab" }
-        ]
-    });
-```
-
-### Medical service prescription
-
-```csharp
-JsonElement r = await session.Prescription.RegisterMedicalServicePrescriptionAsync(
-    new RegisterMedicalServicePrescriptionRequest
-    {
-        DoctorId          = "doctor-id",
-        PatientNationalId = "1234567890",
-        VisitDate         = "2024-06-01",
-        ServiceItems      = [new ServiceItem { ServiceCode = "SVC001", Quantity = 1 }]
-    });
-```
-
-### Referral prescription
-
-```csharp
-JsonElement r = await session.Prescription.RegisterReferralPrescriptionAsync(
-    new RegisterReferralPrescriptionRequest
-    {
-        DoctorId           = "doctor-id",
-        PatientNationalId  = "1234567890",
-        VisitDate          = "2024-06-01",
-        TargetSpecialty    = "cardiology",
-        TargetProviderType = "clinic",
-        Reason             = "heart evaluation"
-    });
-```
-
-### Physiotherapy prescription
-
-```csharp
-JsonElement r = await session.Prescription.RegisterPhysiotherapyPrescriptionAsync(
-    new RegisterPhysiotherapyPrescriptionRequest
-    {
-        DoctorId           = "doctor-id",
-        PatientNationalId  = "1234567890",
-        PhysiotherapyItems = [new PhysiotherapyItem { ServiceCode = "PHY001" }],
-        SessionCount       = 10,
-        EffectiveDate      = "2024-06-01"
-    });
-```
-
----
-
-## Prescription query & mutation (`session.Prescription`)
-
-### Retrieve a prescription
-
-```csharp
-JsonElement detail = await session.Prescription.GetRegisteredPrescriptionAsync(
-    headerId:           1001,
+JsonElement registered = await session.Prescription.GetRegisteredPrescriptionAsync(
+    headerId: 123,
     doctorNationalCode: "0012345678",
-    doctorId:           "NPI12345");
-```
+    doctorId: "doctor-id");
 
-### List prescriptions with filters
-
-```csharp
-JsonElement list = await session.Prescription.GetPrescriptionListAsync(
-    new PrescriptionListFilter
-    {
-        DoctorId          = "doctor-id",
-        PatientNationalId = "1234567890",
-        FromDate          = "2024-01-01",
-        ToDate            = "2024-06-30",
-        PrescriptionType  = PrescriptionType.Drug,
-        Status            = "accepted"
-    });
-```
-
-### Edit a prescription
-
-```csharp
 JsonElement edited = await session.Prescription.EditElectronicPrescriptionAsync(
     new EditPrescriptionRequest
     {
-        HeaderId            = 1001,
-        DoctorNationalCode  = "0012345678",
-        DoctorId            = "NPI12345",
-        EditedItems         = [ /* updated items */ ]
+        HeaderId = 123,
+        DoctorNationalCode = "0012345678",
+        DoctorId = "doctor-id",
+        EditedItems = []
     });
-```
 
-### Delete a prescription
-
-```csharp
 JsonElement deleted = await session.Prescription.DeleteElectronicPrescriptionAsync(
     new DeletePrescriptionRequest
     {
-        HeaderId            = 1001,
-        DoctorNationalCode  = "0012345678",
-        DoctorId            = "NPI12345"
+        HeaderId = 123,
+        DoctorNationalCode = "0012345678",
+        DoctorId = "doctor-id"
     });
-```
 
-### Retrieve a referral prescription
-
-```csharp
-JsonElement referral = await session.Prescription.GetReferralPrescriptionAsync(
-    referralPrescriptionId: "RP001",
-    trackingCode:           "TC001",
-    patientNationalId:      "1234567890");
-```
-
----
-
-## Warning services (`session.Prescription`)
-
-Check for clinical or insurance warnings **before** submitting a prescription:
-
-```csharp
 JsonElement warnings = await session.Prescription.CheckPrescriptionWarningAsync(
     new CheckWarningRequest
     {
-        PatientNationalId  = "1234567890",
-        DoctorId           = "doctor-id",
-        PrescriptionItems  = [ /* items to check */ ]
-    });
-```
-
-Each warning item in the response corresponds to `WarningItem`:
-
-| Property | Description |
-|---|---|
-| `WarningCode` | Machine-readable code |
-| `WarningType` | Category of warning |
-| `Severity` | e.g. `error`, `warning`, `info` |
-| `Message` | Human-readable text |
-| `CanContinueFlag` | Whether submission can proceed despite this warning |
-| `RequiresConfirmationFlag` | Whether the user must acknowledge the warning |
-
----
-
-## Pharmacy dispensing (`session.Pharmacy`)
-
-`session.Pharmacy` is a `PharmacyClient`. The typical dispensing workflow is:
-
-1. **Check entitlement** — verify the patient has active coverage.
-2. **Register paper prescription** (if applicable) — when converting a paper Rx to electronic.
-3. **Get prescription list / details** — fetch the Rx waiting for dispensing.
-4. **Check warnings** — look for drug-interaction or insurance warnings.
-5. **Dispense** — submit the dispensed items.
-6. **Register / activate authenticity codes** — for tracked medications.
-
-```csharp
-// 1. Entitlement
-await session.Pharmacy.CheckEntitlementAsync(
-    new CheckEntitlementRequest
-    {
-        NationalId  = "1234567890",
-        ProviderId  = "pharmacy-id",
-        VisitDate   = "2024-06-01",
-        ServiceType = "pharmacy"
-    });
-
-// 2. Register paper prescription (optional)
-await session.Pharmacy.RegisterPaperPrescriptionAsync(
-    new RegisterPaperPrescriptionRequest
-    {
-        PatientNationalId       = "1234567890",
-        PaperPrescriptionNumber = "PP001"
-    });
-
-// 3. Fetch pending prescription
-JsonElement details = await session.Pharmacy.GetPrescriptionDetailsAsync("P001", "TC001");
-
-// 4. Check warnings
-await session.Pharmacy.CheckPrescriptionWarningsAsync(
-    new CheckWarningRequest
-    {
         PatientNationalId = "1234567890",
-        DoctorId          = "doctor-id",
-        PrescriptionItems = [ /* items */ ]
+        DoctorId = "doctor-id",
+        PrescriptionItems = []
     });
-
-// 5a. Dispense electronic prescription
-await session.Pharmacy.DispenseElectronicPrescriptionAsync(
-    new DispensePrescriptionRequest
-    {
-        PrescriptionId = "P001",
-        TrackingCode   = "TC001",
-        DispensedItems = [ /* dispensed items */ ],
-        PharmacistId   = "pharmacist-id"
-    });
-
-// 5b. Dispense with an acknowledged warning
-await session.Pharmacy.DispenseWithWarningAsync(
-    new DispensePrescriptionRequest { PrescriptionId = "P001", TrackingCode = "TC001", DispensedItems = [] });
-
-// 6. Register and activate drug authenticity/tracking code
-await session.Pharmacy.RegisterDrugAuthenticityCodeAsync(
-    new DrugAuthenticityRequest
-    {
-        PrescriptionId   = "P001",
-        DrugCode         = "DR001",
-        AuthenticityCode = "SERIAL123"
-    });
-
-await session.Pharmacy.ActivateDrugAuthenticityCodeAsync(
-    new DrugAuthenticityRequest { PrescriptionId = "P001", DrugCode = "DR001", AuthenticityCode = "SERIAL123" });
 ```
-
-### Additional pharmacy operations
-
-| Method | Description |
-|---|---|
-| `GetPrescriptionListAsync(query)` | Fetch prescriptions pending dispensing |
-| `TwoStepElectronicDispensingAsync(request)` | Two-step electronic dispensing workflow |
-| `GetActivatedBarcodeAsync(prescriptionId, trackingCode)` | Show activated barcode |
-| `GetPriceAsync(prescriptionId, trackingCode)` | Price and insurance-share breakdown |
-| `DeleteDispensingRecordAsync(request)` | Cancel a dispensing record |
-| `ReferPrescriptionToDoctorAsync(request)` | Return a prescription to the prescribing doctor |
-
----
-
-## Paraclinic service delivery (`session.Paraclinic`)
-
-`session.Paraclinic` is a `ParaclinicClient`. The workflow mirrors pharmacy dispensing:
-
-```csharp
-// Check entitlement
-await session.Paraclinic.CheckEntitlementAsync(
-    new CheckEntitlementRequest
-    {
-        NationalId  = "1234567890",
-        ProviderId  = "lab-id",
-        VisitDate   = "2024-06-01",
-        ServiceType = "lab"
-    });
-
-// Get prescription list / details
-JsonElement pending = await session.Paraclinic.GetPrescriptionListAsync();
-JsonElement detail  = await session.Paraclinic.GetPrescriptionDetailsAsync("P001", "TC001");
-
-// Provide electronic service
-await session.Paraclinic.ProvideElectronicPrescriptionServiceAsync(
-    new ProvideServiceRequest
-    {
-        PrescriptionId = "P001",
-        TrackingCode   = "TC001",
-        DeliveredItems = [ /* delivered services */ ],
-        ProviderId     = "lab-id"
-    });
-
-// Price breakdown
-JsonElement price = await session.Paraclinic.GetPriceAsync("P001", "TC001");
-```
-
-### Additional paraclinic operations
-
-| Method | Description |
-|---|---|
-| `RegisterPaperPrescriptionAsync(request)` | Register a paper prescription for paper-based workflows |
-| `ProvidePaperPrescriptionServiceAsync(request)` | Deliver paper prescription services |
-| `ProvideServiceWithWarningAsync(request)` | Deliver with an acknowledged warning |
-| `DeleteServiceDeliveryRecordAsync(request)` | Cancel a service delivery record |
 
 ---
 
 ## Parsing API responses
 
-All domain-client methods return `JsonElement`. You can deserialize into a typed DTO manually or use the provided response types:
+Most public client methods return the unwrapped API payload as `JsonElement`:
 
 ```csharp
-using System.Text.Json;
+JsonElement raw = await session.Service.GetDrugListAsync(searchText: "aspirin");
 
-JsonElement raw = await session.Identity.VerifyIdentityAsync(
-    new VerifyIdentityRequest { NationalId = "1234567890" });
-
-// Access individual fields
-string? name = raw.TryGetProperty("patient_name", out var n) ? n.GetString() : null;
-
-// Or deserialize to a known type
-IdentityResult identity = raw.Deserialize<IdentityResult>()!;
-Console.WriteLine(identity.PatientName);
+if (raw.ValueKind == JsonValueKind.Array)
+{
+    foreach (JsonElement item in raw.EnumerateArray())
+        Console.WriteLine(item);
+}
 ```
 
-### `TaminResponse<T>` — standard API envelope
-
-If you need access to the full envelope including `Success`, `StatusCode`, `Message`, `TrackingCode`, `CorrelationId`, or `Errors`, deserialize the raw HTTP body into `TaminResponse<T>`:
+When you manually consume raw EP.Tamin JSON outside of the SDK, deserialize the complete envelope with `TaminResponse<T>`:
 
 ```csharp
-// Advanced: manually read the raw response and deserialize the full envelope
-var taminResponse = JsonSerializer.Deserialize<TaminResponse<IdentityResult>>(rawJson);
+var taminResponse = JsonSerializer.Deserialize<TaminResponse<TokenResult>>(rawJson);
 if (taminResponse?.Success == true)
     Console.WriteLine(taminResponse.TrackingCode);
 ```
-
-> **Note:** The SDK automatically unwraps the `data` field from the envelope. Methods return the unwrapped payload as a `JsonElement`, not the full `TaminResponse<T>`. Use `TaminResponse<T>` only if you are parsing raw API responses outside of the SDK.
 
 ---
 
@@ -654,16 +372,16 @@ if (taminResponse?.Success == true)
 
 | Exception | When thrown |
 |---|---|
-| `AuthTokenNotSuppliedException` | `TaminSession` constructed without a token when `needToken: true` |
-| `UserLoginException` | Login failed; exposes `Status`, `Family`, `ReasonText` from the API body |
-| `PrescriptionNotCreatedException` | Prescription creation rejected; exposes `ErrorCode` |
-| `MissingParamException` | A required method parameter was null or empty |
-| `MissingConfigException` | A required configuration key is absent |
-| `InvalidConfigException` | A configuration value is present but invalid |
+| `AuthTokenNotSuppliedException` | `TaminSession` is constructed without a token while `needToken` is `true`. |
+| `UserLoginException` | Login failed; exposes `Status`, `Family`, and `ReasonText` when the API body supplies them. |
+| `PrescriptionNotCreatedException` | Prescription creation rejected; exposes `ErrorCode`. |
+| `MissingParamException` | A required method parameter was null or empty. |
+| `MissingConfigException` | A required configuration key is absent. |
+| `InvalidConfigException` | A configuration value is present but invalid. |
 
 ### HTTP exceptions
 
-All HTTP error responses throw a subclass of `ConnectionError`. The base class exposes `StatusCode`, `ReasonPhrase`, and `Content` (raw response body).
+All HTTP error responses throw a subclass of `ConnectionError`. The base class exposes `StatusCode`, `ReasonPhrase`, and `Content`.
 
 | Exception | HTTP status |
 |---|---|
@@ -679,46 +397,24 @@ All HTTP error responses throw a subclass of `ConnectionError`. The base class e
 | `ClientError` | Other 4xx |
 | `ServerError` | 5xx |
 
-### Domain / business exceptions
-
-Thrown by higher-level validation logic in your application or middleware, not directly by the SDK HTTP layer:
-
-| Exception | Meaning |
-|---|---|
-| `AuthenticationError` | Invalid credentials, expired token, or missing OTP |
-| `AuthorizationError` | Provider not authorised for the operation |
-| `IdentityError` | Patient identity verification failed |
-| `EntitlementError` | Patient does not have valid treatment coverage |
-| `ValidationError` | Required field missing, invalid code, invalid date |
-| `BusinessRuleError` | Prescription violates an insurance or medical rule |
-| `DuplicateSubmissionRisk` | Timeout or retry; check status before retrying |
-| `TemporaryServiceError` | External service temporarily unavailable |
-
-### Example: catch-all error handling
+### Example
 
 ```csharp
 try
 {
-    var result = await session.Prescription.RegisterDrugPrescriptionAsync(request);
+    JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(request);
 }
 catch (UnauthorizedAccess)
 {
-    // Token expired — refresh and retry
     await session.RefreshTokenAsync(savedRefreshToken);
 }
 catch (ResourceInvalid ex)
 {
     Console.WriteLine($"Validation failed: {ex.Content}");
 }
-catch (DuplicateSubmissionRisk)
-{
-    // Query before retrying to avoid double-submission
-    var existing = await session.Prescription.GetRegisteredPrescriptionAsync(
-        headerId, doctorNationalCode, doctorId);
-}
 catch (ServerError)
 {
-    // Temporary outage — back off and retry
+    // Temporary outage: back off and retry according to your application's policy.
 }
 ```
 
@@ -726,93 +422,53 @@ catch (ServerError)
 
 ## Artifact inventory
 
-### Primary user-facing
+### Primary user-facing artifacts
 
-| Artifact | Type | Description |
+| Artifact | Status | Description |
 |---|---|---|
-| `TaminSession` | Class | Main entry point. Holds all domain clients and manages HTTP authentication. |
-| `TaminSession.CreateAsync` | Static factory | Creates a session, performing login if no token is provided. |
-| `TaminSession.RefreshTokenAsync` | Method | Refreshes the bearer token. |
-| `TaminSession.ValidateTokenAsync` | Method | Validates the current bearer token. |
-| `ServiceClient` (via `session.Service`) | Class | Reference data: drug list, service list, pricing, allowed counts. |
-| `PrescriptionClient` (via `session.Prescription`) | Class | E-prescription writing, query, mutation, and warnings. |
-| `IdentityClient` (via `session.Identity`) | Class | Patient identity verification and treatment eligibility. |
-| `PharmacyClient` (via `session.Pharmacy`) | Class | Pharmacy dispensing: entitlement check, paper/electronic dispense, barcode, price. |
-| `ParaclinicClient` (via `session.Paraclinic`) | Class | Paraclinic service delivery: entitlement check, paper/electronic provision, price. |
-| `AddTaminClient` | DI extension method | Registers `TaminSession` as scoped with `IHttpClientFactory`. |
-| `TaminOptions` | Options class | Configuration POCO for DI / `appsettings.json` binding. |
+| `TaminSession` | Implemented | Main entry point. Creates domain clients and selects production or sandbox generated gateways. |
+| `TaminSession.CreateAsync` | Implemented | Creates a session and optionally performs login. |
+| `TaminSession.RefreshTokenAsync` | Implemented | Refreshes a bearer token. |
+| `TaminSession.ValidateTokenAsync` | Implemented | Validates an access token. |
+| `ServiceClient` (`session.Service`) | Implemented | Reference data and service lookups. |
+| `PrescriptionClient` (`session.Prescription`) | Implemented | Prescription registration, lookup, mutation, and warning checks. |
+| `IdentityClient` (`session.Identity`) | Not implemented | Placeholder only; no public operation methods. |
+| `PharmacyClient` (`session.Pharmacy`) | Not implemented | Placeholder only; no public operation methods. |
+| `ParaclinicClient` (`session.Paraclinic`) | Not implemented | Placeholder only; no public operation methods. |
+| `AddTaminClient` | Implemented | Registers `TaminSession` with `IHttpClientFactory`. |
+| `TaminOptions` | Implemented | Configuration POCO for DI and `appsettings.json` binding. |
 
-### Request / response DTOs
+### DTOs and enums
 
-| Type | Domain |
-|---|---|
-| `GetTokenRequest` | Authentication |
-| `TokenResult` | Authentication |
-| `ValidateTokenResult` | Authentication |
-| `VerifyIdentityRequest` | Identity |
-| `IdentityResult` | Identity |
-| `CheckEntitlementRequest` | Identity / Pharmacy / Paraclinic |
-| `EntitlementResult` | Identity |
-| `DrugItem` | Prescription writing |
-| `ServiceItem` | Prescription writing |
-| `PhysiotherapyItem` | Prescription writing |
-| `RegisterVisitPrescriptionRequest` | Prescription writing |
-| `RegisterDrugPrescriptionRequest` | Prescription writing |
-| `RegisterParaclinicPrescriptionRequest` | Prescription writing |
-| `RegisterMedicalServicePrescriptionRequest` | Prescription writing |
-| `RegisterReferralPrescriptionRequest` | Prescription writing |
-| `RegisterPhysiotherapyPrescriptionRequest` | Prescription writing |
-| `PrescriptionResult` | Prescription writing result |
-| `PrescriptionListFilter` | Prescription query |
-| `EditPrescriptionRequest` | Prescription mutation |
-| `DeletePrescriptionRequest` | Prescription mutation |
-| `DrugReference` | Reference data |
-| `ServiceReference` | Reference data |
-| `AllowedCountResult` | Reference data |
-| `PriceResult` | Reference data / pricing |
-| `WarningItem` | Warning services |
-| `CheckWarningRequest` | Warning services |
-| `RegisterPaperPrescriptionRequest` | Pharmacy / Paraclinic |
-| `DispensePrescriptionRequest` | Pharmacy dispensing |
-| `DrugAuthenticityRequest` | Pharmacy authenticity |
-| `ReferPrescriptionRequest` | Pharmacy referral |
-| `ProvideServiceRequest` | Paraclinic delivery |
-
-### Enums
-
-| Type | Values |
-|---|---|
-| `PrescriptionType` | `Drug(1)`, `Paraclinic(2)`, `Visit(3)`, `VisitService(4)`, `Service(5)`, `Referral(6)`, `Physiotherapy(7)` |
-| `PrescriptionStatus` | `Draft`, `Submitted`, `Accepted`, `Rejected`, `Warning`, `Edited`, `Deleted`, `PendingSync`, `Failed` |
-
-### Supporting / advanced
-
-| Type | Notes |
-|---|---|
-| `TaminResponse<T>` | Standard API envelope — useful if you consume raw JSON outside the SDK. |
-| `Prescription` | Low-level key/value prescription dictionary. Prefer the typed `RegisterXxx` request types. |
-| `DocEprsc` | Doctor-type record. Used internally by prescription payloads. |
-
-### Exception hierarchy
-
-| Base | Subclasses |
-|---|---|
-| `Exception` | `AuthTokenNotSuppliedException`, `UserLoginException`, `PrescriptionNotCreatedException`, `MissingConfigException`, `InvalidConfigException` |
-| `ArgumentException` | `MissingParamException` |
-| `ConnectionError` | `Redirection`, `ClientError` → (`BadRequest`, `UnauthorizedAccess`, `ForbiddenAccess`, `ResourceNotFound`, `MethodNotAllowed`, `ResourceConflict`, `ResourceGone`, `ResourceInvalid`), `ServerError` |
-| `Exception` (domain) | `AuthenticationError`, `AuthorizationError`, `IdentityError`, `EntitlementError`, `ValidationError`, `BusinessRuleError`, `DuplicateSubmissionRisk`, `TemporaryServiceError` |
+| Type | Status | Domain |
+|---|---|---|
+| `TokenResult` | Implemented | Authentication |
+| `ValidateTokenResult` | Implemented | Authentication |
+| `DrugItem` | Implemented | Prescription writing |
+| `ServiceItem` | Implemented | Prescription writing |
+| `PhysiotherapyItem` | Implemented | Prescription writing |
+| `RegisterVisitPrescriptionRequest` | Implemented | Prescription writing |
+| `RegisterDrugPrescriptionRequest` | Implemented | Prescription writing |
+| `RegisterParaclinicPrescriptionRequest` | Implemented | Prescription writing |
+| `RegisterMedicalServicePrescriptionRequest` | Implemented | Prescription writing |
+| `RegisterReferralPrescriptionRequest` | Implemented | Prescription writing |
+| `RegisterPhysiotherapyPrescriptionRequest` | Implemented | Prescription writing |
+| `EditPrescriptionRequest` | Implemented | Prescription mutation |
+| `DeletePrescriptionRequest` | Implemented | Prescription mutation |
+| `CheckWarningRequest` | Implemented | Warning services |
+| `PrescriptionType` | Implemented | Prescription writing |
+| Identity, entitlement, pharmacy, paraclinic dispensing, pricing, and typed reference result DTOs | Not implemented | Use `JsonElement` or wait for generated endpoint support. |
 
 ---
 
 ## Limitations & compatibility notes
 
 - **Target framework:** `net10.0` only. Earlier .NET versions are not supported.
-- **Sandbox vs. production:** The default base URL is the sandbox endpoint (`https://ep-test.tamin.ir/api/`). Override `baseUri` / `TaminOptions.BaseUrl` for production (`https://ep.tamin.ir/api/`).
-- **No IHttpClientFactory in manual construction:** When constructing `TaminSession` directly (not via DI), supply your own `HttpClient`. Lifetime and socket management are your responsibility.
-- **`JsonElement` return type:** Domain-client methods return raw `JsonElement` to remain forward-compatible with API schema changes. Deserialize to the provided DTO types when strong typing is required.
-- **Token lifetime:** The SDK does not automatically refresh tokens. Monitor `TokenResult.ExpiresIn` and call `RefreshTokenAsync` proactively.
-- **`DuplicateSubmissionRisk`:** On network timeouts during prescription submission, **query the API for an existing prescription before retrying** to avoid double-submitting.
-- **Thread safety:** `TaminSession` shares a single `HttpClient`. Concurrent calls are safe. Do not replace `HttpClient.DefaultRequestHeaders` from multiple threads.
+- **Default endpoint:** `TaminSession` and `TaminOptions` default to `TaminEndpoint.Production`; set `TaminEndpoint.Sandbox` for sandbox request builders and default sandbox base URL.
+- **Manual `HttpClient` ownership:** when constructing `TaminSession` directly, supply and manage your own `HttpClient` lifetime.
+- **`JsonElement` return type:** client methods return raw unwrapped payloads to stay compatible with EP.Tamin response changes.
+- **No automatic token refresh:** monitor token expiry and call `RefreshTokenAsync` from your application policy.
+- **Not implemented placeholders:** `IdentityClient`, `PharmacyClient`, and `ParaclinicClient` are intentionally empty until generated Kiota builders exist for those endpoint groups.
 
 ---
 
@@ -821,15 +477,8 @@ catch (ServerError)
 See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, code-style guidelines, and pull-request instructions.
 
 ```bash
-# Run all tests
 dotnet test Vorn.Tamin.slnx
 ```
-
----
-
-## Acknowledgement
-
-Inspired by the Python [`Mazafard/tamin-sdk`](https://github.com/Mazafard/tamin-sdk).
 
 ---
 
@@ -847,4 +496,3 @@ See [CHANGELOG.md](CHANGELOG.md).
 
 **Repository:** <https://github.com/mobinseven/Vorn.Tamin>  
 **Issues:** <https://github.com/mobinseven/Vorn.Tamin/issues>
-
