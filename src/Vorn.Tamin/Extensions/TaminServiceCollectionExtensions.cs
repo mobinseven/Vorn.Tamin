@@ -12,9 +12,12 @@ public sealed class TaminOptions
 {
     /// <summary>
     /// Base URL for the EP.Tamin API.
-    /// Defaults to the generated Kiota endpoint <c>https://soa.tamin.ir/</c>.
+    /// When blank, defaults to the selected <see cref="Endpoint"/> base URL.
     /// </summary>
-    public string BaseUrl { get; set; } = TaminKiotaClientFactory.DefaultBaseUrl;
+    public string BaseUrl { get; set; } = string.Empty;
+
+    /// <summary>Generated endpoint surface to use for requests.</summary>
+    public TaminEndpoint Endpoint { get; set; } = TaminEndpoint.Production;
 
     /// <summary>Client-Id header value issued during API onboarding.</summary>
     public string? ClientId { get; set; }
@@ -64,16 +67,26 @@ public static class TaminServiceCollectionExtensions
             var factory = sp.GetRequiredService<IHttpClientFactory>();
             var httpClient = factory.CreateClient("TaminClient");
 
-            var baseUri = new Uri(options.BaseUrl);
+            var baseUri = new Uri(string.IsNullOrWhiteSpace(options.BaseUrl)
+                ? DefaultBaseUrl(options.Endpoint)
+                : options.BaseUrl);
 
             if (!string.IsNullOrWhiteSpace(options.OAuthToken))
-                return new TaminSession(httpClient, options.OAuthToken, baseUri, clientId: options.ClientId);
+                return new TaminSession(httpClient, options.OAuthToken, baseUri, clientId: options.ClientId, endpoint: options.Endpoint);
 
             // If no static token is configured we create the session without one.
             // Callers must invoke TaminSession.CreateAsync(...) to obtain a token at runtime.
-            return new TaminSession(httpClient, null, baseUri, needToken: false, clientId: options.ClientId);
+            return new TaminSession(httpClient, null, baseUri, needToken: false, clientId: options.ClientId, endpoint: options.Endpoint);
         });
 
         return services;
     }
+
+    private static string DefaultBaseUrl(TaminEndpoint endpoint)
+        => endpoint switch
+        {
+            TaminEndpoint.Production => TaminKiotaClientFactory.DefaultBaseUrl,
+            TaminEndpoint.Sandbox => TaminKiotaSandboxClientFactory.DefaultBaseUrl,
+            _ => throw new ArgumentOutOfRangeException(nameof(endpoint), endpoint, "Unsupported Tamin endpoint.")
+        };
 }
