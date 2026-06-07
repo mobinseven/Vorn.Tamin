@@ -42,7 +42,10 @@ public sealed record PkceChallenge
         if (verifier.Any(static c => !(char.IsAsciiLetterOrDigit(c) || c is '-' or '.' or '_' or '~')))
             throw new ArgumentException("PKCE verifier contains characters outside RFC 7636 unreserved characters.", nameof(verifier));
 
-        var hash = SHA256.HashData(Encoding.ASCII.GetBytes(verifier));
+        Span<byte> verifierBytes = stackalloc byte[verifier.Length];
+        Encoding.ASCII.GetBytes(verifier, verifierBytes);
+        Span<byte> hash = stackalloc byte[32];
+        SHA256.HashData(verifierBytes, hash);
         return new PkceChallenge(verifier, Base64UrlEncode(hash));
     }
 

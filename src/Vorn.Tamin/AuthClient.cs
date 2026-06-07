@@ -103,21 +103,28 @@ public sealed class AuthClient
     /// <summary>Sends a sign-out request to the provider.</summary>
     public async Task SignOutAsync(Uri redirectUri, CancellationToken cancellationToken = default)
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, CreateSignOutUrl(redirectUri));
+        using var request = new HttpRequestMessage(HttpMethod.Get, CreateSignOutUrl(redirectUri));
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
         await SendNoContentAsync(TaminOperation.SignOut, request, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<TokenResult> SendFormAsync(TaminOperation operation, IReadOnlyDictionary<string, string> fields, CancellationToken cancellationToken)
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, _routes.Resolve(_environment, operation).Uri)
+        using var request = new HttpRequestMessage(HttpMethod.Post, _routes.Resolve(_environment, operation).Uri)
         {
             Content = new FormUrlEncodedContent(fields)
         };
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         var response = await SendAsync(operation, request, cancellationToken).ConfigureAwait(false);
-        return DeserializeToken(response.Content);
+        try
+        {
+            return DeserializeToken(response.Content);
+        }
+        catch (JsonException ex)
+        {
+            throw new TaminAuthRequestException(_environment, operation, response.StatusCode, response.Content, ex);
+        }
     }
 
     private async Task SendNoContentAsync(TaminOperation operation, HttpRequestMessage request, CancellationToken cancellationToken)

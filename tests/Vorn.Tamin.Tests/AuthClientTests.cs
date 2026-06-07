@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using Vorn.Tamin;
 
 namespace Vorn.Tamin.Tests;
@@ -77,10 +78,12 @@ public sealed class AuthClientTests
     public async Task AuthClient_ExchangeCodeAsync_PostsFormFields()
     {
         HttpRequestMessage? captured = null;
-        var handler = new StubHandler((request, _) =>
+        string? capturedBody = null;
+        var handler = new StubHandler(async (request, _) =>
         {
             captured = request;
-            return Task.FromResult(TokenResponse());
+            capturedBody = await request.Content!.ReadAsStringAsync();
+            return TokenResponse();
         });
         var auth = new AuthClient(new HttpClient(handler));
         var pkce = PkceChallenge.FromVerifier(new string('b', 43));
@@ -92,21 +95,22 @@ public sealed class AuthClientTests
         Assert.Equal(HttpMethod.Post, captured!.Method);
         Assert.Equal("https://soa.tamin.ir/auth/server/token", captured.RequestUri!.ToString());
         Assert.Equal("application/x-www-form-urlencoded", captured.Content!.Headers.ContentType!.MediaType);
-        var body = await captured.Content.ReadAsStringAsync();
-        Assert.Contains("grant_type=authorization_code", body);
-        Assert.Contains("client_id=client", body);
-        Assert.Contains("code=code", body);
-        Assert.Contains($"code_verifier={pkce.Verifier}", body);
+        Assert.Contains("grant_type=authorization_code", capturedBody);
+        Assert.Contains("client_id=client", capturedBody);
+        Assert.Contains("code=code", capturedBody);
+        Assert.Contains($"code_verifier={pkce.Verifier}", capturedBody);
     }
 
     [Fact]
     public async Task AuthClient_RefreshTokenV2Async_PostsV2FormFields()
     {
         HttpRequestMessage? captured = null;
-        var handler = new StubHandler((request, _) =>
+        string? capturedBody = null;
+        var handler = new StubHandler(async (request, _) =>
         {
             captured = request;
-            return Task.FromResult(TokenResponse());
+            capturedBody = await request.Content!.ReadAsStringAsync();
+            return TokenResponse();
         });
         var auth = new AuthClient(new HttpClient(handler), TaminEndpoint.Sandbox);
 
@@ -115,11 +119,10 @@ public sealed class AuthClientTests
         Assert.NotNull(captured);
         Assert.Equal("https://ep-test.tamin.ir/auth/server/v2/token", captured!.RequestUri!.ToString());
         Assert.Equal("application/x-www-form-urlencoded", captured.Content!.Headers.ContentType!.MediaType);
-        var body = await captured.Content.ReadAsStringAsync();
-        Assert.Contains("grant_type=refresh_token", body);
-        Assert.Contains("client_id=client", body);
-        Assert.Contains("refresh_token=refresh", body);
-        Assert.Contains("audience=audience", body);
+        Assert.Contains("grant_type=refresh_token", capturedBody);
+        Assert.Contains("client_id=client", capturedBody);
+        Assert.Contains("refresh_token=refresh", capturedBody);
+        Assert.Contains("audience=audience", capturedBody);
     }
 
     [Fact]
@@ -157,6 +160,27 @@ public sealed class AuthClientTests
         Assert.Equal(TaminOperation.TokenExchange, ex.Operation);
         Assert.Equal(HttpStatusCode.Unauthorized, ex.StatusCode);
         Assert.Equal("denied", ex.Content);
+    }
+
+
+    [Fact]
+    public async Task AuthClient_MalformedTokenJson_PreservesOperationAndContent()
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("<html>not json</html>", Encoding.UTF8, "text/html")
+        }));
+        var auth = new AuthClient(new HttpClient(handler), TaminEndpoint.Production);
+        var pkce = PkceChallenge.FromVerifier(new string('d', 43));
+
+        var ex = await Assert.ThrowsAsync<TaminAuthRequestException>(() =>
+            auth.ExchangeCodeAsync("client", "code", new Uri("https://app/callback"), pkce));
+
+        Assert.Equal(TaminEndpoint.Production, ex.Environment);
+        Assert.Equal(TaminOperation.TokenExchange, ex.Operation);
+        Assert.Equal(HttpStatusCode.OK, ex.StatusCode);
+        Assert.Equal("<html>not json</html>", ex.Content);
+        Assert.IsAssignableFrom<JsonException>(ex.InnerException);
     }
 
     private static HttpResponseMessage TokenResponse() =>
