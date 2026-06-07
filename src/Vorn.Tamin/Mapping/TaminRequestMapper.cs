@@ -6,6 +6,7 @@ namespace Vorn.Tamin.Mapping;
 /// <summary>Maps supported friendly prescription DTOs to generated Kiota request models.</summary>
 internal static class TaminRequestMapper
 {
+    private static readonly TaminProviderSerializer Serializer = new();
     public static KiotaModels.SendEprescRequest ToSendEprescRequest(RegisterVisitPrescriptionRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -40,8 +41,8 @@ internal static class TaminRequestMapper
     {
         ArgumentNullException.ThrowIfNull(request);
         var result = CreateSendRequest(request.DoctorId, request.PatientNationalId, request.VisitDate, request.PrescriptionType, comments: request.Description ?? request.Reason);
-        result.AdditionalData["targetSpecialty"] = request.TargetSpecialty;
-        result.AdditionalData["targetProviderType"] = request.TargetProviderType;
+        result.AdditionalData["targetSpecialty"] = Serializer.SerializeStringCode(request.TargetSpecialty, nameof(request.TargetSpecialty));
+        result.AdditionalData["targetProviderType"] = Serializer.SerializeStringCode(request.TargetProviderType, nameof(request.TargetProviderType));
         return result;
     }
 
@@ -51,7 +52,7 @@ internal static class TaminRequestMapper
         var result = CreateSendRequest(request.DoctorId, request.PatientNationalId, request.EffectiveDate, request.PrescriptionType, comments: request.Description);
         result.NoteDetailEprscs = request.PhysiotherapyItems.Select(item => new KiotaModels.NoteDetailEprsc
         {
-            SrvId = new KiotaModels.Service { SrvCode = item.ServiceCode },
+            SrvId = new KiotaModels.Service { SrvCode = Serializer.SerializeStringCode(item.ServiceCode, nameof(item.ServiceCode)) },
             SrvQty = request.SessionCount,
             AdditionalData = { ["description"] = item.Description ?? string.Empty }
         }).ToList();
@@ -69,8 +70,8 @@ internal static class TaminRequestMapper
         ArgumentNullException.ThrowIfNull(request);
         return new KiotaModels.DentistRuleRequest
         {
-            DocId = request.DoctorId,
-            PatientId = request.PatientNationalId,
+            DocId = Serializer.SerializeStringCode(request.DoctorId, nameof(request.DoctorId)),
+            PatientId = Serializer.SerializeStringCode(request.PatientNationalId, nameof(request.PatientNationalId)),
             AllGridData = request.PrescriptionItems.Select(ToGridData).ToList()
         };
     }
@@ -84,10 +85,10 @@ internal static class TaminRequestMapper
         string? comments = null)
         => new()
         {
-            DocId = doctorId,
-            Patient = patientNationalId,
-            PrescDate = prescriptionDate,
-            Mobile = mobile,
+            DocId = Serializer.SerializeStringCode(doctorId, nameof(doctorId)),
+            Patient = Serializer.SerializeStringCode(patientNationalId, nameof(patientNationalId)),
+            PrescDate = Serializer.SerializeJalaliDate(prescriptionDate, nameof(prescriptionDate)),
+            Mobile = Serializer.SerializeOptionalStringCode(mobile, nameof(mobile)),
             Comments = comments,
             PrescType = new KiotaModels.PrescType { PrescTypeId = prescriptionType }
         };
@@ -97,20 +98,20 @@ internal static class TaminRequestMapper
         {
             NoteDetailDrug = new KiotaModels.DiagnosisID
             {
-                AdditionalData = { ["drugCode"] = item.DrugCode }
+                AdditionalData = { ["drugCode"] = Serializer.SerializeStringCode(item.DrugCode, nameof(item.DrugCode)) }
             },
             SrvQty = item.Quantity,
             Dose = item.DosageInstruction,
-            Repeat = item.RepeatCount?.ToString(),
-            AdditionalData = { ["drugCode"] = item.DrugCode, ["frequency"] = item.Frequency ?? string.Empty, ["duration"] = item.Duration ?? string.Empty, ["route"] = item.Route ?? string.Empty, ["usageNote"] = item.UsageNote ?? string.Empty }
+            Repeat = item.RepeatCount?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            AdditionalData = { ["drugCode"] = Serializer.SerializeStringCode(item.DrugCode, nameof(item.DrugCode)), ["frequency"] = item.Frequency ?? string.Empty, ["duration"] = item.Duration ?? string.Empty, ["route"] = item.Route ?? string.Empty, ["usageNote"] = item.UsageNote ?? string.Empty }
         };
 
     private static KiotaModels.NoteDetailEprsc ToNoteDetail(ServiceItem item)
         => new()
         {
-            SrvId = new KiotaModels.Service { SrvCode = item.ServiceCode },
+            SrvId = new KiotaModels.Service { SrvCode = Serializer.SerializeStringCode(item.ServiceCode, nameof(item.ServiceCode)) },
             SrvQty = item.Quantity,
-            AdditionalData = { ["description"] = item.Description ?? string.Empty }
+            AdditionalData = { ["serviceGroup"] = item.ServiceGroup ?? string.Empty, ["dateDo"] = Serializer.SerializeOptionalJalaliDate(item.EffectiveDate, nameof(item.EffectiveDate)) ?? string.Empty, ["description"] = item.Description ?? string.Empty }
         };
 
     private static KiotaModels.NoteDetailEprsc ToNoteDetail(object value)
