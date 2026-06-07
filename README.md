@@ -122,7 +122,7 @@ JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(
     {
         DoctorId = "doctor-id",
         PatientNationalId = "1234567890",
-        VisitDate = "2026-06-01",
+        VisitDate = "14030601",
         DrugItems =
         [
             new DrugItem
@@ -333,7 +333,7 @@ await session.Prescription.RegisterVisitPrescriptionAsync(new RegisterVisitPresc
 {
     DoctorId = "doctor-id",
     PatientNationalId = "1234567890",
-    VisitDate = "2026-06-01",
+    VisitDate = "14030601",
     ClinicId = "clinic-id"
 });
 
@@ -341,7 +341,7 @@ await session.Prescription.RegisterDrugPrescriptionAsync(new RegisterDrugPrescri
 {
     DoctorId = "doctor-id",
     PatientNationalId = "1234567890",
-    VisitDate = "2026-06-01",
+    VisitDate = "14030601",
     DrugItems = [new DrugItem { DrugCode = "DR001", Quantity = 2 }]
 });
 
@@ -349,8 +349,8 @@ await session.Prescription.RegisterParaclinicPrescriptionAsync(new RegisterParac
 {
     DoctorId = "doctor-id",
     PatientNationalId = "1234567890",
-    VisitDate = "2026-06-01",
-    ServiceItems = [new ServiceItem { ServiceCode = "LAB001", Quantity = 1 }]
+    VisitDate = "14030601",
+    ServiceItems = [new ServiceItem { ServiceCode = "LAB001", ServiceGroup = "LAB", Quantity = 1 }]
 });
 ```
 
@@ -359,6 +359,40 @@ Other implemented registration methods are:
 - `RegisterMedicalServicePrescriptionAsync(...)`
 - `RegisterReferralPrescriptionAsync(...)`
 - `RegisterPhysiotherapyPrescriptionAsync(...)`
+
+### Provider serialization and pre-send validation
+
+Provider-bound identifiers that look numeric are intentionally modeled and serialized as strings. Keep values such as `DoctorId`, `PatientNationalId`, `DrugCode`, `ServiceCode`, referral identifiers, and private-practice identifiers in string form so leading zeros, dashes, and alphabetic prefixes or suffixes are preserved.
+
+Provider date fields must already be eight-character Jalali strings, for example `14030601`. ISO/Gregorian-looking dates such as `2026-06-01` are rejected before any HTTP request is sent; convert dates in your application before calling the SDK.
+
+```csharp
+try
+{
+    await session.Prescription.RegisterDrugPrescriptionAsync(
+        new RegisterDrugPrescriptionRequest
+        {
+            DoctorId = "000-DOC",
+            PatientNationalId = "0012345678",
+            VisitDate = "14030601",
+            MobileNumber = "09123456789",
+            DrugItems = [new DrugItem { DrugCode = "000-DR-A", Quantity = 1 }]
+        });
+}
+catch (TaminValidationException ex)
+{
+    foreach (ValidationFailure failure in ex.Failures)
+        Console.WriteLine($"{failure.Field}: {failure.Code} - {failure.Message}");
+}
+```
+
+Use `ProfessionalIdentifierFormatter` when you need provider-specific professional identifier formatting:
+
+```csharp
+var formatter = new ProfessionalIdentifierFormatter();
+string midwifeDoctorId = formatter.FormatMidwifeDoctorId("12م345"); // 12*345
+string foreignDoctorCode = formatter.FormatForeignDoctorNationalCode("001-A"); // FIDA001-A
+```
 
 ### Query, edit, delete, and warnings
 
@@ -374,7 +408,7 @@ JsonElement edited = await session.Prescription.EditElectronicPrescriptionAsync(
         HeaderId = 123,
         DoctorNationalCode = "0012345678",
         DoctorId = "doctor-id",
-        EditedItems = []
+        EditedItems = [new Vorn.Tamin.Kiota.Models.NoteDetailEprsc { SrvQty = 1 }]
     });
 
 JsonElement deleted = await session.Prescription.DeleteElectronicPrescriptionAsync(
@@ -390,7 +424,7 @@ JsonElement warnings = await session.Prescription.CheckPrescriptionWarningAsync(
     {
         PatientNationalId = "1234567890",
         DoctorId = "doctor-id",
-        PrescriptionItems = []
+        PrescriptionItems = [new Vorn.Tamin.Kiota.Models.GridData()]
     });
 ```
 
@@ -432,6 +466,7 @@ if (taminResponse?.Success == true)
 | `MissingParamException` | A required method parameter was null or empty. |
 | `MissingConfigException` | A required configuration key is absent. |
 | `InvalidConfigException` | A configuration value is present but invalid. |
+| `TaminValidationException` | Provider-bound values fail structured client-side validation before transport. |
 
 ### HTTP exceptions
 
@@ -462,9 +497,14 @@ catch (UnauthorizedAccess)
 {
     await session.RefreshTokenAsync(savedRefreshToken);
 }
+catch (TaminValidationException ex)
+{
+    foreach (ValidationFailure failure in ex.Failures)
+        Console.WriteLine($"{failure.Field}: {failure.Code} - {failure.Message}");
+}
 catch (ResourceInvalid ex)
 {
-    Console.WriteLine($"Validation failed: {ex.Content}");
+    Console.WriteLine($"Provider validation failed: {ex.Content}");
 }
 catch (ServerError)
 {

@@ -55,7 +55,7 @@ public class TaminSessionTests
         {
             DoctorId = "D1",
             PatientNationalId = "1234567890",
-            VisitDate = "2024-01-01",
+            VisitDate = "14030101",
             ClinicId = "C1"
         });
 
@@ -111,8 +111,8 @@ public class TaminSessionTests
         {
             DoctorId = "D1",
             PatientNationalId = "1234567890",
-            VisitDate = "2024-01-01",
-            DrugItems = []
+            VisitDate = "14030101",
+            DrugItems = [new DrugItem { DrugCode = "DR001", Quantity = 1 }]
         });
 
         Assert.NotNull(captured);
@@ -132,11 +132,11 @@ public class TaminSessionTests
         });
 
         var session = new TaminSession(new HttpClient(handler), "token", endpoint: TaminEndpoint.Sandbox);
-        await session.Prescription.GetRegisteredPrescriptionAsync(1001, "NAT1", "D1");
+        await session.Prescription.GetRegisteredPrescriptionAsync(1001, "1234567890", "D1");
 
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Get, captured!.Method);
-        Assert.Equal("https://ep-test.tamin.ir/api/v2/ep/1001/NAT1/D1/detail", captured.RequestUri!.ToString());
+        Assert.Equal("https://ep-test.tamin.ir/api/v2/ep/1001/1234567890/D1/detail", captured.RequestUri!.ToString());
     }
 
     [Fact]
@@ -153,14 +153,14 @@ public class TaminSessionTests
         await session.Prescription.EditElectronicPrescriptionAsync(new EditPrescriptionRequest
         {
             HeaderId = 1001,
-            DoctorNationalCode = "NAT1",
+            DoctorNationalCode = "1234567890",
             DoctorId = "D1",
-            EditedItems = []
+            EditedItems = [new Vorn.Tamin.Kiota.Models.NoteDetailEprsc { SrvQty = 1 }]
         });
 
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Equal("https://ep-test.tamin.ir/api/v2/ep/update/1001/NAT1/D1", captured.RequestUri!.ToString());
+        Assert.Equal("https://ep-test.tamin.ir/api/v2/ep/update/1001/1234567890/D1", captured.RequestUri!.ToString());
     }
 
     [Fact]
@@ -177,13 +177,13 @@ public class TaminSessionTests
         await session.Prescription.DeleteElectronicPrescriptionAsync(new DeletePrescriptionRequest
         {
             HeaderId = 1001,
-            DoctorNationalCode = "NAT1",
+            DoctorNationalCode = "1234567890",
             DoctorId = "D1"
         });
 
         Assert.NotNull(captured);
         Assert.Equal(HttpMethod.Post, captured!.Method);
-        Assert.Equal("https://ep-test.tamin.ir/api/v2/ep/1001/NAT1/D1", captured.RequestUri!.ToString());
+        Assert.Equal("https://ep-test.tamin.ir/api/v2/ep/1001/1234567890/D1", captured.RequestUri!.ToString());
     }
 
     // ── Common headers ────────────────────────────────────────────────────────
@@ -264,7 +264,7 @@ public class TaminSessionTests
         {
             DoctorId = "d1",
             PatientNationalId = "1234567890",
-            VisitDate = "2024-01-01",
+            VisitDate = "14030101",
             DrugItems = [new DrugItem { DrugCode = "DR001", Quantity = 1 }]
         });
 
@@ -291,28 +291,28 @@ public class TaminSessionTests
         {
             DoctorId = "D1",
             PatientNationalId = "1234567890",
-            VisitDate = "2024-01-01",
+            VisitDate = "14030101",
             ClinicId = "C1"
         });
         await session.Prescription.RegisterDrugPrescriptionAsync(new RegisterDrugPrescriptionRequest
         {
             DoctorId = "D1",
             PatientNationalId = "1234567890",
-            VisitDate = "2024-01-01",
+            VisitDate = "14030101",
             DrugItems = [new DrugItem { DrugCode = "DR001", Quantity = 1 }]
         });
         await session.Prescription.RegisterParaclinicPrescriptionAsync(new RegisterParaclinicPrescriptionRequest
         {
             DoctorId = "D1",
             PatientNationalId = "1234567890",
-            VisitDate = "2024-01-01",
-            ServiceItems = [new ServiceItem { ServiceCode = "LAB001", Quantity = 1 }]
+            VisitDate = "14030101",
+            ServiceItems = [new ServiceItem { ServiceCode = "LAB001", ServiceGroup = "LAB", Quantity = 1 }]
         });
         await session.Prescription.RegisterMedicalServicePrescriptionAsync(new RegisterMedicalServicePrescriptionRequest
         {
             DoctorId = "D1",
             PatientNationalId = "1234567890",
-            VisitDate = "2024-01-01",
+            VisitDate = "14030101",
             ServiceItems = [new ServiceItem { ServiceCode = "SVC001", Quantity = 1 }]
         });
         await session.Prescription.RegisterReferralPrescriptionAsync(new RegisterReferralPrescriptionRequest
@@ -322,14 +322,15 @@ public class TaminSessionTests
             TargetSpecialty = "cardiology",
             TargetProviderType = "clinic",
             Reason = "consult",
-            VisitDate = "2024-01-01"
+            VisitDate = "14030101"
         });
         await session.Prescription.RegisterPhysiotherapyPrescriptionAsync(new RegisterPhysiotherapyPrescriptionRequest
         {
             DoctorId = "D1",
             PatientNationalId = "1234567890",
             PhysiotherapyItems = [new PhysiotherapyItem { ServiceCode = "PHY001" }],
-            SessionCount = 5
+            SessionCount = 5,
+            EffectiveDate = "14030101"
         });
 
         Assert.Equal(
@@ -358,9 +359,9 @@ public class TaminSessionTests
         await session.Prescription.EditElectronicPrescriptionAsync(new EditPrescriptionRequest
         {
             HeaderId = 1001,
-            DoctorNationalCode = "NAT1",
+            DoctorNationalCode = "1234567890",
             DoctorId = "D1",
-            EditedItems = []
+            EditedItems = [new Vorn.Tamin.Kiota.Models.NoteDetailEprsc { SrvQty = 1 }]
         });
 
         Assert.NotNull(captured);
@@ -382,7 +383,7 @@ public class TaminSessionTests
         await session.Prescription.DeleteElectronicPrescriptionAsync(new DeletePrescriptionRequest
         {
             HeaderId = 1001,
-            DoctorNationalCode = "NAT1",
+            DoctorNationalCode = "1234567890",
             DoctorId = "D1"
         });
 
@@ -475,7 +476,7 @@ public class TaminSessionTests
         {
             PatientNationalId = "1234567890",
             DoctorId = "D1",
-            PrescriptionItems = []
+            PrescriptionItems = [new Vorn.Tamin.Kiota.Models.GridData()]
         });
 
         Assert.NotNull(captured);
