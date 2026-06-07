@@ -72,38 +72,44 @@ internal sealed class TaminKiotaSandboxGateway : ITaminKiotaGateway
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    public Task<JsonElement> GetPrescriptionAsync(int headerId, string doctorId, CancellationToken cancellationToken)
+    public Task<JsonElement> GetPrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, CancellationToken cancellationToken)
     {
         if (headerId <= 0)
             throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
+        if (string.IsNullOrWhiteSpace(doctorNationalCode))
+            throw new ArgumentException("Doctor national code is required.", nameof(doctorNationalCode));
         if (string.IsNullOrWhiteSpace(doctorId))
             throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
 
-        var requestInfo = _client.Api.V2.Ep[headerId][doctorId][doctorId].Detail.ToGetRequestInformation();
+        var requestInfo = _client.Api.V2.Ep[headerId][doctorNationalCode][doctorId].Detail.ToGetRequestInformation();
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    public Task<JsonElement> EditPrescriptionAsync(int headerId, string doctorId, IReadOnlyList<NoteDetailEprsc> details, CancellationToken cancellationToken)
+    public Task<JsonElement> EditPrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, IReadOnlyList<NoteDetailEprsc> details, CancellationToken cancellationToken)
     {
         if (headerId <= 0)
             throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
+        if (string.IsNullOrWhiteSpace(doctorNationalCode))
+            throw new ArgumentException("Doctor national code is required.", nameof(doctorNationalCode));
         if (string.IsNullOrWhiteSpace(doctorId))
             throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
         ArgumentNullException.ThrowIfNull(details);
 
-        var requestInfo = _client.Api.V2.Ep.Update[headerId][doctorId][doctorId].ToPostRequestInformation([]);
+        var requestInfo = _client.Api.V2.Ep.Update[headerId][doctorNationalCode][doctorId].ToPostRequestInformation([]);
         ReplaceBody(requestInfo, _bodySerializer.SerializeCollection(details));
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    public Task<JsonElement> RemovePrescriptionAsync(int headerId, string doctorId, CancellationToken cancellationToken)
+    public Task<JsonElement> RemovePrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, CancellationToken cancellationToken)
     {
         if (headerId <= 0)
             throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
+        if (string.IsNullOrWhiteSpace(doctorNationalCode))
+            throw new ArgumentException("Doctor national code is required.", nameof(doctorNationalCode));
         if (string.IsNullOrWhiteSpace(doctorId))
             throw new ArgumentException("Doctor ID is required.", nameof(doctorId));
 
-        var requestInfo = _client.Api.V2.Ep[headerId][doctorId][doctorId].ToPostRequestInformation();
+        var requestInfo = _client.Api.V2.Ep[headerId][doctorNationalCode][doctorId].ToPostRequestInformation();
         return SendAsync(requestInfo, cancellationToken);
     }
 

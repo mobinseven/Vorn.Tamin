@@ -406,9 +406,9 @@ JsonElement r = await session.Prescription.RegisterPhysiotherapyPrescriptionAsyn
 
 ```csharp
 JsonElement detail = await session.Prescription.GetRegisteredPrescriptionAsync(
-    prescriptionId:    "P12345",
-    trackingCode:      "TC67890",
-    patientNationalId: "1234567890");
+    headerId:           1001,
+    doctorNationalCode: "0012345678",
+    doctorId:           "NPI12345");
 ```
 
 ### List prescriptions with filters
@@ -432,10 +432,10 @@ JsonElement list = await session.Prescription.GetPrescriptionListAsync(
 JsonElement edited = await session.Prescription.EditElectronicPrescriptionAsync(
     new EditPrescriptionRequest
     {
-        PrescriptionId = "P12345",
-        TrackingCode   = "TC67890",
-        EditedItems    = [ /* updated items */ ],
-        EditReason     = "Dosage correction"
+        HeaderId            = 1001,
+        DoctorNationalCode  = "0012345678",
+        DoctorId            = "NPI12345",
+        EditedItems         = [ /* updated items */ ]
     });
 ```
 
@@ -445,9 +445,9 @@ JsonElement edited = await session.Prescription.EditElectronicPrescriptionAsync(
 JsonElement deleted = await session.Prescription.DeleteElectronicPrescriptionAsync(
     new DeletePrescriptionRequest
     {
-        PrescriptionId = "P12345",
-        TrackingCode   = "TC67890",
-        DeleteReason   = "Entry error"
+        HeaderId            = 1001,
+        DoctorNationalCode  = "0012345678",
+        DoctorId            = "NPI12345"
     });
 ```
 
@@ -714,7 +714,7 @@ catch (DuplicateSubmissionRisk)
 {
     // Query before retrying to avoid double-submission
     var existing = await session.Prescription.GetRegisteredPrescriptionAsync(
-        prescriptionId, trackingCode, patientNationalId);
+        headerId, doctorNationalCode, doctorId);
 }
 catch (ServerError)
 {

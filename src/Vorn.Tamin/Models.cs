@@ -207,6 +207,7 @@ public sealed class RegisterPhysiotherapyPrescriptionRequest
 public sealed class EditPrescriptionRequest
 {
     [JsonPropertyName("header_id")] public required int HeaderId { get; init; }
+    [JsonPropertyName("doctor_national_code")] public required string DoctorNationalCode { get; init; }
     [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
     [JsonPropertyName("edited_items")] public required IReadOnlyList<object> EditedItems { get; init; }
 }
@@ -215,6 +216,7 @@ public sealed class EditPrescriptionRequest
 public sealed class DeletePrescriptionRequest
 {
     [JsonPropertyName("header_id")] public required int HeaderId { get; init; }
+    [JsonPropertyName("doctor_national_code")] public required string DoctorNationalCode { get; init; }
     [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
 }
 

@@ -20,11 +20,11 @@ internal interface ITaminKiotaGateway
 
     Task<JsonElement> SendPrescriptionAsync(SendEprescRequest request, CancellationToken cancellationToken);
 
-    Task<JsonElement> GetPrescriptionAsync(int headerId, string doctorId, CancellationToken cancellationToken);
+    Task<JsonElement> GetPrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, CancellationToken cancellationToken);
 
-    Task<JsonElement> EditPrescriptionAsync(int headerId, string doctorId, IReadOnlyList<NoteDetailEprsc> details, CancellationToken cancellationToken);
+    Task<JsonElement> EditPrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, IReadOnlyList<NoteDetailEprsc> details, CancellationToken cancellationToken);
 
-    Task<JsonElement> RemovePrescriptionAsync(int headerId, string doctorId, CancellationToken cancellationToken);
+    Task<JsonElement> RemovePrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, CancellationToken cancellationToken);
 
     Task<JsonElement> CheckPrescriptionWarningAsync(DentistRuleRequest request, CancellationToken cancellationToken);
 }

@@ -69,7 +69,7 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    public Task<JsonElement> GetPrescriptionAsync(int headerId, string doctorId, CancellationToken cancellationToken)
+    public Task<JsonElement> GetPrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, CancellationToken cancellationToken)
     {
         if (headerId <= 0)
             throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
@@ -80,7 +80,7 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    public Task<JsonElement> EditPrescriptionAsync(int headerId, string doctorId, IReadOnlyList<NoteDetailEprsc> details, CancellationToken cancellationToken)
+    public Task<JsonElement> EditPrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, IReadOnlyList<NoteDetailEprsc> details, CancellationToken cancellationToken)
     {
         if (headerId <= 0)
             throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
@@ -92,7 +92,7 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         return SendAsync(requestInfo, cancellationToken);
     }
 
-    public Task<JsonElement> RemovePrescriptionAsync(int headerId, string doctorId, CancellationToken cancellationToken)
+    public Task<JsonElement> RemovePrescriptionAsync(int headerId, string doctorNationalCode, string doctorId, CancellationToken cancellationToken)
     {
         if (headerId <= 0)
             throw new ArgumentOutOfRangeException(nameof(headerId), headerId, "Prescription header ID must be positive.");
