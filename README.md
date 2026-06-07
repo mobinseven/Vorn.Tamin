@@ -100,7 +100,7 @@ var session = new TaminSession(
     endpoint: TaminEndpoint.Production);
 
 // Option B: log in with username / password (+ optional OTP/provider identifier).
-var loggedInSession = await TaminSession.CreateAsync(
+var session = await TaminSession.CreateAsync(
     new HttpClient(),
     username: "your-username",
     password: "your-password",
