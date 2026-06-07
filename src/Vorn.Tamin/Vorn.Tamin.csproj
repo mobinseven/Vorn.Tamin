@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Vorn.Tamin.Kiota\Vorn.Tamin.Kiota.csproj" />
-    <ProjectReference Include="..\..\Vorn.Tamin.Kiota.Sandbox\Vorn.Tamin.Kiota.Sandbox.csproj" />
+    <ProjectReference Include="..\Vorn.Tamin.Kiota.Sandbox\Vorn.Tamin.Kiota.Sandbox.csproj" />
   </ItemGroup>
 
   <ItemGroup>
