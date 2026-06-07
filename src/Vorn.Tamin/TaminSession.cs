@@ -20,11 +20,38 @@ public sealed class TaminSession
     /// <summary>Optional Client-Id header value issued during API onboarding.</summary>
     public string? ClientId { get; }
 
-    /// <summary>Reference-data and service-lookup operations.</summary>
+    /// <summary>Backward-compatible reference-data and service-lookup operations.</summary>
     public ServiceClient Service { get; }
+
+    /// <summary>Reference-data query operations.</summary>
+    public ReferenceDataClient ReferenceData { get; }
 
     /// <summary>E-prescription writing, query, and mutation operations.</summary>
     public PrescriptionClient Prescription { get; }
+
+    /// <summary>Alias for role-aware prescription workflows.</summary>
+    public PrescriptionClient Prescriptions => Prescription;
+
+    /// <summary>Dental rule-check workflow operations.</summary>
+    public DentistryClient Dentistry { get; }
+
+    /// <summary>Referral workflow operations.</summary>
+    public ReferralClient Referrals { get; }
+
+    /// <summary>Eligibility lookup workflow operations.</summary>
+    public EligibilityClient Eligibility { get; }
+
+    /// <summary>Hospitalization workflow operations.</summary>
+    public HospitalizationClient Hospitalization { get; }
+
+    /// <summary>Doctor-facing workflow operations.</summary>
+    public DoctorClient Doctor { get; }
+
+    /// <summary>Secretary-facing workflow operations.</summary>
+    public SecretaryClient Secretary { get; }
+
+    /// <summary>Nurse-facing workflow operations.</summary>
+    public NurseClient Nurse { get; }
 
     /// <summary>Identity operation surface; empty until matching generated Kiota builders exist.</summary>
     public IdentityClient Identity { get; }
@@ -62,8 +89,16 @@ public sealed class TaminSession
             throw new AuthTokenNotSuppliedException();
 
         KiotaGateway = CreateGateway(endpoint, HttpClient, BaseUri, oauthToken, clientId);
-        Service = new ServiceClient(KiotaGateway);
+        ReferenceData = new ReferenceDataClient(KiotaGateway);
+        Service = new ServiceClient(ReferenceData);
         Prescription = new PrescriptionClient(KiotaGateway);
+        Dentistry = new DentistryClient(Prescription);
+        Referrals = new ReferralClient(Prescription);
+        Eligibility = new EligibilityClient(KiotaGateway);
+        Hospitalization = new HospitalizationClient();
+        Doctor = new DoctorClient(ReferenceData, Prescription, Dentistry, Referrals);
+        Secretary = new SecretaryClient(Eligibility, Hospitalization);
+        Nurse = new NurseClient();
         Identity = new IdentityClient(KiotaGateway);
         Pharmacy = new PharmacyClient(KiotaGateway);
         Paraclinic = new ParaclinicClient(KiotaGateway);
