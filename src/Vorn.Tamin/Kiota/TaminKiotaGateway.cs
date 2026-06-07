@@ -124,14 +124,17 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
         {
             requestInfo.Content.Position = 0;
             request.Content = new StreamContent(requestInfo.Content);
-            if (requestInfo.Headers.TryGetValue("Content-Type", out var contentTypes))
-                request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(contentTypes.First());
+            if (requestInfo.Headers.TryGetValue("Content-Type", out var contentTypes)
+                && contentTypes.FirstOrDefault() is { Length: > 0 } contentType)
+                request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
             else
                 request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
         }
 
         using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        var content = response.Content is not null
+            ? await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false)
+            : string.Empty;
         return ResponseHandling.Handle(response.StatusCode, response.ReasonPhrase, content);
     }
 
@@ -163,6 +166,9 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
             return;
 
         var uri = requestInfo.URI;
+        if (uri is null)
+            return;
+
         var separator = uri.Query.Length == 0 ? "?" : "&";
         requestInfo.URI = new Uri($"{uri}{separator}{queryString}");
     }
