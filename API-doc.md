@@ -1,7 +1,3 @@
-Here is the content of the provided PDF file converted into Markdown format.
-
----
-
 # راهنمای سرویس نسخه نویسی الکترونیک سازمان تامین اجتماعی
 
 **نسخه 1.9.4**  
