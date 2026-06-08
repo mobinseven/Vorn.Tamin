@@ -722,7 +722,7 @@ catch (ServerError)
 
 ---
 
-### Provider Documentation
+## Provider Documentation
 
 The Official API docs: [EP-TAMIN-API.md](EP-TAMIN-API.md) 
 
