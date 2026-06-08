@@ -720,16 +720,9 @@ catch (ServerError)
 - **No automatic token refresh:** monitor token expiry and call `RefreshTokenAsync` from your application policy.
 - **Not implemented placeholders:** `IdentityClient`, `PharmacyClient`, and `ParaclinicClient` are intentionally empty until generated Kiota builders exist for those endpoint groups. Nurse, referral feedback/count/detail, and hospitalization methods throw `TaminWorkflowNotImplementedException` so unavailable role workflows are explicit.
 
-### Provider compatibility notes
+### Provider Documentation
 
-The EP.Tamin provider materials contain specification inconsistencies that affect code generation, request construction, and support diagnosis:
-
-- **Version labels:** provider materials reference both version `1.9.4` and version `1.9.3`; verify the table, example, business note, and error section before treating a field as stable.
-- **Client identifier naming:** authentication examples and notes may use both `id_client` and `client_id`. The SDK sends the documented operation-specific shape, but support escalation should mention the exact field name used in the failed payload.
-- **String-versus-number ambiguity:** provider tables sometimes describe numeric values while examples carry string values. The SDK preserves provider-bound identifiers as strings where leading zeros or code semantics matter.
-- **Dental flag typing:** `isDentalService` appears with string/numeric ambiguity, so callers should not assume boolean coercion unless a specific provider operation documents it consistently.
-- **Sandbox route discrepancies:** sandbox paths and spellings can differ from production paths, including `api/v2/ws-services`, `api/v2/SendEpresc`, and prescription detail/update path segments. `TaminEnvironmentRoutes` keeps operation-level routes instead of deriving sandbox URLs from production URLs.
-- **Cross-section reconciliation:** payloads and routes must be reconciled across provider tables, JSON examples, business notes, and error sections. Do not generate behavior from a single table when another provider section contradicts it.
+The Official API docs: [EP-TAMIN-API.md](EP-TAMIN-API.md) 
 
 ---
 
