@@ -15,18 +15,19 @@ A .NET 10 client SDK for selected EP.Tamin electronic prescription API endpoints
 2. [Installation](#installation)
 3. [Prerequisites](#prerequisites)
 4. [Quick-start](#quick-start)
-5. [Role-aware workflows](#role-aware-workflows)
-6. [Dependency injection setup](#dependency-injection-setup)
-7. [Authentication](#authentication)
-8. [Reference data](#reference-data)
-9. [Prescription operations](#prescription-operations)
-10. [Parsing API responses](#parsing-api-responses)
-11. [Error handling](#error-handling)
-12. [Artifact inventory](#artifact-inventory)
-13. [Limitations & compatibility notes](#limitations--compatibility-notes)
-14. [Contributing](#contributing)
-15. [Changelog](#changelog)
-16. [License](#license)
+5. [Choosing a client surface](#choosing-a-client-surface)
+6. [Role-aware workflows](#role-aware-workflows)
+7. [Dependency injection setup](#dependency-injection-setup)
+8. [Authentication](#authentication)
+9. [Reference data](#reference-data)
+10. [Prescription operations](#prescription-operations)
+11. [Parsing API responses](#parsing-api-responses)
+12. [Error handling](#error-handling)
+13. [Artifact inventory](#artifact-inventory)
+14. [Limitations & compatibility notes](#limitations--compatibility-notes)
+15. [Contributing](#contributing)
+16. [Changelog](#changelog)
+17. [License](#license)
 
 ---
 
@@ -100,22 +101,24 @@ Install-Package Vorn.Tamin
 using System.Text.Json;
 using Vorn.Tamin;
 
+using var httpClient = new HttpClient();
+
 // Option A: pre-obtained bearer token.
-var session = new TaminSession(
-    new HttpClient(),
+TaminSession session = new(
+    httpClient,
     oauthToken: "YOUR_TOKEN",
     clientId: "YOUR_CLIENT_ID",
     endpoint: TaminEndpoint.Production);
 
 // Option B: log in with username / password (+ optional OTP/provider identifier).
-var session = await TaminSession.CreateAsync(
-    new HttpClient(),
-    username: "your-username",
-    password: "your-password",
-    otp: "123456",
-    providerIdentifier: "prov-id",
-    clientId: "YOUR_CLIENT_ID",
-    endpoint: TaminEndpoint.Sandbox);
+// TaminSession session = await TaminSession.CreateAsync(
+//     httpClient,
+//     username: "your-username",
+//     password: "your-password",
+//     otp: "123456",
+//     providerIdentifier: "prov-id",
+//     clientId: "YOUR_CLIENT_ID",
+//     endpoint: TaminEndpoint.Sandbox);
 
 // Reference data.
 JsonElement drugs = await session.Service.GetDrugListAsync(
@@ -142,6 +145,21 @@ JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(
 ```
 
 > **Not implemented:** identity verification, pharmacy dispensing, paraclinic delivery, nurse action submission, and hospitalization submission are not available in this version. Unavailable role workflows fail with `TaminWorkflowNotImplementedException` instead of appearing usable.
+
+---
+
+## Choosing a client surface
+
+Use one session as the source of truth for endpoint selection, token state, `Client-Id`, route resolution, and the generated Kiota gateway. Build other surfaces from that session instead of constructing parallel clients with their own `HttpClient` or environment settings.
+
+| Surface | Use when | Notes |
+|---|---|---|
+| `TaminSession` | You want direct access to every currently exposed workflow client. | Owns `BaseUri`, `ClientId`, endpoint selection, generated gateway construction, and backward-compatible properties such as `session.Service` and `session.Prescription`. |
+| `TaminClient` | You want role-oriented grouping for application code. | Wraps an existing `TaminSession`; it does not own separate provider state or transport. |
+| `AddTaminClient(...)` | You use ASP.NET Core or Microsoft dependency injection. | Registers a single configured `TaminSession` through `IHttpClientFactory`; prefer this for managed `HttpClient` lifetime. |
+| Generated Kiota projects | You are maintaining this SDK, not consuming it. | Treat generated request builders as infrastructure details behind the public workflow clients. |
+
+Commands and queries are intentionally exposed as separate methods: registration, edit, delete, token refresh, sign-out, referral feedback, nurse action recording, and hospitalization creation are commands; reference-data lookup, eligibility lookup, prescription retrieval, warning checks, referral counts/details, nurse to-do retrieval, and hospitalization lists are queries.
 
 ---
 
