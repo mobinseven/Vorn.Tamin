@@ -11,10 +11,12 @@ public sealed class PrescriptionClient
 {
     private readonly ITaminKiotaGateway _gateway;
     private readonly PrescriptionValidationRules _validationRules;
+    private readonly TaminEndpoint _endpoint;
 
     internal PrescriptionClient(ITaminKiotaGateway gateway, PrescriptionValidationRules? validationRules = null)
     {
         _gateway = gateway ?? throw new ArgumentNullException(nameof(gateway));
+        _endpoint = _gateway.Endpoint;
         _validationRules = validationRules ?? new PrescriptionValidationRules();
     }
 
@@ -24,42 +26,42 @@ public sealed class PrescriptionClient
     public Task<JsonElement> RegisterVisitPrescriptionAsync(RegisterVisitPrescriptionRequest request, CancellationToken cancellationToken = default)
     {
         _validationRules.ThrowIfInvalid(_validationRules.Validate(request));
-        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request), cancellationToken);
+        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request, _endpoint), cancellationToken);
     }
 
     /// <summary>Submits prescribed drug items through the generated SendEpresc builder.</summary>
     public Task<JsonElement> RegisterDrugPrescriptionAsync(RegisterDrugPrescriptionRequest request, CancellationToken cancellationToken = default)
     {
         _validationRules.ThrowIfInvalid(_validationRules.Validate(request));
-        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request), cancellationToken);
+        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request, _endpoint), cancellationToken);
     }
 
     /// <summary>Submits laboratory, imaging, diagnostic, or other paraclinic orders through the generated SendEpresc builder.</summary>
     public Task<JsonElement> RegisterParaclinicPrescriptionAsync(RegisterParaclinicPrescriptionRequest request, CancellationToken cancellationToken = default)
     {
         _validationRules.ThrowIfInvalid(_validationRules.Validate(request));
-        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request), cancellationToken);
+        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request, _endpoint), cancellationToken);
     }
 
     /// <summary>Submits physician-provided services or other medical service orders through the generated SendEpresc builder.</summary>
     public Task<JsonElement> RegisterMedicalServicePrescriptionAsync(RegisterMedicalServicePrescriptionRequest request, CancellationToken cancellationToken = default)
     {
         _validationRules.ThrowIfInvalid(_validationRules.Validate(request));
-        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request), cancellationToken);
+        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request, _endpoint), cancellationToken);
     }
 
     /// <summary>Registers a referral to another provider, specialty, or service centre through the generated SendEpresc builder.</summary>
     public Task<JsonElement> RegisterReferralPrescriptionAsync(RegisterReferralPrescriptionRequest request, CancellationToken cancellationToken = default)
     {
         _validationRules.ThrowIfInvalid(_validationRules.Validate(request));
-        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request), cancellationToken);
+        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request, _endpoint), cancellationToken);
     }
 
     /// <summary>Registers a physiotherapy prescription through the generated SendEpresc builder.</summary>
     public Task<JsonElement> RegisterPhysiotherapyPrescriptionAsync(RegisterPhysiotherapyPrescriptionRequest request, CancellationToken cancellationToken = default)
     {
         _validationRules.ThrowIfInvalid(_validationRules.Validate(request));
-        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request), cancellationToken);
+        return _gateway.SendPrescriptionAsync(TaminRequestMapper.ToSendEprescRequest(request, _endpoint), cancellationToken);
     }
 
     // ── Section 9: Prescription Query ────────────────────────────────────────
@@ -77,14 +79,14 @@ public sealed class PrescriptionClient
     public Task<JsonElement> EditElectronicPrescriptionAsync(EditPrescriptionRequest request, CancellationToken cancellationToken = default)
     {
         _validationRules.ThrowIfInvalid(_validationRules.Validate(request));
-        return _gateway.EditPrescriptionAsync(request.HeaderId, request.DoctorNationalCode, request.DoctorId, TaminRequestMapper.ToNoteDetails(request.EditedItems), cancellationToken);
+        return _gateway.EditPrescriptionAsync(request.HeaderId, request.DoctorNationalCode!, request.DoctorId, TaminRequestMapper.ToNoteDetails(request.EditedItems), cancellationToken);
     }
 
     /// <summary>Cancels or deletes a registered electronic prescription through the generated remove builder.</summary>
     public Task<JsonElement> DeleteElectronicPrescriptionAsync(DeletePrescriptionRequest request, CancellationToken cancellationToken = default)
     {
         _validationRules.ThrowIfInvalid(_validationRules.Validate(request));
-        return _gateway.RemovePrescriptionAsync(request.HeaderId, request.DoctorNationalCode, request.DoctorId, cancellationToken);
+        return _gateway.RemovePrescriptionAsync(request.HeaderId, request.DoctorNationalCode!, request.DoctorId, cancellationToken);
     }
 
     // ── Section 14: Warning Services ─────────────────────────────────────────

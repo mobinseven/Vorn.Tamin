@@ -2,9 +2,12 @@ using System.Text.Json.Serialization;
 
 namespace Vorn.Tamin;
 
-/// <summary>Request data for recording referral feedback.</summary>
+/// <summary>Request data for locating referral feedback detail.</summary>
 public sealed class ReferralFeedbackRequest
 {
-    [JsonPropertyName("referral_id")] public required string ReferralId { get; init; }
-    [JsonPropertyName("message")] public required string Message { get; init; }
+    /// <summary>Referral detail identifier.</summary>
+    [JsonPropertyName("id")] public long Id { get; init; }
+
+    /// <summary>Parent referral note header identifier.</summary>
+    [JsonPropertyName("master_parent")] public long MasterParent { get; init; }
 }

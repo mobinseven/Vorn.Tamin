@@ -93,12 +93,12 @@ public sealed class TaminSession
         Service = new ServiceClient(ReferenceData);
         Prescription = new PrescriptionClient(KiotaGateway);
         Dentistry = new DentistryClient(Prescription);
-        Referrals = new ReferralClient(Prescription);
+        Referrals = new ReferralClient(Prescription, KiotaGateway);
         Eligibility = new EligibilityClient(KiotaGateway);
-        Hospitalization = new HospitalizationClient();
+        Hospitalization = new HospitalizationClient(KiotaGateway);
         Doctor = new DoctorClient(ReferenceData, Prescription, Dentistry, Referrals);
         Secretary = new SecretaryClient(Eligibility, Hospitalization);
-        Nurse = new NurseClient();
+        Nurse = new NurseClient(KiotaGateway);
         Identity = new IdentityClient(KiotaGateway);
         Pharmacy = new PharmacyClient(KiotaGateway);
         Paraclinic = new ParaclinicClient(KiotaGateway);

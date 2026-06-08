@@ -129,12 +129,27 @@ public sealed class PhysiotherapyItem
     public string? Description { get; init; }
 }
 
+
+/// <summary>Provider identity fields shared by SendEpresc registration requests.</summary>
+public abstract class ProviderPrescriptionIdentity
+{
+    /// <summary>شماره نظام پزشکی بدون علامت؛ برای ماما حرف «م» در انتهای شماره نظام با <c>*</c> ارسال می‌شود.</summary>
+    [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
+
+    /// <summary>کد ملی پزشک؛ برای پزشکان اتباع طبق مستندات با FDA/FIDA ارسال شود.</summary>
+    [JsonPropertyName("doctor_national_code")] public string? DoctorNationalCode { get; init; }
+
+    /// <summary>Mobile number for the prescribing doctor, serialized to the official <c>docMobileNo</c> field.</summary>
+    [JsonPropertyName("doctor_mobile_number")] public string? DoctorMobileNumber { get; init; }
+
+    /// <summary>Patient national code used as the official SendEpresc <c>patient</c> value.</summary>
+    [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
+}
+
 /// <summary>Request payload for registering a visit-only prescription.</summary>
-public sealed class RegisterVisitPrescriptionRequest
+public sealed class RegisterVisitPrescriptionRequest : ProviderPrescriptionIdentity
 {
     [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Visit;
-    [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
-    [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("visit_date")] public required string VisitDate { get; init; }
     [JsonPropertyName("clinic_id")] public required string ClinicId { get; init; }
     [JsonPropertyName("mobile_number")] public string? MobileNumber { get; init; }
@@ -143,11 +158,9 @@ public sealed class RegisterVisitPrescriptionRequest
 }
 
 /// <summary>Request payload for registering a drug prescription.</summary>
-public sealed class RegisterDrugPrescriptionRequest
+public sealed class RegisterDrugPrescriptionRequest : ProviderPrescriptionIdentity
 {
     [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Drug;
-    [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
-    [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("visit_date")] public required string VisitDate { get; init; }
     [JsonPropertyName("mobile_number")] public string? MobileNumber { get; init; }
     [JsonPropertyName("diagnosis_code")] public string? DiagnosisCode { get; init; }
@@ -155,31 +168,25 @@ public sealed class RegisterDrugPrescriptionRequest
 }
 
 /// <summary>Request payload for registering a paraclinic prescription.</summary>
-public sealed class RegisterParaclinicPrescriptionRequest
+public sealed class RegisterParaclinicPrescriptionRequest : ProviderPrescriptionIdentity
 {
     [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Paraclinic;
-    [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
-    [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("visit_date")] public required string VisitDate { get; init; }
     [JsonPropertyName("service_items")] public required IReadOnlyList<ServiceItem> ServiceItems { get; init; }
 }
 
 /// <summary>Request payload for registering a medical service prescription.</summary>
-public sealed class RegisterMedicalServicePrescriptionRequest
+public sealed class RegisterMedicalServicePrescriptionRequest : ProviderPrescriptionIdentity
 {
     [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Service;
-    [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
-    [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("visit_date")] public required string VisitDate { get; init; }
     [JsonPropertyName("service_items")] public required IReadOnlyList<ServiceItem> ServiceItems { get; init; }
 }
 
 /// <summary>Request payload for registering a referral prescription.</summary>
-public sealed class RegisterReferralPrescriptionRequest
+public sealed class RegisterReferralPrescriptionRequest : ProviderPrescriptionIdentity
 {
     [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Referral;
-    [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
-    [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("target_specialty")] public required string TargetSpecialty { get; init; }
     [JsonPropertyName("target_provider_type")] public required string TargetProviderType { get; init; }
     [JsonPropertyName("reason")] public required string Reason { get; init; }
@@ -188,11 +195,9 @@ public sealed class RegisterReferralPrescriptionRequest
 }
 
 /// <summary>Request payload for registering a physiotherapy prescription.</summary>
-public sealed class RegisterPhysiotherapyPrescriptionRequest
+public sealed class RegisterPhysiotherapyPrescriptionRequest : ProviderPrescriptionIdentity
 {
     [JsonPropertyName("prescription_type")] public int PrescriptionType { get; init; } = (int)Tamin.PrescriptionType.Physiotherapy;
-    [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
-    [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("physiotherapy_items")] public required IReadOnlyList<PhysiotherapyItem> PhysiotherapyItems { get; init; }
     [JsonPropertyName("session_count")] public int SessionCount { get; init; }
     [JsonPropertyName("effective_date")] public string? EffectiveDate { get; init; }
@@ -207,7 +212,7 @@ public sealed class RegisterPhysiotherapyPrescriptionRequest
 public sealed class EditPrescriptionRequest
 {
     [JsonPropertyName("header_id")] public required int HeaderId { get; init; }
-    [JsonPropertyName("doctor_national_code")] public required string DoctorNationalCode { get; init; }
+    [JsonPropertyName("doctor_national_code")] public string? DoctorNationalCode { get; init; }
     [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
     [JsonPropertyName("edited_items")] public required IReadOnlyList<object> EditedItems { get; init; }
 }
@@ -216,7 +221,7 @@ public sealed class EditPrescriptionRequest
 public sealed class DeletePrescriptionRequest
 {
     [JsonPropertyName("header_id")] public required int HeaderId { get; init; }
-    [JsonPropertyName("doctor_national_code")] public required string DoctorNationalCode { get; init; }
+    [JsonPropertyName("doctor_national_code")] public string? DoctorNationalCode { get; init; }
     [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
 }
 
@@ -224,7 +229,7 @@ public sealed class DeletePrescriptionRequest
 /// <summary>Request payload for checking prescription warnings.</summary>
 public sealed class CheckWarningRequest
 {
-    [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("doctor_id")] public required string DoctorId { get; init; }
+    [JsonPropertyName("patient_national_id")] public required string PatientNationalId { get; init; }
     [JsonPropertyName("prescription_items")] public required IReadOnlyList<object> PrescriptionItems { get; init; }
 }
