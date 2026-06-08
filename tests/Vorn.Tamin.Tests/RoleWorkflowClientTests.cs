@@ -103,6 +103,81 @@ public sealed class RoleWorkflowClientTests
         Assert.True(result.GetProperty("ok").GetBoolean());
     }
 
+    [Fact]
+    public async Task HospitalizationCreateWorkflow_UsesGateway()
+    {
+        var session = new TaminSession(new HttpClient(new StubHandler()), "token");
+
+        var result = await session.Hospitalization.CreateAsync(new HospitalizationCreateRequest
+        {
+            DoctorId = "D1",
+            PatientNationalId = "1234567890",
+            PrescriptionDate = "14030101",
+            SiamId = "S1",
+            ReferralDetails =
+            [
+                new HospitalizationReferralDetail
+                {
+                    PatientNationalCode = "1234567890",
+                    ReferralHijriDate = "14030101",
+                    SiamId = "S1",
+                    Icd10Items = [new HospitalizationIcd10Item { IcdCode = "A00" }]
+                }
+            ]
+        });
+
+        Assert.True(result.GetProperty("ok").GetBoolean());
+    }
+
+    [Fact]
+    public async Task HospitalizationCreateWorkflow_InvalidNestedInputDoesNotSendTransport()
+    {
+        var sent = false;
+        var session = new TaminSession(new HttpClient(new StubHandler((_, _) =>
+        {
+            sent = true;
+            return Task.FromResult(JsonResponse());
+        })), "token");
+
+        var ex = await Assert.ThrowsAsync<TaminValidationException>(() => session.Hospitalization.CreateAsync(new HospitalizationCreateRequest
+        {
+            DoctorId = "D1",
+            PatientNationalId = "1234567890",
+            PrescriptionDate = "14030101",
+            SiamId = "S1",
+            ReferralDetails =
+            [
+                null!,
+                new HospitalizationReferralDetail
+                {
+                    PatientNationalCode = "123",
+                    ReferralHijriDate = "14030101",
+                    SiamId = "S1",
+                    Icd10Items = [null!]
+                }
+            ]
+        }));
+
+        Assert.False(sent);
+        Assert.Contains(ex.Failures, failure => failure.Field == "note_details_referral_list[0]" && failure.Code == "required");
+        Assert.Contains(ex.Failures, failure => failure.Field == "note_details_referral_list[1].patient_national_code" && failure.Code == "national-code-shape");
+        Assert.Contains(ex.Failures, failure => failure.Field == "note_details_referral_list[1].icd10s[0]" && failure.Code == "required");
+    }
+
+    [Fact]
+    public async Task ReferralCountsWorkflow_UsesGateway()
+    {
+        var session = new TaminSession(new HttpClient(new StubHandler()), "token");
+
+        var result = await session.Referrals.GetCountsAsync(new ReferralCountRequest
+        {
+            PatientNationalCode = "1234567890",
+            DoctorId = "D1"
+        });
+
+        Assert.True(result.GetProperty("ok").GetBoolean());
+    }
+
     private static HttpResponseMessage JsonResponse()
         => new(HttpStatusCode.OK)
         {

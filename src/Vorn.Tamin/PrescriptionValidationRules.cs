@@ -135,14 +135,29 @@ public sealed class PrescriptionValidationRules
             for (var index = 0; index < request.ReferralDetails.Count; index++)
             {
                 var detail = request.ReferralDetails[index];
-                AddRequired(failures, detail.PatientNationalCode, $"note_details_referral_list[{index}].patient_national_code");
+                if (detail is null)
+                {
+                    failures.Add(new ValidationFailure($"note_details_referral_list[{index}]", "required", "Referral detail cannot be null."));
+                    continue;
+                }
+
+                AddNationalCode(failures, detail.PatientNationalCode, $"note_details_referral_list[{index}].patient_national_code");
                 AddJalaliDate(failures, detail.ReferralHijriDate, $"note_details_referral_list[{index}].referral_hijri_date");
                 AddRequired(failures, detail.SiamId, $"note_details_referral_list[{index}].siam_id");
                 AddRequiredItems(failures, detail.Icd10Items, $"note_details_referral_list[{index}].icd10s");
                 if (detail.Icd10Items is not null)
                 {
                     for (var icdIndex = 0; icdIndex < detail.Icd10Items.Count; icdIndex++)
-                        AddRequired(failures, detail.Icd10Items[icdIndex].IcdCode, $"note_details_referral_list[{index}].icd10s[{icdIndex}].icd_code");
+                    {
+                        var icdItem = detail.Icd10Items[icdIndex];
+                        if (icdItem is null)
+                        {
+                            failures.Add(new ValidationFailure($"note_details_referral_list[{index}].icd10s[{icdIndex}]", "required", "ICD10 item cannot be null."));
+                            continue;
+                        }
+
+                        AddRequired(failures, icdItem.IcdCode, $"note_details_referral_list[{index}].icd10s[{icdIndex}].icd_code");
+                    }
                 }
             }
         }
