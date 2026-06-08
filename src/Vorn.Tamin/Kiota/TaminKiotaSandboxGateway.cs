@@ -9,6 +9,8 @@ namespace Vorn.Tamin.Kiota;
 /// <summary>Translates friendly SDK operations into generated sandbox Kiota request-builder calls and executes them with common headers.</summary>
 internal sealed class TaminKiotaSandboxGateway : ITaminKiotaGateway
 {
+    public TaminEndpoint Endpoint => TaminEndpoint.Sandbox;
+
     private readonly HttpClient _httpClient;
     private readonly string? _clientId;
     private readonly string? _oauthToken;
@@ -130,6 +132,80 @@ internal sealed class TaminKiotaSandboxGateway : ITaminKiotaGateway
 
         var requestInfo = _client.Api.V2.Patients.DeserveInfo[requestBy][siamId][doctorId][patientNationalCode].ToGetRequestInformation();
         return SendAsync(requestInfo, "GetEligibility", cancellationToken);
+    }
+
+
+    public Task<JsonElement> GetHospitalizationSecretaryListAsync(string siamId, string secretaryNationalCode, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(siamId, nameof(siamId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(secretaryNationalCode, nameof(secretaryNationalCode));
+        var requestInfo = _client.Api.V2.NoteDetailsReferral.HospitalizationOrder[siamId][secretaryNationalCode].ToGetRequestInformation();
+        return SendAsync(requestInfo, "GetHospitalizationSecretaryList", cancellationToken);
+    }
+
+    public Task<JsonElement> GetNurseTodoListAsync(string siamId, string nationalCode, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(siamId, nameof(siamId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(nationalCode, nameof(nationalCode));
+        var requestInfo = _client.Api.V2.CartableNurse.GetAll[siamId][nationalCode].ToGetRequestInformation();
+        return SendAsync(requestInfo, "GetNurseTodoList", cancellationToken);
+    }
+
+    public Task<JsonElement> SaveNurseActionAsync(NurseActionRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var sandboxRequest = new SandboxModels.NurseActionRequest
+        {
+            SiamId = request.SiamId,
+            NurseNationalCode = request.NurseNationalCode,
+            NoteDetailsEprscIds = request.NoteDetailsEprscIds
+        };
+        var requestInfo = _client.Ep.Api.V2.CartableNurse.Save.ToPostRequestInformation(sandboxRequest);
+        return SendAsync(requestInfo, "SaveNurseAction", cancellationToken);
+    }
+
+    public Task<JsonElement> GetReferralCountAsync(string patientNationalCode, string doctorId, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(patientNationalCode, nameof(patientNationalCode));
+        ArgumentException.ThrowIfNullOrWhiteSpace(doctorId, nameof(doctorId));
+        var requestInfo = _client.Api.V2.Referral.Count[patientNationalCode][doctorId].ToGetRequestInformation();
+        return SendAsync(requestInfo, "GetReferralCount", cancellationToken);
+    }
+
+    public Task<JsonElement> FindNoteReferralAsync(long masterId, string doctorId, string trackingCode, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(doctorId, nameof(doctorId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(trackingCode, nameof(trackingCode));
+        var requestInfo = _client.Api.V2.Ep.FindNoteReferral[masterId.ToString(System.Globalization.CultureInfo.InvariantCulture)][doctorId][trackingCode].ToGetRequestInformation();
+        return SendAsync(requestInfo, "FindNoteReferral", cancellationToken);
+    }
+
+    public Task<JsonElement> FetchReferralCartableAsync(string doctorNationalCode, string patientNationalCode, string trackingCode, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(doctorNationalCode, nameof(doctorNationalCode));
+        ArgumentException.ThrowIfNullOrWhiteSpace(patientNationalCode, nameof(patientNationalCode));
+        ArgumentException.ThrowIfNullOrWhiteSpace(trackingCode, nameof(trackingCode));
+        var requestInfo = _client.Api.CartablenoteDetailsReferral[doctorNationalCode][patientNationalCode][trackingCode].ToGetRequestInformation();
+        return SendAsync(requestInfo, "FetchReferralCartable", cancellationToken);
+    }
+
+    public Task<JsonElement> GetReferralListAsync(long referralId, CancellationToken cancellationToken)
+    {
+        var requestInfo = _client.Api.NoteDetailsReferral.Forward[referralId.ToString(System.Globalization.CultureInfo.InvariantCulture)].ToGetRequestInformation();
+        return SendAsync(requestInfo, "GetReferralList", cancellationToken);
+    }
+
+    public Task<JsonElement> GetReferralNoteDetailAsync(long id, long masterParent, CancellationToken cancellationToken)
+    {
+        var requestInfo = _client.Api.NoteDetailsReferral.Noteheads[id.ToString(System.Globalization.CultureInfo.InvariantCulture)][masterParent.ToString(System.Globalization.CultureInfo.InvariantCulture)].ToGetRequestInformation();
+        return SendAsync(requestInfo, "GetReferralNoteDetail", cancellationToken);
+    }
+
+    public Task<JsonElement> GetPatientOpenReferralCountAsync(string patientNationalCode, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(patientNationalCode, nameof(patientNationalCode));
+        var requestInfo = _client.Api.V2.Referral.ReferredList[patientNationalCode].ToGetRequestInformation();
+        return SendAsync(requestInfo, "GetPatientOpenReferralCount", cancellationToken);
     }
 
     private static void ReplaceBody(RequestInformation requestInfo, Stream content)

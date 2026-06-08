@@ -752,3 +752,14 @@ See [CHANGELOG.md](CHANGELOG.md).
 
 **Repository:** <https://github.com/mobinseven/Vorn.Tamin>  
 **Issues:** <https://github.com/mobinseven/Vorn.Tamin/issues>
+
+
+## Provider compatibility notes
+
+- `docNationalCode`: کد ملی پزشک؛ برای پزشکان اتباع طبق مستندات با FDA/FIDA ارسال شود.
+- `docId`: شماره نظام پزشکی بدون علامت؛ برای ماما حرف «م» در انتهای شماره نظام با `*` ارسال می‌شود.
+- `clientId`: در محیط تست مقدار آن کد ملی پزشک است.
+- `siamId`: شناسه سیام مرکز درمانی/درمانگاه/بیمارستان.
+- `trackingCode`: کد پیگیری نسخه.
+
+- `isDentalService`: provider compatibility flag retained for dental service payloads.

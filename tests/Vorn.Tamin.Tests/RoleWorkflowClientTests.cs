@@ -90,17 +90,17 @@ public sealed class RoleWorkflowClientTests
     }
 
     [Fact]
-    public async Task NurseUnavailableWorkflow_FailsExplicitly()
+    public async Task NurseTodoWorkflow_UsesGateway()
     {
         var session = new TaminSession(new HttpClient(new StubHandler()), "token");
 
-        var ex = await Assert.ThrowsAsync<TaminWorkflowNotImplementedException>(() => session.Nurse.GetTodoListAsync(new NurseTodoListRequest
+        var result = await session.Nurse.GetTodoListAsync(new NurseTodoListRequest
         {
             SiamId = "S1",
-            PatientNationalCode = "0987654321"
-        }));
+            NurseNationalCode = "0987654321"
+        });
 
-        Assert.Equal("nurse to-do list", ex.WorkflowName);
+        Assert.True(result.GetProperty("ok").GetBoolean());
     }
 
     private static HttpResponseMessage JsonResponse()

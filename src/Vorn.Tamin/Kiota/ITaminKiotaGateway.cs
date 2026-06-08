@@ -8,6 +8,8 @@ namespace Vorn.Tamin.Kiota;
 /// </summary>
 internal interface ITaminKiotaGateway
 {
+    TaminEndpoint Endpoint { get; }
+
     Task<JsonElement> GetServicesAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken);
 
     Task<JsonElement> GetPrescriptionTypesAsync(IReadOnlyDictionary<string, string?>? query, CancellationToken cancellationToken);
@@ -29,4 +31,22 @@ internal interface ITaminKiotaGateway
     Task<JsonElement> CheckPrescriptionWarningAsync(DentistRuleRequest request, CancellationToken cancellationToken);
 
     Task<JsonElement> GetEligibilityAsync(string requestBy, string siamId, string doctorId, string patientNationalCode, CancellationToken cancellationToken);
+
+    Task<JsonElement> GetHospitalizationSecretaryListAsync(string siamId, string secretaryNationalCode, CancellationToken cancellationToken);
+
+    Task<JsonElement> GetNurseTodoListAsync(string siamId, string nationalCode, CancellationToken cancellationToken);
+
+    Task<JsonElement> SaveNurseActionAsync(NurseActionRequest request, CancellationToken cancellationToken);
+
+    Task<JsonElement> GetReferralCountAsync(string patientNationalCode, string doctorId, CancellationToken cancellationToken);
+
+    Task<JsonElement> FindNoteReferralAsync(long masterId, string doctorId, string trackingCode, CancellationToken cancellationToken);
+
+    Task<JsonElement> FetchReferralCartableAsync(string doctorNationalCode, string patientNationalCode, string trackingCode, CancellationToken cancellationToken);
+
+    Task<JsonElement> GetReferralListAsync(long referralId, CancellationToken cancellationToken);
+
+    Task<JsonElement> GetReferralNoteDetailAsync(long id, long masterParent, CancellationToken cancellationToken);
+
+    Task<JsonElement> GetPatientOpenReferralCountAsync(string patientNationalCode, CancellationToken cancellationToken);
 }
