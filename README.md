@@ -720,6 +720,8 @@ catch (ServerError)
 - **No automatic token refresh:** monitor token expiry and call `RefreshTokenAsync` from your application policy.
 - **Not implemented placeholders:** `IdentityClient`, `PharmacyClient`, and `ParaclinicClient` are intentionally empty until generated Kiota builders exist for those endpoint groups. Nurse, referral feedback/count/detail, and hospitalization methods throw `TaminWorkflowNotImplementedException` so unavailable role workflows are explicit.
 
+---
+
 ### Provider Documentation
 
 The Official API docs: [EP-TAMIN-API.md](EP-TAMIN-API.md) 
