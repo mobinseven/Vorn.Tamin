@@ -5,7 +5,7 @@
 
 A .NET 10 client SDK for selected EP.Tamin electronic prescription API endpoints of the Social Security Insurance of Iran (سازمان تأمین اجتماعی).
 
-> **Implementation status:** the new version is Kiota-backed and currently exposes only the endpoint groups listed as **Implemented** below. Older README examples for identity, pharmacy dispensing, paraclinic delivery, pricing, and some response DTOs described planned or previous surfaces and are now explicitly marked **Not implemented** until matching generated request builders are available.
+> **Implementation status:** the new version is Kiota-backed and currently exposes only the endpoint groups listed as **Implemented** below. Older README examples for pharmacy dispensing, paraclinic delivery, pricing, and some response DTOs described planned or previous surfaces and are now explicitly marked **Not implemented** until matching generated request builders are available. Patient identity verification and entitlement checking are available through `EligibilityClient.LookupPrivatePracticeAsync()`, not through a separate `IdentityClient`.
 
 ---
 
@@ -57,7 +57,7 @@ A .NET 10 client SDK for selected EP.Tamin electronic prescription API endpoints
 | Eligibility lookup | **Implemented** | `session.Secretary.Eligibility.LookupPrivatePracticeAsync(...)` |
 | Nurse workflow | **Explicitly not implemented** | `session.Nurse` methods fail with `TaminWorkflowNotImplementedException`. |
 | Hospitalization workflow | **Explicitly not implemented** | `session.Secretary.Hospitalization` methods fail with `TaminWorkflowNotImplementedException`. |
-| Identity verification | **Not implemented** | `session.Identity` exists only as an empty placeholder. |
+| Identity verification | **Not implemented** | `session.Identity` exists only as an empty placeholder. For patient identity verification and entitlement checking, use `session.Eligibility.LookupPrivatePracticeAsync(...)` or `session.Secretary.Eligibility.LookupPrivatePracticeAsync(...)`, which calls the EP.Tamin "deserve-info" endpoint. No separate identity-specific operations exist in the generated Kiota clients. |
 | Pharmacy dispensing | **Not implemented** | `session.Pharmacy` exists only as an empty placeholder. |
 | Paraclinic service delivery | **Not implemented** | `session.Paraclinic` exists only as an empty placeholder. |
 | Allowed-count and pricing helpers | **Not implemented** | No public methods are exposed in this version. |
@@ -144,7 +144,7 @@ JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(
     });
 ```
 
-> **Not implemented:** identity verification, pharmacy dispensing, paraclinic delivery, nurse action submission, and hospitalization submission are not available in this version. Unavailable role workflows fail with `TaminWorkflowNotImplementedException` instead of appearing usable.
+> **Not implemented:** Pharmacy dispensing, paraclinic delivery, nurse action submission, and hospitalization submission are not available in this version. Unavailable role workflows fail with `TaminWorkflowNotImplementedException` instead of appearing usable. For patient identity verification and entitlement checking, use `session.Eligibility.LookupPrivatePracticeAsync(...)` which calls the EP.Tamin "deserve-info" endpoint.
 
 ---
 

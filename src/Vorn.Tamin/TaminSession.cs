@@ -53,7 +53,11 @@ public sealed class TaminSession
     /// <summary>Nurse-facing workflow operations.</summary>
     public NurseClient Nurse { get; }
 
-    /// <summary>Identity operation surface; empty until matching generated Kiota builders exist.</summary>
+    /// <summary>
+    /// Identity operation surface; empty placeholder because no separate identity-specific endpoints exist
+    /// beyond patient eligibility verification. Use <see cref="Eligibility"/> or <see cref="SecretaryClient.Eligibility"/>
+    /// for identity verification and entitlement checking via the "deserve-info" endpoint.
+    /// </summary>
     public IdentityClient Identity { get; }
 
     /// <summary>Pharmacy operation surface; empty until matching generated Kiota builders exist.</summary>

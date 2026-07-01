@@ -490,6 +490,8 @@ public class TaminSessionTests
     {
         Assert.Null(typeof(ServiceClient).GetMethod("GetAllowedCountAsync"));
         Assert.Null(typeof(ServiceClient).GetMethod("GetPriceAsync"));
+        // IdentityClient remains empty because patient identity verification is provided by EligibilityClient.LookupPrivatePracticeAsync
+        // which calls the "deserve-info" endpoint. No separate identity-specific endpoints exist in generated Kiota clients.
         Assert.DoesNotContain(typeof(IdentityClient).GetMethods(), IsDeclaredPublicInstanceMethod);
         Assert.DoesNotContain(typeof(PharmacyClient).GetMethods(), IsDeclaredPublicInstanceMethod);
         Assert.DoesNotContain(typeof(ParaclinicClient).GetMethods(), IsDeclaredPublicInstanceMethod);
