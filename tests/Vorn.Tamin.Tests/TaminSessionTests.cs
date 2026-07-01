@@ -490,9 +490,27 @@ public class TaminSessionTests
     {
         Assert.Null(typeof(ServiceClient).GetMethod("GetAllowedCountAsync"));
         Assert.Null(typeof(ServiceClient).GetMethod("GetPriceAsync"));
-        Assert.DoesNotContain(typeof(IdentityClient).GetMethods(), IsDeclaredPublicInstanceMethod);
-        Assert.DoesNotContain(typeof(PharmacyClient).GetMethods(), IsDeclaredPublicInstanceMethod);
-        Assert.DoesNotContain(typeof(ParaclinicClient).GetMethods(), IsDeclaredPublicInstanceMethod);
+    }
+
+    [Fact]
+    public void TaminSession_DoesNotExposeUnsupportedPlaceholderClients()
+    {
+        Assert.Null(typeof(TaminSession).GetProperty("Identity"));
+        Assert.Null(typeof(TaminSession).GetProperty("Pharmacy"));
+        Assert.Null(typeof(TaminSession).GetProperty("Paraclinic"));
+    }
+
+    [Fact]
+    public void Assembly_DoesNotExportUnsupportedPlaceholderClientTypes()
+    {
+        var exportedTypeNames = typeof(TaminSession).Assembly
+            .GetExportedTypes()
+            .Select(type => type.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.DoesNotContain("IdentityClient", exportedTypeNames);
+        Assert.DoesNotContain("PharmacyClient", exportedTypeNames);
+        Assert.DoesNotContain("ParaclinicClient", exportedTypeNames);
     }
 
     // ── Exception completeness ────────────────────────────────────────────────
@@ -527,12 +545,6 @@ public class TaminSessionTests
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private static bool IsDeclaredPublicInstanceMethod(System.Reflection.MethodInfo method)
-        => method.DeclaringType != typeof(object)
-            && method.IsPublic
-            && !method.IsStatic
-            && !method.IsSpecialName;
 
     private static HttpResponseMessage OkResponse() =>
         new(HttpStatusCode.OK)
