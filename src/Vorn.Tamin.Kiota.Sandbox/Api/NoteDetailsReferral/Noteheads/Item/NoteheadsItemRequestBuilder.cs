@@ -18,7 +18,7 @@ namespace Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Noteheads.Item
         /// <summary>Gets an item from the Vorn.Tamin.Kiota.Sandbox.api.noteDetailsReferral.noteheads.item.item collection</summary>
         /// <param name="position">Master parent ID</param>
         /// <returns>A <see cref="global::Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Noteheads.Item.Item.WithMasterParentItemRequestBuilder"/></returns>
-        public global::Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Noteheads.Item.Item.WithMasterParentItemRequestBuilder this[int position]
+        public global::Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Noteheads.Item.Item.WithMasterParentItemRequestBuilder this[long position]
         {
             get
             {

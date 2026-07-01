@@ -191,13 +191,13 @@ internal sealed class TaminKiotaSandboxGateway : ITaminKiotaGateway
 
     public Task<JsonElement> GetReferralListAsync(long referralId, CancellationToken cancellationToken)
     {
-        var requestInfo = _client.Api.NoteDetailsReferral.Forward[checked((int)referralId)].ToGetRequestInformation();
+        var requestInfo = _client.Api.NoteDetailsReferral.Forward[referralId].ToGetRequestInformation();
         return SendAsync(requestInfo, "GetReferralList", cancellationToken);
     }
 
     public Task<JsonElement> GetReferralNoteDetailAsync(long id, long masterParent, CancellationToken cancellationToken)
     {
-        var requestInfo = _client.Api.NoteDetailsReferral.Noteheads[checked((int)id)][checked((int)masterParent)].ToGetRequestInformation();
+        var requestInfo = _client.Api.NoteDetailsReferral.Noteheads[id][masterParent].ToGetRequestInformation();
         return SendAsync(requestInfo, "GetReferralNoteDetail", cancellationToken);
     }
 

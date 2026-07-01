@@ -18,7 +18,7 @@ namespace Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Noteheads
         /// <summary>Gets an item from the Vorn.Tamin.Kiota.Sandbox.api.noteDetailsReferral.noteheads.item collection</summary>
         /// <param name="position">Feedback/prescription ID; zero means feedback record itself</param>
         /// <returns>A <see cref="global::Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Noteheads.Item.NoteheadsItemRequestBuilder"/></returns>
-        public global::Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Noteheads.Item.NoteheadsItemRequestBuilder this[int position]
+        public global::Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Noteheads.Item.NoteheadsItemRequestBuilder this[long position]
         {
             get
             {

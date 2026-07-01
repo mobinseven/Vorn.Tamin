@@ -176,13 +176,13 @@ internal sealed class TaminKiotaGateway : ITaminKiotaGateway
 
     public Task<JsonElement> GetReferralListAsync(long referralId, CancellationToken cancellationToken)
     {
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.ReferralList[checked((int)referralId)].ToGetRequestInformation();
+        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.ReferralList[referralId].ToGetRequestInformation();
         return SendAsync(requestInfo, "GetReferralList", cancellationToken);
     }
 
     public Task<JsonElement> GetReferralNoteDetailAsync(long id, long masterParent, CancellationToken cancellationToken)
     {
-        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.Referral.NoteDetail[checked((int)id)][checked((int)masterParent)].ToGetRequestInformation();
+        var requestInfo = _client.Interface.Epresc.SendEpresc.V2.Referral.NoteDetail[id][masterParent].ToGetRequestInformation();
         return SendAsync(requestInfo, "GetReferralNoteDetail", cancellationToken);
     }
 

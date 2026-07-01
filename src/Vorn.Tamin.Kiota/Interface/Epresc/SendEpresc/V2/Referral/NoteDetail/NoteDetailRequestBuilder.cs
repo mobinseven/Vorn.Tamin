@@ -18,7 +18,7 @@ namespace Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.Referral.NoteDetail
         /// <summary>Gets an item from the Vorn.Tamin.Kiota.interface.epresc.SendEpresc.v2.referral.noteDetail.item collection</summary>
         /// <param name="position">Feedback/prescription ID; zero means feedback record itself</param>
         /// <returns>A <see cref="global::Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.Referral.NoteDetail.Item.NoteDetailItemRequestBuilder"/></returns>
-        public global::Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.Referral.NoteDetail.Item.NoteDetailItemRequestBuilder this[int position]
+        public global::Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.Referral.NoteDetail.Item.NoteDetailItemRequestBuilder this[long position]
         {
             get
             {

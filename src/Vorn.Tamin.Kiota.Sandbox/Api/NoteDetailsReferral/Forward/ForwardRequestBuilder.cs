@@ -18,7 +18,7 @@ namespace Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Forward
         /// <summary>Gets an item from the Vorn.Tamin.Kiota.Sandbox.api.noteDetailsReferral.forward.item collection</summary>
         /// <param name="position">Registered referral ID</param>
         /// <returns>A <see cref="global::Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Forward.Item.WithReferralItemRequestBuilder"/></returns>
-        public global::Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Forward.Item.WithReferralItemRequestBuilder this[int position]
+        public global::Vorn.Tamin.Kiota.Sandbox.Api.NoteDetailsReferral.Forward.Item.WithReferralItemRequestBuilder this[long position]
         {
             get
             {
