@@ -18,7 +18,7 @@ namespace Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.ReferralList
         /// <summary>Gets an item from the Vorn.Tamin.Kiota.interface.epresc.SendEpresc.v2.referralList.item collection</summary>
         /// <param name="position">Registered referral ID</param>
         /// <returns>A <see cref="global::Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.ReferralList.Item.WithReferralItemRequestBuilder"/></returns>
-        public global::Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.ReferralList.Item.WithReferralItemRequestBuilder this[int position]
+        public global::Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.ReferralList.Item.WithReferralItemRequestBuilder this[long position]
         {
             get
             {

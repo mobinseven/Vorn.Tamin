@@ -18,7 +18,7 @@ namespace Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.Referral.NoteDetail.It
         /// <summary>Gets an item from the Vorn.Tamin.Kiota.interface.epresc.SendEpresc.v2.referral.noteDetail.item.item collection</summary>
         /// <param name="position">Master parent ID</param>
         /// <returns>A <see cref="global::Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.Referral.NoteDetail.Item.Item.WithMasterParentItemRequestBuilder"/></returns>
-        public global::Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.Referral.NoteDetail.Item.Item.WithMasterParentItemRequestBuilder this[int position]
+        public global::Vorn.Tamin.Kiota.Interface.Epresc.SendEpresc.V2.Referral.NoteDetail.Item.Item.WithMasterParentItemRequestBuilder this[long position]
         {
             get
             {

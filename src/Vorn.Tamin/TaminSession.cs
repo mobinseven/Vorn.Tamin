@@ -53,15 +53,6 @@ public sealed class TaminSession
     /// <summary>Nurse-facing workflow operations.</summary>
     public NurseClient Nurse { get; }
 
-    /// <summary>Identity operation surface; empty until matching generated Kiota builders exist.</summary>
-    public IdentityClient Identity { get; }
-
-    /// <summary>Pharmacy operation surface; empty until matching generated Kiota builders exist.</summary>
-    public PharmacyClient Pharmacy { get; }
-
-    /// <summary>Paraclinic operation surface; empty until matching generated Kiota builders exist.</summary>
-    public ParaclinicClient Paraclinic { get; }
-
     internal ITaminKiotaGateway KiotaGateway { get; }
 
     /// <summary>
@@ -99,9 +90,6 @@ public sealed class TaminSession
         Doctor = new DoctorClient(ReferenceData, Prescription, Dentistry, Referrals);
         Secretary = new SecretaryClient(Eligibility, Hospitalization);
         Nurse = new NurseClient(KiotaGateway);
-        Identity = new IdentityClient(KiotaGateway);
-        Pharmacy = new PharmacyClient(KiotaGateway);
-        Paraclinic = new ParaclinicClient(KiotaGateway);
     }
 
     /// <summary>

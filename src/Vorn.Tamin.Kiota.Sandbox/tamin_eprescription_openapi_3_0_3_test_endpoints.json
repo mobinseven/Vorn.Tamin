@@ -1741,7 +1741,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "format": "int64"
             },
             "description": "Registered referral ID"
           }
@@ -1800,7 +1801,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "format": "int64"
             },
             "description": "Feedback/prescription ID; zero means feedback record itself"
           },
@@ -1809,7 +1811,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer"
+              "type": "integer",
+              "format": "int64"
             },
             "description": "Master parent ID"
           }
