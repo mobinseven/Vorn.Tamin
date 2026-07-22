@@ -1,14 +1,24 @@
 <Project>
     <PropertyGroup>
-        <Authors>EP.Tamin.NET Contributors</Authors>
-        <Company>EP.Tamin.NET</Company>
-        <Copyright>Copyright © EP.Tamin.NET Contributors</Copyright>
-        <RepositoryUrl>https://github.com/mobinseven/EP.Tamin.NET</RepositoryUrl>
+        <Authors>Vorn.Tamin Contributors</Authors>
+        <Company>Vorn.Tamin</Company>
+        <Copyright>Copyright © Vorn.Tamin Contributors</Copyright>
+        <Description>Kiota-generated .NET 10 client SDK for the EP.Tamin electronic prescription APIs of the Social Security Insurance of Iran.</Description>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageProjectUrl>https://github.com/mobinseven/Vorn.Tamin</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/mobinseven/Vorn.Tamin</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
+        <PackageTags>tamin;ep-tamin;electronic-prescription;iran;khadamat;social-security;healthcare;kiota;api-client</PackageTags>
+        <PackageReleaseNotes>Replace hand-written client with audited Kiota-generated contracts.</PackageReleaseNotes>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
     </PropertyGroup>
 
+    <ItemGroup Condition="'$(IsPackable)' != 'false'">
+        <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath="" />
+        <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="" />
+    </ItemGroup>
 </Project>
