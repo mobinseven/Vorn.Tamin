@@ -16,17 +16,17 @@ Clients are **generated from audited OpenAPI specifications** using [Kiota](http
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                  Your Application                    │
+│                  Your Application                   │
 ├─────────────────────────────────────────────────────┤
 │  Tamin.Integration                                  │
 │  ├── Auth / TaminTokenProvider   (PKCE + refresh)   │
 │  ├── Http  / TaminClientFactory  (pipeline wiring)  │
-│  ├── Http  / TaminResponseHandler + Retry            │
-│  └── Mapping / PrescriptionRequestMapper             │
+│  ├── Http  / TaminResponseHandler + Retry           │
+│  └── Mapping / PrescriptionRequestMapper            │
 ├──────────┬──────────┬───────────────────────────────┤
 │ Account  │   SOA    │           API                 │
 │ (Auth)   │ (Services│   (Clinical operations)       │
-│          │          │                               │
+│          │          │                               │ 
 │ Kiota    │  Kiota   │         Kiota                 │
 │ generated│ generated│       generated               │
 └──────────┴──────────┴───────────────────────────────┘
