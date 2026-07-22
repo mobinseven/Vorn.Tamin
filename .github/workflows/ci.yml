@@ -5,8 +5,14 @@ on:
     branches: ["**"]
     tags: ["v*"]
     paths:
-      - src/
-      - tests/
+      - "src/**"
+      - "openapi/**"
+      - "scripts/**"
+      - ".config/dotnet-tools.json"
+      - "Directory.Build.props"
+      - "Vorn.Tamin.slnx"
+      - "package.json"
+      - "package-lock.json"
   pull_request:
     branches: ["**"]
 
@@ -25,7 +31,14 @@ jobs:
           global-json-file: global.json
 
       - name: Restore
-        run: dotnet restore --force
+        run: |
+          dotnet tool restore
+          dotnet restore --force
+          npm ci
+
+      - name: Verify generated contracts
+        shell: pwsh
+        run: ./scripts/verify-tamin-contracts.ps1
 
       - name: Build
         run: dotnet build -m --no-restore --configuration Release

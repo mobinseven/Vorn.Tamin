@@ -2,12 +2,13 @@
   <Folder Name="/items/">
     <File Path="Directory.Build.props" />
   </Folder>
-  <Folder Name="/src/">
-    <Project Path="src/Vorn.Tamin.Kiota/Vorn.Tamin.Kiota.csproj" Id="d5377239-d081-4865-937b-3cf9115e1fca" />
-    <Project Path="src/Vorn.Tamin/Vorn.Tamin.csproj" />
-    <Project Path="src/Vorn.Tamin.Kiota.Sandbox/Vorn.Tamin.Kiota.Sandbox.csproj" Id="5b780355-214e-4596-9b30-ea01dea3330c" />
+  <Folder Name="/src/" />
+  <Folder Name="/src/Tamin/">
+    <Project Path="src/Tamin/Tamin.Client.Account/Tamin.Client.Account.csproj" />
+    <Project Path="src/Tamin/Tamin.Client.Api/Tamin.Client.Api.csproj" />
+    <Project Path="src/Tamin/Tamin.Client.Soa/Tamin.Client.Soa.csproj" />
+    <Project Path="src/Tamin/Tamin.Integration.Tests/Tamin.Integration.Tests.csproj" />
+    <Project Path="src/Tamin/Tamin.Integration/Tamin.Integration.csproj" />
   </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Vorn.Tamin.Tests/Vorn.Tamin.Tests.csproj" />
-  </Folder>
+  <Folder Name="/tests/" />
 </Solution>

@@ -1,0 +1,268 @@
+openapi: 3.1.0
+info:
+  title: Tamin Electronic Prescription API - Production
+  version: 1.9.7
+  description: Production OpenAPI contract transcribed solely from EP-TAMIN-API.md, document version 1.9.7 dated 1405/04/20. Where the source does not define a response payload, the response remains deliberately unconstrained and is identified as such in the companion audit.
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+servers:
+  - url: https://account.tamin.ir
+security:
+  - taminOAuth: []
+tags:
+  - name: Authentication
+    description: PKCE authorization, token exchange, refresh, and sign-out.
+  - name: Prescriptions
+    description: Prescription creation, entitlement, retrieval, deletion, and editing.
+  - name: Reference Data
+    description: Reference values used by prescription request fields.
+  - name: Dentistry
+    description: Dentistry rule checking and dentistry service lookup.
+  - name: Referrals
+    description: Doctor referral, referral feedback, and secretary referral workflows.
+  - name: Nursing
+    description: Clinic nursing cartable and nursing actions.
+  - name: Referred Services
+    description: Retrieval of referred medical-service prescriptions.
+  - name: Hospitalization
+    description: Hospitalization-order prescriptions for clinic secretaries.
+  - name: Family Doctor
+    description: Family-doctor patient admission share calculation.
+  - name: Patient Diseases
+    description: Selectable disease lookup and patient disease marking.
+paths:
+  /auth/server/authorize:
+    get:
+      tags:
+        - Authentication
+      summary: Start the PKCE authorization flow
+      operationId: beginAuthorization
+      security: []
+      parameters:
+        - name: redirect_uri
+          in: query
+          required: true
+          description: Registered HTTPS callback URI. Dynamic callback parameters are not supported.
+          schema:
+            type: string
+            format: uri
+        - name: code_challenge
+          in: query
+          required: true
+          description: BASE64URL-ENCODE(SHA256(ASCII(code_verifier))).
+          schema:
+            type: string
+        - name: client_id
+          in: query
+          required: true
+          description: Client identifier issued to the integrating company.
+          schema:
+            type: string
+        - name: response_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - code
+        - name: code_challenge_method
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - S256
+        - name: state
+          in: query
+          required: false
+          description: Opaque client state returned unchanged on the callback.
+          schema:
+            type: string
+      responses:
+        default:
+          description: Browser-facing HTML/redirect result. The source does not specify an HTTP status or body schema. The callback carries code, expires_in, and, when supplied, state.
+          content:
+            text/html:
+              schema:
+                type: string
+  /auth/server/token:
+    post:
+      tags:
+        - Authentication
+      summary: Exchange an authorization code for an access token
+      operationId: exchangeAuthorizationCode
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthorizationCodeTokenRequest'
+      responses:
+        '200':
+          description: Access token response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+              example:
+                access_token: eyJhbGciOiJSUzI...
+                expires_in: 3600
+  /auth/signout:
+    get:
+      tags:
+        - Authentication
+      summary: Sign out from the electronic-prescription system
+      operationId: signOutUser
+      security: []
+      parameters:
+        - name: redirect_uri
+          in: query
+          required: true
+          description: Registered callback URI to return to after sign-out.
+          schema:
+            type: string
+            format: uri
+      responses:
+        default:
+          description: Redirect result; the source does not define its status or payload.
+  /auth/server/v2/token:
+    post:
+      tags:
+        - Authentication
+      summary: Exchange a doctor authorization code or refresh token
+      operationId: exchangeOrRefreshDoctorToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/DoctorAuthorizationCodeGrant'
+                - $ref: '#/components/schemas/DoctorRefreshTokenGrant'
+              discriminator:
+                propertyName: grant_type
+                mapping:
+                  authorization_code: '#/components/schemas/DoctorAuthorizationCodeGrant'
+                  refresh_token: '#/components/schemas/DoctorRefreshTokenGrant'
+      responses:
+        '200':
+          description: Doctor access-token and refresh-token response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoctorTokenResponse'
+components:
+  securitySchemes:
+    taminOAuth:
+      type: oauth2
+      description: PKCE authorization-code authentication documented by Tamin. The source states that the resulting token is used for the remaining services but does not state the HTTP Authorization header format or any scopes.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://account.tamin.ir/auth/server/authorize
+          tokenUrl: https://account.tamin.ir/auth/server/token
+          refreshUrl: https://account.tamin.ir/auth/server/v2/token
+          scopes: {}
+  schemas:
+    AuthorizationCodeTokenRequest:
+      type: object
+      additionalProperties: true
+      required:
+        - redirect_uri
+        - grant_type
+        - client_id
+        - code
+        - code_verifier
+      properties:
+        redirect_uri:
+          type: string
+          format: uri
+        grant_type:
+          type: string
+          enum:
+            - authorization_code
+        client_id:
+          type: string
+        code:
+          type: string
+          description: Authorization code returned to redirect_uri.
+        code_verifier:
+          $ref: '#/components/schemas/CodeVerifier'
+    DoctorAuthorizationCodeGrant:
+      type: object
+      additionalProperties: true
+      required:
+        - redirect_uri
+        - grant_type
+        - client_id
+        - code
+        - code_verifier
+        - audience
+      properties:
+        redirect_uri:
+          type: string
+          format: uri
+        grant_type:
+          type: string
+          enum:
+            - authorization_code
+        client_id:
+          type: string
+        code:
+          type: string
+        code_verifier:
+          $ref: '#/components/schemas/CodeVerifier'
+        audience:
+          type: string
+          description: Token subject/audience, such as the doctor's national code.
+    DoctorRefreshTokenGrant:
+      type: object
+      additionalProperties: true
+      required:
+        - grant_type
+        - client_id
+        - refresh_token
+        - audience
+      properties:
+        grant_type:
+          type: string
+          enum:
+            - refresh_token
+        client_id:
+          type: string
+        refresh_token:
+          type: string
+        audience:
+          type: string
+          description: Token subject/audience, such as the doctor's national code.
+    CodeVerifier:
+      type: string
+      minLength: 43
+      maxLength: 128
+      pattern: ^[A-Za-z0-9._~-]+$
+      description: PKCE code verifier generated by the client.
+    AccessTokenResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - access_token
+        - expires_in
+      properties:
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+    DoctorTokenResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - access_token
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+          description: Documented for the authorization-code variant; refresh-flow rotation is unspecified.
+        expires_in:
+          type: integer
+          description: Included when returned; the v2 response fields are not exhaustively documented.

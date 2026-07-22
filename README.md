@@ -1,79 +1,75 @@
 # Vorn.Tamin
 
-[![NuGet Version](https://img.shields.io/nuget/v/vorn.tamin?style=flat-square)](https://www.nuget.org/packages/Vorn.Tamin)
+[![NuGet Version](https://img.shields.io/nuget/v/Vorn.Tamin?style=flat-square&label=Vorn.Tamin)](https://www.nuget.org/packages/Vorn.Tamin)
+[![NuGet Version](https://img.shields.io/nuget/v/Tamin.Client.Account?style=flat-square&label=Tamin.Client.Account)](https://www.nuget.org/packages/Tamin.Client.Account)
+[![NuGet Version](https://img.shields.io/nuget/v/Tamin.Client.Api?style=flat-square&label=Tamin.Client.Api)](https://www.nuget.org/packages/Tamin.Client.Api)
+[![NuGet Version](https://img.shields.io/nuget/v/Tamin.Client.Soa?style=flat-square&label=Tamin.Client.Soa)](https://www.nuget.org/packages/Tamin.Client.Soa)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-A .NET 10 client SDK for selected EP.Tamin electronic prescription API endpoints of the Social Security Insurance of Iran (سازمان تأمین اجتماعی).
+A .NET 10 client SDK for the EP.Tamin electronic prescription APIs of the Social Security Insurance of Iran (سازمان تأمین اجتماعی).
 
-> **Implementation status:** the Kiota-backed SDK exposes only provider operations backed by `docs/EP-TAMIN-API.md` and generated Kiota request builders. Areas absent from that contract are intentionally not represented as public clients.
-
----
-
-## Table of contents
-
-1. [Implementation status](#implementation-status)
-2. [Installation](#installation)
-3. [Prerequisites](#prerequisites)
-4. [Quick-start](#quick-start)
-5. [Choosing a client surface](#choosing-a-client-surface)
-6. [Role-aware workflows](#role-aware-workflows)
-7. [Dependency injection setup](#dependency-injection-setup)
-8. [Authentication](#authentication)
-9. [Reference data](#reference-data)
-10. [Prescription operations](#prescription-operations)
-11. [Parsing API responses](#parsing-api-responses)
-12. [Error handling](#error-handling)
-13. [Artifact inventory](#artifact-inventory)
-14. [Limitations & compatibility notes](#limitations--compatibility-notes)
-15. [Contributing](#contributing)
-16. [Changelog](#changelog)
-17. [License](#license)
+Clients are **generated from audited OpenAPI specifications** using [Kiota](https://github.com/microsoft/kiota), then wrapped by an integration layer that provides authentication, HTTP resilience, and request/response mapping.
 
 ---
 
-## Implementation status
+## Architecture
 
-| Area | Status | Public surface |
-|---|---|---|
-| Session construction with a pre-obtained token | **Implemented** | `new TaminSession(...)` |
-| Runtime login | **Implemented** | `TaminSession.CreateAsync(...)` |
-| Token refresh | **Implemented** | `TaminSession.RefreshTokenAsync(...)`, `AuthClient.RefreshTokenV2Async(...)` |
-| PKCE authorization URL and token exchange | **Implemented** | `AuthClient`, `PkceChallenge` |
-| Operation-level environment routes | **Implemented** | `TaminEnvironmentRoutes`, `TaminOperation` |
-| Token validation | **Implemented** | `TaminSession.ValidateTokenAsync(...)` |
-| Production / sandbox endpoint selection | **Implemented** | `TaminEndpoint.Production`, `TaminEndpoint.Sandbox` |
-| Dependency injection registration | **Implemented** | `AddTaminClient(...)`, `TaminOptions` |
-| Role-aware facade | **Implemented** | `new TaminClient(session)`, `session.Doctor`, `session.Secretary`, `session.Nurse` |
-| Reference data: services | **Implemented** | `session.ReferenceData.GetServiceListAsync(...)`, `session.Service.GetServiceListAsync(...)`, `GetAllServicesAsync(...)` |
-| Reference data: prescription types | **Implemented** | `session.Service.GetPrescriptionTypeAsync(...)` |
-| Reference data: paraclinic tariffs | **Implemented** | `session.Service.GetParaclinicTarefAsync(...)` |
-| Reference data: drug amounts/list | **Implemented** | `session.Service.GetDrugListAsync(...)`, `GetDrugAmountAsync(...)` |
-| Reference data: drug instructions | **Implemented** | `session.Service.GetDrugInstructionAsync(...)` |
-| Prescription writing | **Implemented** | `RegisterVisitPrescriptionAsync`, `RegisterDrugPrescriptionAsync`, `RegisterParaclinicPrescriptionAsync`, `RegisterMedicalServicePrescriptionAsync`, `RegisterReferralPrescriptionAsync`, `RegisterPhysiotherapyPrescriptionAsync` |
-| Prescription lookup | **Implemented** | `session.Prescription.GetRegisteredPrescriptionAsync(...)` |
-| Prescription edit/delete | **Implemented** | `EditElectronicPrescriptionAsync(...)`, `DeleteElectronicPrescriptionAsync(...)` |
-| Prescription warning check | **Implemented** | `session.Dentistry.CheckRulesAsync(...)`, `CheckPrescriptionWarningAsync(...)` |
-| Referral workflow | **Implemented** | `session.Doctor.Referrals.RegisterPrescriptionAsync(...)`, count, feedback/detail, cartable, and list queries. |
-| Eligibility lookup | **Implemented** | `session.Secretary.Eligibility.LookupPrivatePracticeAsync(...)` |
-| Nurse workflow | **Implemented** | `session.Nurse.GetTodoListAsync(...)`, `session.Nurse.RecordActionAsync(...)`. |
-| Hospitalization workflow | **Implemented** | `session.Secretary.Hospitalization.CreateAsync(...)`, `GetSecretaryListAsync(...)`. |
-| Allowed-count and pricing helpers | **Not implemented** | No public methods are exposed in this version. |
-| Strong typed response DTOs for reference data and implemented workflows | **Not implemented** | Methods currently return `JsonElement`. |
+```
+┌─────────────────────────────────────────────────────┐
+│                  Your Application                    │
+├─────────────────────────────────────────────────────┤
+│  Tamin.Integration                                  │
+│  ├── Auth / TaminTokenProvider   (PKCE + refresh)   │
+│  ├── Http  / TaminClientFactory  (pipeline wiring)  │
+│  ├── Http  / TaminResponseHandler + Retry            │
+│  └── Mapping / PrescriptionRequestMapper             │
+├──────────┬──────────┬───────────────────────────────┤
+│ Account  │   SOA    │           API                 │
+│ (Auth)   │ (Services│   (Clinical operations)       │
+│          │          │                               │
+│ Kiota    │  Kiota   │         Kiota                 │
+│ generated│ generated│       generated               │
+└──────────┴──────────┴───────────────────────────────┘
+         Pilot + Production variants for each
+```
+
+Each service has **two environments** — `Pilot` and `Prod` — generated from separate OpenAPI documents.
+
+---
+
+## Prerequisites
+
+- .NET 10 SDK
+- Node.js (for `npm install` — OpenAPI validation tools)
+- EP.Tamin credentials or a pre-obtained bearer token
 
 ---
 
 ## Installation
 
-### dotnet CLI
+### NuGet (recommended)
 
 ```bash
 dotnet add package Vorn.Tamin
 ```
 
-### Package Manager Console
+This installs the integration layer and all three generated client libraries as transitive dependencies.
 
-```powershell
-Install-Package Vorn.Tamin
+#### Individual packages
+
+If you only need specific clients without the integration layer:
+
+| Package | Description |
+|---|---|
+| `Vorn.Tamin` | Integration layer — auth, HTTP pipeline, request/response mapping. Depends on all three clients below. |
+| `Tamin.Client.Account` | Kiota-generated OAuth/auth client (token exchange, PKCE, signout). |
+| `Tamin.Client.Api` | Kiota-generated clinical API client (eprescription, referrals, notes, hospitalization, etc.). |
+| `Tamin.Client.Soa` | Kiota-generated SOA client (auth, family doctor, patient disease, referral feedback). |
+
+```bash
+dotnet add package Tamin.Client.Account
+dotnet add package Tamin.Client.Api
+dotnet add package Tamin.Client.Soa
 ```
 
 ### PackageReference
@@ -82,646 +78,212 @@ Install-Package Vorn.Tamin
 <PackageReference Include="Vorn.Tamin" Version="*" />
 ```
 
----
+### Source (project reference)
 
-## Prerequisites
-
-- .NET 10 SDK.
-- EP.Tamin credentials or a pre-obtained bearer token.
-- A `Client-Id` value when your EP.Tamin onboarding requires that header.
+```xml
+<ProjectReference Include="src/Tamin/Tamin.Integration/Tamin.Integration.csproj" />
+```
 
 ---
 
-## Quick-start
+## Quick start
+
+### 1. Create clients
 
 ```csharp
-using System.Text.Json;
-using Vorn.Tamin;
+using Tamin.Integration.Auth;
+using Tamin.Integration.Http;
 
-using var httpClient = new HttpClient();
+// Base URLs for each service.
+var bases = new TaminClientBases(
+    Account: new Uri("https://auth.tamin.ir/"),
+    Soa:     new Uri("https://soa.tamin.ir/"),
+    Api:     new Uri("https://api.tamin.ir/")
+);
 
-// Option A: pre-obtained bearer token.
-TaminSession session = new(
-    httpClient,
-    oauthToken: "YOUR_TOKEN",
+// Token provider handles PKCE and auto-refresh.
+var tokenProvider = new TaminTokenProvider(
+    exchange: new TaminDoctorTokenExchange(httpClient, new Uri("https://auth.tamin.ir/auth/server/v2/token"), isPilot: false),
     clientId: "YOUR_CLIENT_ID",
-    endpoint: TaminEndpoint.Production);
+    audience: "YOUR_AUDIENCE",
+    allowedHosts: new[] { "auth.tamin.ir", "soa.tamin.ir", "api.tamin.ir" }
+);
 
-// Option B: log in with username / password (+ optional OTP/provider identifier).
-// TaminSession session = await TaminSession.CreateAsync(
-//     httpClient,
-//     username: "your-username",
-//     password: "your-password",
-//     otp: "123456",
-//     providerIdentifier: "prov-id",
-//     clientId: "YOUR_CLIENT_ID",
-//     endpoint: TaminEndpoint.Sandbox);
+// Wire up the HTTP pipeline and create all three clients.
+var clients = TaminClientFactory.CreateProduction(
+    bases,
+    tokenProvider,
+    primaryHandler: new HttpClientHandler(),
+    loggerFactory:  LoggerFactory.Create(b => b.AddConsole()),
+    operationIdResolver: req => req.RequestUri?.AbsolutePath ?? "unknown"
+);
 
-// Reference data.
-JsonElement drugs = await session.Service.GetDrugListAsync(
-    searchText: "amoxicillin",
-    activeOnly: true);
-
-// Register a drug prescription.
-JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(
-    new RegisterDrugPrescriptionRequest
-    {
-        DoctorId = "doctor-id",
-        PatientNationalId = "1234567890",
-        VisitDate = "14030601",
-        DrugItems =
-        [
-            new DrugItem
-            {
-                DrugCode = "DR001",
-                Quantity = 2,
-                DosageInstruction = "twice daily"
-            }
-        ]
-    });
+// clients.Account  — Tamin.Client.Account.Prod.ProdAccountClient
+// clients.Soa      — Tamin.Client.Soa.Prod.ProdSoaClient
+// clients.Api      — Tamin.Client.Api.Prod.ProdApiClient
 ```
 
-> **Contract boundary:** identity verification, pharmacy dispensing, and standalone paraclinic delivery clients are not exposed because they are not backed by generated request builders in this version.
+For the pilot environment, use `TaminClientFactory.CreatePilot(...)` which returns `PilotTaminClients`.
 
----
-
-## Choosing a client surface
-
-Use one session as the source of truth for endpoint selection, token state, `Client-Id`, route resolution, and the generated Kiota gateway. Build other surfaces from that session instead of constructing parallel clients with their own `HttpClient` or environment settings.
-
-| Surface | Use when | Notes |
-|---|---|---|
-| `TaminSession` | You want direct access to every currently exposed workflow client. | Owns `BaseUri`, `ClientId`, endpoint selection, generated gateway construction, and backward-compatible properties such as `session.Service` and `session.Prescription`. |
-| `TaminClient` | You want role-oriented grouping for application code. | Wraps an existing `TaminSession`; it does not own separate provider state or transport. |
-| `AddTaminClient(...)` | You use ASP.NET Core or Microsoft dependency injection. | Registers a single configured `TaminSession` through `IHttpClientFactory`; prefer this for managed `HttpClient` lifetime. |
-| Generated Kiota projects | You are maintaining this SDK, not consuming it. | Treat generated request builders as infrastructure details behind the public workflow clients. |
-
-Commands and queries are intentionally exposed as separate methods: registration, edit, delete, token refresh, sign-out, referral feedback, nurse action recording, and hospitalization creation are commands; reference-data lookup, eligibility lookup, prescription retrieval, warning checks, referral counts/details, nurse to-do retrieval, and hospitalization lists are queries.
-
----
-
-## Role-aware workflows
-
-`TaminClient` is a role-aware facade over `TaminSession`. Existing session clients remain available for compatibility, while new code can group operations by provider role.
+### 2. Authenticate with PKCE
 
 ```csharp
-var tamin = new TaminClient(session);
+using Tamin.Integration.Auth;
 
-// Doctor workflow: medication prescription.
-JsonElement medication = await tamin.Doctor.Prescriptions.RegisterDrugPrescriptionAsync(
-    new RegisterDrugPrescriptionRequest
-    {
-        DoctorId = "doctor-id",
-        PatientNationalId = "1234567890",
-        VisitDate = "14030601",
-        DrugItems = [new DrugItem { DrugCode = "DR001", Quantity = 1 }]
-    });
+// Generate PKCE verifier and state before redirecting.
+string codeVerifier = TaminTokenProvider.CreateCodeVerifier();
+string state = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
 
-// Doctor workflow: paraclinical laboratory prescription.
-JsonElement laboratory = await tamin.Doctor.Prescriptions.RegisterParaclinicPrescriptionAsync(
-    new RegisterParaclinicPrescriptionRequest
-    {
-        DoctorId = "doctor-id",
-        PatientNationalId = "1234567890",
-        VisitDate = "14030601",
-        ServiceItems = [new ServiceItem { ServiceCode = "LAB001", ServiceGroup = "laboratory", Quantity = 1 }]
-    });
-
-// Doctor workflow: referral prescription.
-JsonElement referral = await tamin.Doctor.Referrals.RegisterPrescriptionAsync(
-    new RegisterReferralPrescriptionRequest
-    {
-        DoctorId = "doctor-id",
-        PatientNationalId = "1234567890",
-        TargetSpecialty = "cardiology",
-        TargetProviderType = "specialist",
-        Reason = "consultation",
-        VisitDate = "14030601"
-    });
-
-// Doctor workflow: dental rule check.
-JsonElement dentalWarnings = await tamin.Doctor.Dentistry.CheckRulesAsync(
-    new CheckWarningRequest
-    {
-        DoctorId = "doctor-id",
-        PatientNationalId = "1234567890",
-        PrescriptionItems = [new { serviceCode = "DENT001", toothId = "11" }]
-    });
-
-// Secretary workflow: eligibility lookup.
-JsonElement eligibility = await tamin.Secretary.Eligibility.LookupPrivatePracticeAsync(
-    new EligibilityLookupRequest
-    {
-        SiamId = "clinic-siam-id",
-        DoctorId = "doctor-id",
-        DoctorNationalCode = "0012345678",
-        PatientNationalCode = "1234567890"
-    });
-
-// Nurse and hospitalization workflows map to generated provider request builders.
-JsonElement nurseTodo = await tamin.Nurse.GetTodoListAsync(new NurseTodoListRequest
-{
-    SiamId = "clinic-siam-id",
-    PatientNationalCode = "1234567890"
-});
-
-JsonElement hospitalizationOrders = await tamin.Secretary.Hospitalization.GetSecretaryListAsync(
-    new HospitalizationSecretaryListRequest
-    {
-        SiamId = "clinic-siam-id",
-        SecretaryNationalCode = "0012345678"
-    });
-```
-
-
----
-
-## Dependency injection setup
-
-Register the SDK in `Program.cs` or `Startup.cs`:
-
-```csharp
-using Vorn.Tamin;
-using Vorn.Tamin.Extensions;
-
-builder.Services.AddTaminClient(o =>
-{
-    o.Endpoint = TaminEndpoint.Sandbox;
-    o.BaseUrl = "https://ep-test.tamin.ir/api/"; // optional; defaults from Endpoint when blank
-    o.ClientId = "YOUR_CLIENT_ID";
-    o.OAuthToken = "YOUR_TOKEN"; // optional; omit when a token is acquired elsewhere
-});
-```
-
-`TaminSession` is registered as a scoped service backed by `IHttpClientFactory`:
-
-```csharp
-public sealed class PrescriptionIssuer(TaminSession tamin)
-{
-    public Task<JsonElement> IssueAsync(string doctorId, string patientId, string visitDate)
-        => tamin.Prescription.RegisterDrugPrescriptionAsync(
-            new RegisterDrugPrescriptionRequest
-            {
-                DoctorId = doctorId,
-                PatientNationalId = patientId,
-                VisitDate = visitDate,
-                DrugItems = [new DrugItem { DrugCode = "DR001", Quantity = 1 }]
-            });
-}
-```
-
-### `appsettings.json` binding
-
-```json
-{
-  "Tamin": {
-    "Endpoint": "Sandbox",
-    "BaseUrl": "https://ep-test.tamin.ir/api/",
-    "ClientId": "YOUR_CLIENT_ID",
-    "OAuthToken": "YOUR_TOKEN"
-  }
-}
-```
-
-```csharp
-builder.Services.AddTaminClient(
-    o => builder.Configuration.GetSection("Tamin").Bind(o));
-```
-
----
-
-## Authentication
-
-### Authenticate with a pre-obtained token
-
-```csharp
-var session = new TaminSession(
-    new HttpClient(),
-    oauthToken: "YOUR_TOKEN",
-    clientId: "YOUR_CLIENT_ID");
-```
-
-### Log in at runtime
-
-`TaminSession.CreateAsync` posts credentials to the configured endpoint and stores the returned token for the generated Kiota gateway:
-
-```csharp
-var session = await TaminSession.CreateAsync(
-    new HttpClient(),
-    username: "user",
-    password: "pass",
-    otp: "123456",
-    providerIdentifier: "provider-id");
-```
-
-### PKCE authorization URL and token exchange
-
-`AuthClient` owns the practical OAuth/PKCE boundary. The caller must generate and persist both the PKCE verifier and the `state` value before redirecting the user; the SDK intentionally does not store either value. Token and refresh calls are sent as `application/x-www-form-urlencoded`, matching the provider token endpoints.
-
-```csharp
-using System.Security.Cryptography;
-
-var auth = new AuthClient(new HttpClient(), TaminEndpoint.Sandbox);
-var pkce = PkceChallenge.Create();
-var state = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
-
-Uri authorizeUrl = auth.CreateAuthorizationUrl(
-    clientId: "YOUR_CLIENT_ID",
-    redirectUri: new Uri("https://your-app.example/callback"),
-    pkce: pkce,
-    state: state);
-
-// After callback: first verify the returned state against your stored state, then exchange the code.
-TokenResult token = await auth.ExchangeCodeAsync(
-    clientId: "YOUR_CLIENT_ID",
+// Build the authorization URL and redirect the user there.
+// After callback, exchange the code:
+await tokenProvider.CompleteAuthorizationAsync(
     code: "AUTHORIZATION_CODE",
     redirectUri: new Uri("https://your-app.example/callback"),
-    pkce: pkce);
+    codeVerifier: codeVerifier
+);
+
+// Token is now cached. All subsequent Kiota requests include the Bearer token.
 ```
 
-### Operation-level environment routing
+If the refresh token is expired or missing, `TaminReauthorizationRequiredException` is thrown — the user must re-authorize.
 
-Production and sandbox are not modeled as a single global `baseUrl` replacement. `TaminEnvironmentRoutes` resolves routes by `TaminEndpoint` and `TaminOperation` because provider routes differ by operation, including path spelling and parameter order. For example, the service-list route resolves to `https://soa.tamin.ir/interface/epresc/SendEpresc/v2/services` in production and `https://ep-test.tamin.ir/api/v2/ws-services` in sandbox. Unsupported environment/operation pairs throw `TaminRouteNotDefinedException` instead of falling back to an accidental URL.
+### 3. Make API calls
+
+All generated clients use Kiota's fluent request builder pattern:
 
 ```csharp
-var routes = new TaminEnvironmentRoutes();
-Uri sandboxServices = routes
-    .Resolve(TaminEndpoint.Sandbox, TaminOperation.GetServices)
-    .Uri;
+// Example: fetch reference data via the SOA client
+var services = await clients.Soa.Interface.Epresc.SendEpresc.V2.Services
+    .GetAsync();
+
+// Example: fetch patient referrals via the API client
+var referrals = await clients.Api.V2.Referral
+    .Count
+    .WithNationalCodeItem("{patientNationalCode}")
+    .GetAsync();
 ```
 
-### Refresh a token
+### 4. Map responses to domain DTOs
+
+`TaminMappingService` converts generated Kiota responses into stable DTOs:
 
 ```csharp
-TokenResult refreshed = await session.RefreshTokenAsync(
-    refreshToken: "REFRESH_TOKEN",
-    clientId: "YOUR_CLIENT_ID");
+var mapper = new TaminMappingService();
 
-string? newToken = refreshed.AccessToken ?? refreshed.Data;
+// Structured response
+var result = mapper.MapCreatePrescription(response);
+// result.HeaderId, result.TrackingCode, result.ErrorCode, etc.
+
+// Undocumented / opaque responses remain as JsonElement
+var raw = mapper.MapPrescriptionTypes(jsonResponse);
+// raw.Payload — JsonElement you can inspect freely
 ```
 
-For the provider v2 refresh endpoint, use the PKCE auth client so the refresh request is sent as form data and includes the required `audience` field:
+### 5. Map domain inputs to Kiota requests
+
+`PrescriptionRequestMapper` maps your domain input records to generated Kiota request objects:
 
 ```csharp
-TokenResult refreshedV2 = await auth.RefreshTokenV2Async(
-    clientId: "YOUR_CLIENT_ID",
-    refreshToken: "REFRESH_TOKEN",
-    audience: "NATIONAL_CODE_OR_AUDIENCE");
-```
+var requestMapper = new PrescriptionRequestMapper();
 
-### Sign out
+var input = new PrescriptionCreateInput(
+    Mobile: "09123456789",
+    DocNationalCode: "0012345678",
+    Patient: "Patient Name",
+    PrescDate: "14030601",
+    PrescType: new PrescriptionTypeInput(PrescTypeId: 1),
+    NoteDetailEprscs: [/* prescription items */]
+);
 
-```csharp
-Uri signOutUrl = auth.CreateSignOutUrl(new Uri("https://your-app.example/signed-out"));
-await auth.SignOutAsync(new Uri("https://your-app.example/signed-out"));
-```
+// For production:
+ProdModels.PrescriptionCreateRequest prodRequest = requestMapper.MapProduction(input);
 
-### Validate a token
-
-```csharp
-ValidateTokenResult status = await session.ValidateTokenAsync("ACCESS_TOKEN");
-
-if (status.Valid)
-    Console.WriteLine($"Expires at {status.ExpiresAt}");
-```
-
----
-
-## Reference data
-
-`session.Service` is a `ServiceClient`. Methods return `JsonElement` so callers can handle EP.Tamin schema changes without waiting for a package update.
-
-### Typed query helpers
-
-```csharp
-JsonElement drugs = await session.Service.GetDrugListAsync(
-    searchText: "aspirin",
-    activeOnly: true,
-    page: 1,
-    pageSize: 20);
-
-JsonElement services = await session.Service.GetServiceListAsync(
-    serviceGroup: "imaging",
-    activeOnly: true);
-```
-
-### Raw generated endpoint helpers
-
-| Method | Description |
-|---|---|
-| `GetAllServicesAsync(query)` | Generated service list endpoint. |
-| `GetPrescriptionTypeAsync(query)` | Generated prescription type endpoint. |
-| `GetParaclinicTarefAsync(query)` | Generated paraclinic tariff endpoint. |
-| `GetDrugAmountAsync(query)` | Generated drug amount endpoint. |
-| `GetDrugInstructionAsync(query)` | Generated drug instruction endpoint. |
-
-> **Not implemented:** previous README references to `GetAllowedCountAsync(...)` and `GetPriceAsync(...)` do not apply to this version.
-
----
-
-## Prescription operations
-
-`session.Prescription` is a `PrescriptionClient` for implemented e-prescription flows backed by generated Kiota request builders.
-
-### Register prescriptions
-
-```csharp
-await session.Prescription.RegisterVisitPrescriptionAsync(new RegisterVisitPrescriptionRequest
-{
-    DoctorId = "doctor-id",
-    PatientNationalId = "1234567890",
-    VisitDate = "14030601",
-    ClinicId = "clinic-id"
-});
-
-await session.Prescription.RegisterDrugPrescriptionAsync(new RegisterDrugPrescriptionRequest
-{
-    DoctorId = "doctor-id",
-    PatientNationalId = "1234567890",
-    VisitDate = "14030601",
-    DrugItems = [new DrugItem { DrugCode = "DR001", Quantity = 2 }]
-});
-
-await session.Prescription.RegisterParaclinicPrescriptionAsync(new RegisterParaclinicPrescriptionRequest
-{
-    DoctorId = "doctor-id",
-    PatientNationalId = "1234567890",
-    VisitDate = "14030601",
-    ServiceItems = [new ServiceItem { ServiceCode = "LAB001", ServiceGroup = "LAB", Quantity = 1 }]
-});
-```
-
-Other implemented registration methods are:
-
-- `RegisterMedicalServicePrescriptionAsync(...)`
-- `RegisterReferralPrescriptionAsync(...)`
-- `RegisterPhysiotherapyPrescriptionAsync(...)`
-
-### Provider serialization and pre-send validation
-
-Provider-bound identifiers that look numeric are intentionally modeled and serialized as strings. Keep values such as `DoctorId`, `PatientNationalId`, `DrugCode`, `ServiceCode`, referral identifiers, and private-practice identifiers in string form so leading zeros, dashes, and alphabetic prefixes or suffixes are preserved.
-
-Provider date fields must already be eight-character Jalali strings, for example `14030601`. ISO/Gregorian-looking dates such as `2026-06-01` are rejected before any HTTP request is sent; convert dates in your application before calling the SDK.
-
-```csharp
-try
-{
-    await session.Prescription.RegisterDrugPrescriptionAsync(
-        new RegisterDrugPrescriptionRequest
-        {
-            DoctorId = "000-DOC",
-            PatientNationalId = "0012345678",
-            VisitDate = "14030601",
-            MobileNumber = "09123456789",
-            DrugItems = [new DrugItem { DrugCode = "000-DR-A", Quantity = 1 }]
-        });
-}
-catch (TaminValidationException ex)
-{
-    foreach (ValidationFailure failure in ex.Failures)
-        Console.WriteLine($"{failure.Field}: {failure.Code} - {failure.Message}");
-}
-```
-
-Use `ProfessionalIdentifierFormatter` when you need provider-specific professional identifier formatting:
-
-```csharp
-var formatter = new ProfessionalIdentifierFormatter();
-string midwifeDoctorId = formatter.FormatMidwifeDoctorId("12م345"); // 12*345
-string foreignDoctorCode = formatter.FormatForeignDoctorNationalCode("001-A"); // FIDA001-A
-```
-
-### Query, edit, delete, and warnings
-
-```csharp
-JsonElement registered = await session.Prescription.GetRegisteredPrescriptionAsync(
-    headerId: 123,
-    doctorNationalCode: "0012345678",
-    doctorId: "doctor-id");
-
-JsonElement edited = await session.Prescription.EditElectronicPrescriptionAsync(
-    new EditPrescriptionRequest
-    {
-        HeaderId = 123,
-        DoctorNationalCode = "0012345678",
-        DoctorId = "doctor-id",
-        EditedItems = [new Vorn.Tamin.Kiota.Models.NoteDetailEprsc { SrvQty = 1 }]
-    });
-
-JsonElement deleted = await session.Prescription.DeleteElectronicPrescriptionAsync(
-    new DeletePrescriptionRequest
-    {
-        HeaderId = 123,
-        DoctorNationalCode = "0012345678",
-        DoctorId = "doctor-id"
-    });
-
-JsonElement warnings = await session.Prescription.CheckPrescriptionWarningAsync(
-    new CheckWarningRequest
-    {
-        PatientNationalId = "1234567890",
-        DoctorId = "doctor-id",
-        PrescriptionItems = [new Vorn.Tamin.Kiota.Models.GridData()]
-    });
+// For pilot:
+PilotModels.PrescriptionCreateRequest pilotRequest = requestMapper.MapPilot(input);
 ```
 
 ---
 
-## Parsing API responses
+## HTTP pipeline
 
-Most public client methods return the unwrapped API payload as `JsonElement`:
+`TaminClientFactory` wraps each client's HTTP handler with:
 
-```csharp
-JsonElement raw = await session.Service.GetDrugListAsync(searchText: "aspirin");
+1. **`TaminTransientFaultHandler`** — retries GET requests up to 2 times on HTTP 5xx or network errors (Polly). Mutations are **not** retried since the provider contract does not document idempotency keys.
 
-if (raw.ValueKind == JsonValueKind.Array)
-{
-    foreach (JsonElement item in raw.EnumerateArray())
-        Console.WriteLine(item);
-}
+2. **`TaminResponseHandler`** — non-success responses throw `TaminApiException` with the status code, operation ID, and raw body. Logs redact credential fields (`access_token`, `refresh_token`, `code`, `code_verifier`).
+
+3. **Authentication** — Account endpoints use anonymous access; SOA and API endpoints use `BaseBearerTokenAuthenticationProvider` backed by `TaminTokenProvider`.
+
+---
+
+## Contract verification
+
+The repository includes a verification script that ensures generated code matches the source OpenAPI specs:
+
+```bash
+npm install
+./scripts/verify-tamin-contracts.ps1
 ```
 
-When you manually consume raw EP.Tamin JSON outside of the SDK, deserialize the complete envelope with `TaminResponse<T>`:
+This validates:
+- 6 OpenAPI documents (3 services x 2 environments)
+- Redocly lint warnings match expected counts
+- 40 operations per environment
+- Required route literals (e.g. `docNatioanlCode`, `siamId`)
+- Deterministic regeneration (generated code is identical before/after)
 
-```csharp
-var taminResponse = JsonSerializer.Deserialize<TaminResponse<TokenResult>>(rawJson);
-if (taminResponse?.Success == true)
-    Console.WriteLine(taminResponse.TrackingCode);
+---
+
+## Regenerating clients
+
+To regenerate Kiota clients from updated OpenAPI specs:
+
+```bash
+./scripts/generate-tamin-clients.ps1
+```
+
+This splits the source OpenAPI docs, then runs Kiota for each service/environment combination.
+
+---
+
+## Project structure
+
+```
+openapi/tamin/                    # Split OpenAPI specs (pilot + prod)
+├── account.{pilot,prod}.yaml
+├── api.{pilot,prod}.yaml
+└── soa.{pilot,prod}.yaml
+
+src/tamin-{pilot,production}.openapi.yaml  # Source OpenAPI specs
+
+src/Tamin/
+├── Tamin.Client.Account/         # Generated auth client (Kiota)
+│   └── Generated/{Pilot,Prod}/
+├── Tamin.Client.Api/             # Generated clinical API client (Kiota)
+│   └── Generated/{Pilot,Prod}/
+├── Tamin.Client.Soa/             # Generated SOA client (Kiota)
+│   └── Generated/{Pilot,Prod}/
+├── Tamin.Integration/            # Integration layer
+│   ├── Auth/                     # Token provider, PKCE, OAuth exchange
+│   ├── Http/                     # Client factory, response handler, retry
+│   └── Mapping/                  # Request mapper, response mapper, DTOs
+└── Tamin.Integration.Tests/      # Tests
+
+scripts/
+├── Split-TaminOpenApi.ps1        # Splits source specs into per-service docs
+├── generate-tamin-clients.ps1    # Runs Kiota code generation
+└── verify-tamin-contracts.ps1    # Validates specs + determinism
 ```
 
 ---
 
 ## Error handling
 
-### SDK exceptions
-
-| Exception | When thrown |
+| Exception | Meaning |
 |---|---|
-| `AuthTokenNotSuppliedException` | `TaminSession` is constructed without a token while `needToken` is `true`. |
-| `UserLoginException` | Login failed; exposes `Status`, `Family`, and `ReasonText` when the API body supplies them. |
-| `PrescriptionNotCreatedException` | Prescription creation rejected; exposes `ErrorCode`. |
-| `MissingParamException` | A required method parameter was null or empty. |
-| `MissingConfigException` | A required configuration key is absent. |
-| `InvalidConfigException` | A configuration value is present but invalid. |
-| `TaminValidationException` | Provider-bound values fail structured client-side validation before transport. |
-
-### Normalized provider errors
-
-Every HTTP error derived from `ConnectionError` exposes a `ProviderError` property when the SDK can normalize the provider response. `TaminProviderError` preserves the raw HTTP status, reason phrase, provider body, extracted provider message, operation, and environment so support teams can reconcile failures without losing the original provider payload.
-
-`TaminErrorNormalizer` maps known provider failures into `TaminErrorCategory` values:
-
-| Category | Use it for | Typical action |
-|---|---|---|
-| `ClientPreventable` | Invalid `prescType`/`srvType` pairs, missing laboratory subgroup, null or negative quantities, empty payloads, missing or malformed patient mobile numbers, invalid patient national codes, unknown `srvCode`, missing/invalid prescription types, date format errors, future dates, and invalid `drugAmntId`/`drugInstId`. | Fix request data before resending. |
-| `SupportRequired` | Doctor enrollment/activation failures and doctor national-code/mobile mismatches. | Escalate with onboarding or provider-support evidence. |
-| `Retryable` | Temporary provider failures and duplicate-submission risk. | Do not blindly resubmit state-changing calls; check existing prescription state first. |
-| `ProviderContractMismatch` | Responses that reflect documented provider specification conflicts such as `id_client` versus `client_id` or string-versus-number ambiguity. | Capture the raw provider body and reconcile against the provider specification. |
-| `UnknownProviderError` | Any provider message outside the current catalog. | Preserve the raw payload and decide whether a new catalog rule is justified. |
-
-### Prevent, normalize, escalate
-
-1. **Prevent:** run SDK validation before transport; prescription clients already validate provider-bound request shapes and throw `TaminValidationException` before sending invalid payloads.
-2. **Normalize:** catch `ConnectionError` and inspect `ex.ProviderError` for the normalized code, category, operation, environment, status, and raw body.
-3. **Escalate:** for `SupportRequired`, `ProviderContractMismatch`, or unknown errors, include `ProviderError.Code`, `OperationName`, `Environment`, `StatusCode`, and `ProviderBody` in support tickets.
-
-```csharp
-try
-{
-    JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(request);
-}
-catch (ConnectionError ex) when (ex.ProviderError is { } providerError)
-{
-    Console.WriteLine($"{providerError.Category}: {providerError.Code}");
-    Console.WriteLine($"{providerError.OperationName} / {providerError.Environment}");
-    Console.WriteLine(providerError.ProviderBody);
-}
-```
-
-### HTTP exceptions
-
-All HTTP error responses throw a subclass of `ConnectionError`. The base class exposes `StatusCode`, `ReasonPhrase`, and `Content`.
-
-| Exception | HTTP status |
-|---|---|
-| `Redirection` | 301 / 302 / 303 / 307 |
-| `BadRequest` | 400 |
-| `UnauthorizedAccess` | 401 |
-| `ForbiddenAccess` | 403 |
-| `ResourceNotFound` | 404 |
-| `MethodNotAllowed` | 405 |
-| `ResourceConflict` | 409 |
-| `ResourceGone` | 410 |
-| `ResourceInvalid` | 422 |
-| `ClientError` | Other 4xx |
-| `ServerError` | 5xx |
-
-### Example
-
-```csharp
-try
-{
-    JsonElement result = await session.Prescription.RegisterDrugPrescriptionAsync(request);
-}
-catch (UnauthorizedAccess)
-{
-    await session.RefreshTokenAsync(savedRefreshToken);
-}
-catch (TaminValidationException ex)
-{
-    foreach (ValidationFailure failure in ex.Failures)
-        Console.WriteLine($"{failure.Field}: {failure.Code} - {failure.Message}");
-}
-catch (ResourceInvalid ex)
-{
-    Console.WriteLine($"Provider validation failed: {ex.ProviderError?.Code ?? ex.Content}");
-}
-catch (ServerError)
-{
-    // Temporary outage: back off and retry according to your application's policy.
-}
-```
-
----
-
-## Artifact inventory
-
-### Primary user-facing artifacts
-
-| Artifact | Status | Description |
-|---|---|---|
-| `TaminClient` | Implemented | Role-aware facade over `TaminSession`. |
-| `TaminSession` | Implemented | Main entry point. Creates domain clients and selects production or sandbox generated gateways. |
-| `TaminSession.CreateAsync` | Implemented | Creates a session and optionally performs login. |
-| `TaminSession.RefreshTokenAsync` | Implemented | Refreshes a bearer token. |
-| `TaminSession.ValidateTokenAsync` | Implemented | Validates an access token. |
-| `ReferenceDataClient` (`session.ReferenceData`) | Implemented | Reference-data queries. |
-| `ServiceClient` (`session.Service`) | Implemented | Backward-compatible reference-data and service lookups. |
-| `PrescriptionClient` (`session.Prescription`) | Implemented | Prescription registration, lookup, mutation, and warning checks. |
-| `DoctorClient` (`session.Doctor`) | Implemented | Doctor-facing prescription, dental, referral, and reference-data workflows. |
-| `SecretaryClient` (`session.Secretary`) | Implemented | Secretary-facing eligibility and hospitalization workflow grouping. |
-| `NurseClient` (`session.Nurse`) | Implemented | Nurse to-do query and action-recording workflows. |
-| `AddTaminClient` | Implemented | Registers `TaminSession` with `IHttpClientFactory`. |
-| `TaminOptions` | Implemented | Configuration POCO for DI and `appsettings.json` binding. |
-
-### DTOs and enums
-
-| Type | Status | Domain |
-|---|---|---|
-| `TokenResult` | Implemented | Authentication |
-| `ValidateTokenResult` | Implemented | Authentication |
-| `DrugItem` | Implemented | Prescription writing |
-| `ServiceItem` | Implemented | Prescription writing |
-| `PhysiotherapyItem` | Implemented | Prescription writing |
-| `RegisterVisitPrescriptionRequest` | Implemented | Prescription writing |
-| `RegisterDrugPrescriptionRequest` | Implemented | Prescription writing |
-| `RegisterParaclinicPrescriptionRequest` | Implemented | Prescription writing |
-| `RegisterMedicalServicePrescriptionRequest` | Implemented | Prescription writing |
-| `RegisterReferralPrescriptionRequest` | Implemented | Prescription writing |
-| `RegisterPhysiotherapyPrescriptionRequest` | Implemented | Prescription writing |
-| `EditPrescriptionRequest` | Implemented | Prescription mutation |
-| `DeletePrescriptionRequest` | Implemented | Prescription mutation |
-| `CheckWarningRequest` | Implemented | Warning services |
-| `EligibilityLookupRequest` | Implemented | Eligibility lookup |
-| `NurseTodoListRequest` | Implemented | Nurse to-do query request shape |
-| `NurseActionWorkflowRequest` | Implemented | Nurse action-recording request shape |
-| `HospitalizationCreateRequest` | Implemented | Hospitalization prescription request shape |
-| `HospitalizationSecretaryListRequest` | Implemented | Hospitalization secretary-list request shape |
-| `PrescriptionType` | Implemented | Prescription writing |
-| Typed reference result, pharmacy dispensing, standalone paraclinic delivery, pricing, and identity-verification DTOs | Not exposed | Areas absent from `docs/EP-TAMIN-API.md` generated paths are intentionally omitted from the public SDK surface. |
-
----
-
-## Limitations & compatibility notes
-
-- **Target framework:** `net10.0` only. Earlier .NET versions are not supported.
-- **Default endpoint:** `TaminSession` and `TaminOptions` default to `TaminEndpoint.Production`; set `TaminEndpoint.Sandbox` for sandbox request builders and default sandbox base URL.
-- **Manual `HttpClient` ownership:** when constructing `TaminSession` directly, supply and manage your own `HttpClient` lifetime.
-- **`JsonElement` return type:** client methods return raw unwrapped payloads to stay compatible with EP.Tamin response changes.
-- **No automatic token refresh:** monitor token expiry and call `RefreshTokenAsync` from your application policy.
-- **Contract-backed public surface only:** the SDK exposes only provider operations backed by `docs/EP-TAMIN-API.md` and generated Kiota request builders. Identity verification, pharmacy dispensing, and standalone paraclinic delivery are intentionally omitted until the provider contract and generated paths support them.
-
----
-
-## Provider Documentation
-
-The Official API docs: [EP-TAMIN-API.md](EP-TAMIN-API.md) 
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for prerequisites, code-style guidelines, and pull-request instructions.
-
-```bash
-dotnet test Vorn.Tamin.slnx
-```
-
----
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md).
+| `TaminApiException` | Non-success HTTP response from the Tamin API. Inspect `StatusCode`, `OperationId`, `RawBody`. |
+| `TaminReauthorizationRequiredException` | Token refresh failed or no refresh token available. User must re-authorize via PKCE. |
+| `TaminRequestValidationException` | Request field failed validation before the HTTP call was made. |
 
 ---
 
@@ -731,16 +293,5 @@ See [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
-**Repository:** <https://github.com/mobinseven/Vorn.Tamin>  
+**Repository:** <https://github.com/mobinseven/Vorn.Tamin>
 **Issues:** <https://github.com/mobinseven/Vorn.Tamin/issues>
-
-
-## Provider compatibility notes
-
-- `docNationalCode`: کد ملی پزشک؛ برای پزشکان اتباع طبق مستندات با FDA/FIDA ارسال شود.
-- `docId`: شماره نظام پزشکی بدون علامت؛ برای ماما حرف «م» در انتهای شماره نظام با `*` ارسال می‌شود.
-- `clientId`: در محیط تست مقدار آن کد ملی پزشک است.
-- `siamId`: شناسه سیام مرکز درمانی/درمانگاه/بیمارستان.
-- `trackingCode`: کد پیگیری نسخه.
-
-- `isDentalService`: provider compatibility flag retained for dental service payloads.

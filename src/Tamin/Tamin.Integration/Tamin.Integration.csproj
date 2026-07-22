@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Tamin.Client.Account/Tamin.Client.Account.csproj" />
+    <ProjectReference Include="../Tamin.Client.Soa/Tamin.Client.Soa.csproj" />
+    <ProjectReference Include="../Tamin.Client.Api/Tamin.Client.Api.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.6" />
+    <PackageReference Include="Microsoft.Kiota.Abstractions" Version="1.22.2" />
+    <PackageReference Include="Microsoft.Kiota.Http.HttpClientLibrary" Version="1.22.2" />
+    <PackageReference Include="Polly" Version="7.2.4" />
+  </ItemGroup>
+</Project>
