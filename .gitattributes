@@ -1,0 +1,3 @@
+openapi/tamin/*.yaml text eol=lf
+src/tamin-*.openapi.yaml text eol=lf
+src/Tamin/**/Generated/** whitespace=-blank-at-eol

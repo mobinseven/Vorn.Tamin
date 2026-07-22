@@ -1,0 +1,416 @@
+openapi: 3.1.0
+info:
+  title: Tamin Electronic Prescription API - Production
+  version: 1.9.7
+  description: Production OpenAPI contract transcribed solely from EP-TAMIN-API.md, document version 1.9.7 dated 1405/04/20. Where the source does not define a response payload, the response remains deliberately unconstrained and is identified as such in the companion audit.
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+servers:
+  - url: https://api.tamin.ir
+security:
+  - taminOAuth: []
+tags:
+  - name: Authentication
+    description: PKCE authorization, token exchange, refresh, and sign-out.
+  - name: Prescriptions
+    description: Prescription creation, entitlement, retrieval, deletion, and editing.
+  - name: Reference Data
+    description: Reference values used by prescription request fields.
+  - name: Dentistry
+    description: Dentistry rule checking and dentistry service lookup.
+  - name: Referrals
+    description: Doctor referral, referral feedback, and secretary referral workflows.
+  - name: Nursing
+    description: Clinic nursing cartable and nursing actions.
+  - name: Referred Services
+    description: Retrieval of referred medical-service prescriptions.
+  - name: Hospitalization
+    description: Hospitalization-order prescriptions for clinic secretaries.
+  - name: Family Doctor
+    description: Family-doctor patient admission share calculation.
+  - name: Patient Diseases
+    description: Selectable disease lookup and patient disease marking.
+paths:
+  /ep/referral-feedback-questions/v1:
+    get:
+      tags:
+        - Referrals
+      summary: List referral-feedback questions
+      operationId: listReferralFeedbackQuestions
+      responses:
+        '200':
+          $ref: '#/components/responses/UndocumentedJsonSuccess'
+  /ep/referral-feedback-responses/v1:
+    get:
+      tags:
+        - Referrals
+      summary: List referral-feedback answers
+      operationId: listReferralFeedbackAnswers
+      responses:
+        '200':
+          $ref: '#/components/responses/UndocumentedJsonSuccess'
+  /ep/patient-admission/v1/{siamid}/{nationalCode}/{docId}:
+    get:
+      tags:
+        - Family Doctor
+      summary: Calculate the patient's family-doctor visit share
+      operationId: calculateFamilyDoctorPatientShare
+      parameters:
+        - name: siamid
+          in: path
+          required: true
+          description: SIAM identifier of the clinic or medical center.
+          schema:
+            type: string
+        - name: nationalCode
+          in: path
+          required: true
+          description: Patient national code.
+          schema:
+            type: string
+        - $ref: '#/components/parameters/DocId'
+      responses:
+        '200':
+          description: Successful family-doctor patient-share response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FamilyDoctorShareResponse'
+              examples:
+                familyDoctorPopulation:
+                  value:
+                    status: 200
+                    family: SUCCESSFUL
+                    reason: OK
+                    traceId: 63854023-1eb1-4f68-a2c6-9d00d9a83c65
+                    data:
+                      price: 386,865
+                      familyDoctor: true
+                outsideFamilyDoctor:
+                  value:
+                    status: 200
+                    family: SUCCESSFUL
+                    reason: OK
+                    traceId: 63854023-1eb1-4f68-a2c6-9d00d9a83c65
+                    data:
+                      price: مراجعه خارج از پزشک خانواده
+                      familyDoctor: false
+  /ep/patient-diseases-list/v1/{siamId}/{nationalCode}:
+    get:
+      tags:
+        - Patient Diseases
+      summary: List diseases that the doctor may mark for a patient
+      operationId: listPatientDiseases
+      parameters:
+        - $ref: '#/components/parameters/SiamId'
+        - name: nationalCode
+          in: path
+          required: true
+          description: Patient national code.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful selectable-diseases response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientDiseaseListResponse'
+              example:
+                status: 200
+                family: SUCCESSFUL
+                reason: OK
+                traceId: 2bccffbca-f1ee-4e7e-9da0-470ffd7dd6c6
+                data:
+                  total: 4
+                  list:
+                    - id: 86
+                      illText: رئینوپاتی دیابتی
+                      status: '1'
+                      statusDate: null
+                      type: '1'
+                      priorityOrder: null
+                      codeMapping: H36.0
+                      illName: H36.0
+                    - id: 89
+                      illText: پرفشاری خون کنترل شده
+                      status: '1'
+                      statusDate: null
+                      type: '1'
+                      priorityOrder: null
+                      codeMapping: UnderControlHypertension_I10
+                      illName: UnderControlHypertension_I10
+                    - id: 87
+                      illText: دیابت نوع دو
+                      status: '1'
+                      statusDate: null
+                      type: '1'
+                      priorityOrder: null
+                      codeMapping: noninsulin_E11
+                      illName: noninsulin_E11
+                    - id: 88
+                      illText: پرفشاری خون
+                      status: '1'
+                      statusDate: null
+                      type: '1'
+                      priorityOrder: null
+                      codeMapping: I10
+                      illName: I10
+  /ep/save-patient-info-illness/v1:
+    post:
+      tags:
+        - Patient Diseases
+      summary: Mark a patient with a disease
+      operationId: markPatientDisease
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientIllnessRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/PrescriptionMutationSuccess'
+        default:
+          $ref: '#/components/responses/PrescriptionMutationFailure'
+components:
+  securitySchemes:
+    taminOAuth:
+      type: oauth2
+      description: PKCE authorization-code authentication documented by Tamin. The source states that the resulting token is used for the remaining services but does not state the HTTP Authorization header format or any scopes.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://account.tamin.ir/auth/server/authorize
+          tokenUrl: https://account.tamin.ir/auth/server/token
+          refreshUrl: https://account.tamin.ir/auth/server/v2/token
+          scopes: {}
+  parameters:
+    DocId:
+      name: docId
+      in: path
+      required: true
+      description: Medical Council number.
+      schema:
+        type: string
+    SiamId:
+      name: siamId
+      in: path
+      required: true
+      description: SIAM identifier of the clinic or medical center.
+      schema:
+        type: string
+  responses:
+    UndocumentedJsonSuccess:
+      description: Successful JSON response. The source document does not define the wire schema for this operation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JsonObject'
+    PrescriptionMutationSuccess:
+      description: Successful mutation response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PrescriptionMutationResponse'
+    PrescriptionMutationFailure:
+      description: Error response. The source documents error_Code and error_Msg but does not define the corresponding HTTP status codes.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PrescriptionMutationResponse'
+          examples:
+            nullData:
+              value:
+                error_Msg: data is null خطا در اطلاعات ورودی
+            missingMobile:
+              value:
+                error_Msg: شماره تلفن همراه وارد نشده است
+            invalidMobile:
+              value:
+                error_Msg: شماره تلفن همراه به درستی وارد نشده است
+            invalidPatientNationalCode:
+              value:
+                error_Msg: کد ملی بیمار معتبر نمی باشد
+            invalidDoctorIdentity:
+              value:
+                error_Msg: کدملی/ تلفن همراه پزشک معتبر نمی باشد
+            undefinedServiceCode:
+              value:
+                error_Msg: کد خدمت + srvcode + تعریف نشده است
+            missingPrescriptionType:
+              value:
+                error_Msg: نوع نسخه انتخاب نشده است
+            invalidPrescriptionType:
+              value:
+                error_Msg: نوع نسخه بدرستی وارد نشده است
+            duplicatePrescription:
+              value:
+                error_Msg: نوع نسخه تکراری است
+            invalidPrescriptionDate:
+              value:
+                error_Msg: تاریخ به درستی وارد نشده است
+            futurePrescriptionDate:
+              value:
+                error_Msg: تاریخ نسخه نمی تواند از تاریخ روز بزرگتر باشد.
+            invalidDrugAmount:
+              value:
+                error_Msg: مقادیر مصرف صحیح وارد نشده است
+            invalidDrugInstruction:
+              value:
+                error_Msg: زمان مصرف صحیح وارد نشده است
+  schemas:
+    JsonObject:
+      type: object
+      description: Unconstrained JSON object because the source does not document its fields.
+      additionalProperties: true
+    PrescriptionMutationResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        head_EPRSC_ID:
+          type:
+            - integer
+            - 'null'
+          description: Prescription identifier.
+        complementary_Msg:
+          type:
+            - string
+            - 'null'
+          description: Populated on success.
+        error_Code:
+          type:
+            - string
+            - 'null'
+          description: Populated on failure.
+        error_Msg:
+          type:
+            - string
+            - 'null'
+          description: Populated on failure.
+        trackingCode:
+          type:
+            - integer
+            - 'null'
+          description: Prescription tracking code.
+    PatientIllnessRequest:
+      type: object
+      additionalProperties: true
+      required:
+        - patientNationalCode
+        - illId
+        - mobileNumber
+        - siamId
+        - inputType
+      properties:
+        patientNationalCode:
+          type: string
+        illId:
+          type: integer
+          description: Disease id returned by listPatientDiseases.
+        mobileNumber:
+          type: string
+        siamId:
+          type: string
+          description: SIAM identifier; when the doctor acts from an office, the doctor's national code is sent instead.
+        inputType:
+          type: integer
+          enum:
+            - 1
+        type:
+          type: string
+          enum:
+            - '1'
+            - '2'
+            - '3'
+          description: 'Required only for autism: 1 support required; 2 substantial support required; 3 very substantial support required.'
+    FamilyDoctorShareResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - status
+        - family
+        - reason
+        - traceId
+        - data
+      properties:
+        status:
+          type: integer
+        family:
+          type: string
+        reason:
+          type: string
+        traceId:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+          required:
+            - price
+            - familyDoctor
+          properties:
+            price:
+              type: string
+              description: Formatted amount or the documented out-of-family-doctor message.
+            familyDoctor:
+              type: boolean
+    PatientDiseaseListResponse:
+      type: object
+      additionalProperties: true
+      required:
+        - status
+        - family
+        - reason
+        - traceId
+        - data
+      properties:
+        status:
+          type: integer
+        family:
+          type: string
+        reason:
+          type: string
+        traceId:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+          required:
+            - total
+            - list
+          properties:
+            total:
+              type: integer
+            list:
+              type: array
+              items:
+                $ref: '#/components/schemas/PatientDisease'
+    PatientDisease:
+      type: object
+      additionalProperties: true
+      required:
+        - id
+        - illText
+        - status
+        - type
+        - codeMapping
+        - illName
+      properties:
+        id:
+          type: integer
+        illText:
+          type: string
+        status:
+          type: string
+        statusDate:
+          type:
+            - string
+            - 'null'
+        type:
+          type: string
+        priorityOrder:
+          type:
+            - integer
+            - 'null'
+        codeMapping:
+          type: string
+        illName:
+          type: string
