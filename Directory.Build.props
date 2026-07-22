@@ -1,9 +1,9 @@
 <Project>
     <PropertyGroup>
-        <Authors>Vorn.Tamin Contributors</Authors>
-        <Company>Vorn.Tamin</Company>
-        <Copyright>Copyright © Vorn.Tamin Contributors</Copyright>
-        <Description>Kiota-generated .NET 10 client SDK for the EP.Tamin electronic prescription APIs of the Social Security Insurance of Iran.</Description>
+        <Authors>Vorn</Authors>
+        <Company>Vorn</Company>
+        <Copyright>Copyright © Vorn</Copyright>
+        <Description>.NET 10 client SDK for the EP.Tamin electronic prescription APIs of the Social Security Insurance of Iran.</Description>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageProjectUrl>https://github.com/mobinseven/Vorn.Tamin</PackageProjectUrl>
