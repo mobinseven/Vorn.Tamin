@@ -1,150 +1,69 @@
-# AGENTS.md — Architecture Rules
+# AGENTS.md
 
-These rules are non-negotiable. Every artifact you produce must comply. No exceptions, no shortcuts, no "it's just a small thing."
+Repository-wide operating contract for coding agents.
 
----
+- **[MUST]** is mandatory. Deviate only with explicit owner approval recorded in the narrowest authoritative document or ADR. Never waive security, authorization, secret handling, or data-loss protection merely to finish work.
+- **[SHOULD]** is the strong default. Deviate only for a clearly simpler or safer solution and state why.
 
-## What "Artifact" Means
+## Scope and precedence
 
-Every unit you touch: solution, project, namespace, class, struct, record, interface, enum, method, function, service, repository, controller, handler, command, query, DTO, entity, event, migration, config, test, adapter, port, or integration boundary.
+Applies to every changed artifact. A nearer `AGENTS.md` may specialize commands, placement, and **[SHOULD]** rules, but cannot weaken a root **[MUST]**. A matched skill may specialize **[SHOULD]** guidance. Conflicting **[MUST]** rules are a policy defect: stop, report them, and do not choose silently.
 
----
+Do not duplicate those documents here.
 
-## The Ten Rules
+## Core rules
 
-**1. One responsibility per artifact.**
-One reason to change. If it mixes business logic, persistence, validation, orchestration, transport, or UI — split it now.
+1. **Cohesion [SHOULD]** — Give each artifact one primary reason to change. Split unrelated forces; do not split cohesive behavior merely to add indirection.
+2. **Authoritative ownership [MUST]** — Every rule, invariant, mutable state, and shared value has one owner. Derived DTOs, persistence shapes, caches, indexes, generated clients, fixtures, and view models must have an explicit source and synchronization path.
+3. **Narrow knowledge [SHOULD]** — Expose only the information and capabilities required through the narrowest stable boundary. Do not reach through internals or framework details.
+4. **Dependency direction [MUST]** — Domain is independent of Infrastructure and UI. Application may depend only on Application-owned ports, never concrete databases, HTTP/filesystem clients, vendor SDKs, UI frameworks, or other outward implementations. Add a port only for a real boundary, nondeterminism, alternative implementation, or meaningful capability.
+5. **Commands and queries [MUST]** — Queries cause no observable state change. Commands return only the outcome data required; they are not read APIs. CQRS infrastructure is optional.
+6. **Explicit boundaries [MUST]** — Validate transport shape at Transport, use-case preconditions at Application, invariants at their owner, and external responses before trust. Define relevant cancellation, timeout, retry, duplicate-call, idempotency, concurrency, partial-failure, and dependency-unavailable behavior. Never swallow failures.
+7. **Cohesive edits [SHOULD]** — Reuse a natural extension point; otherwise edit the current owner. Do not invent handlers, strategies, plug-ins, layers, or wrappers solely to avoid changing stable code.
+8. **Current requirements [SHOULD]** — Avoid speculative layers, options, abstractions, and configuration. When solutions are equally correct, prefer the simpler and more reversible one.
 
-**2. One active state model.**
-No duplicated domain concepts, no parallel truth sources. If two models exist, define their boundary and mapping explicitly.
+## Safeguards
 
-**3. Minimize inter-component knowledge.**
-Components know only what they directly need. No reaching through object graphs. No leaking internals, persistence details, or framework specifics.
+- **Secrets/data [MUST]:** Never expose, log, commit, or generate secrets, credentials, private keys, or sensitive payloads. Preserve redaction and least privilege.
+- **Trust [MUST]:** Never weaken authentication, authorization, ownership/tenant checks, TLS, CORS, antiforgery, validation, or isolation to pass tests or deployment.
+- **Data access [MUST]:** Parameterize data access. Treat external, generated, deserialized, and cross-boundary content as untrusted.
+- **Compatibility [MUST]:** Public APIs, operation IDs, generated-client inputs, persisted formats, schemas, events/messages, and configuration keys are compatibility boundaries. Breaking changes require explicit versioning or migration.
+- **Migrations [MUST]:** Account for existing data and mixed versions. Prefer expand-migrate-contract; state data-loss, rollback, and compatibility effects.
+- **Generated output [MUST]:** Never edit generated clients, DTOs, hooks, keys, mocks, or equivalent output. Change the source and run the canonical generator.
+- **Retries [MUST]:** The initiating boundary owns retry policy. Retried mutations require idempotency. Do not stack retries without explicit reason.
+- **Quality [MUST]:** Do not weaken assertions, tests, analyzers, validators, or diagnostics to obtain a pass.
+- **Observability [SHOULD]:** Important failures produce structured, actionable, redacted telemetry.
 
-**4. Depend on abstractions, not implementations.**
-Core logic depends on stable contracts only. Never on databases, HTTP clients, filesystems, vendor SDKs, clocks, or UI details.
+## Scope and minimum change
 
-**5. Commands change state. Queries return data. Never both.**
-A method that changes state must not return data as a query API. A method that returns data must not change observable state.
+Make the smallest complete change. Fix violations introduced or materially worsened by it; report unrelated pre-existing issues. Do not reformat, rename, reorganize, modernize, or refactor unrelated files. Preserve user changes. Modify lockfiles only when dependency resolution requires it.
 
-**6. Validate all inputs. Handle all failures explicitly.**
-Invalid input, unavailable dependencies, partial failure, retries, idempotency, cancellation — handle them intentionally. Silent swallowing of exceptions is a defect.
+When replacing a path, remove it or document the compatibility window, remaining dependents, owner, and removal condition.
 
-**7. Extend through new code, not edits to stable code.**
-New behavior goes in new implementations, strategies, handlers, or adapters. Do not repeatedly modify stable core logic to add features.
+Stop at the first complete option:
 
-**8. Protect core logic from infrastructure.**
-Domain and application logic must never import or reference UI, database, transport, framework, filesystem, network, clock, or third-party SDKs.
+1. No change needed.
+2. Reuse an existing owner, pattern, contract, component, hook, validator, or script.
+3. Use the standard library/runtime.
+4. Use native platform/framework behavior.
+5. Use an installed dependency.
+6. Make the smallest cohesive edit.
+7. Add only the minimum custom code or dependency.
 
-**9. Do not add what is not needed now.**
-No speculative layers, no fashionable patterns, no generic frameworks built for imagined futures. If it doesn't solve a real present problem, remove it.
+For bugs, trace callers and fix the shared root cause when that is the smallest correct fix. Never simplify away security, data safety, validation, cancellation, idempotency, accessibility, localization, boundaries, or required tests.
 
-**10. One source of truth for every rule and value.**
-Business rules, validation logic, state transitions, config values, and shared definitions exist in exactly one place. Duplication is a defect.
+## Planning and delivery
 
----
+For non-trivial work, record:
 
-## Before You Write Anything
+- outcome, non-goals, repository evidence, assumptions, and unresolved decisions;
+- smallest artifact set, layer, primary responsibility, owner, and dependency direction;
+- trust, failure, contract, compatibility, migration, configuration, and generated-output effects;
+- ordered independently valid slices, acceptance criteria, deterministic validation, and runtime hot scenarios;
+- applicable skills and whether work is planning-only or implementation-authorized.
 
-Classify each artifact:
+Skip this ceremony for trivial edits that do not alter behavior or structural boundaries.
 
-- Domain / core logic
-- Application / use-case orchestration
-- Command (write)
-- Query (read)
-- Port / contract
-- Adapter / infrastructure
-- Presentation / API / UI
-- Data transfer shape
-- Persistence model
-- Test
-- Configuration / composition root
+A plan is complete only when it provides the above plus risks, rejected alternatives, and revision triggers. A file list or generic steps are insufficient.
 
-If an artifact fits more than one category, split it. No exceptions.
-
----
-
-## Mandatory Steps
-
-1. Identify the smallest set of artifacts required.
-2. Assign exactly one responsibility to each.
-3. Define boundaries: core → application → infrastructure → presentation.
-4. Name the single source of truth for every piece of state.
-5. Separate commands from queries.
-6. Define abstractions before writing any infrastructure dependency.
-7. Ask whether extensibility is needed *now* — not speculatively.
-8. Remove every pattern, layer, and abstraction that serves no current requirement.
-9. Only then write code.
-
----
-
-## Hard Stops — Stop and Correct Immediately If:
-
-- A class or method has more than one responsibility.
-- A method both mutates state and serves as a query.
-- Core logic imports or references infrastructure, frameworks, vendors, or UI.
-- A business rule appears in more than one place.
-- Two artifacts represent the same state without an explicit ownership boundary.
-- A component accesses internals through another component.
-- Adding a feature requires editing stable core logic when an extension point exists.
-- An error is swallowed, ignored, or left to accidental runtime failure.
-- A pattern was chosen because it is fashionable rather than necessary.
-- The design is more complex than the requirement demands.
-
-Do not proceed past a hard stop. Identify the violation, explain it, fix it.
-
----
-
-## Required Audit for Every Artifact
-
-```
-Artifact: <name>
-Type: <class / method / module / etc.>
-Responsibility: <one sentence>
-
-SRP:                    Pass / Fail — reason
-Single state model:     Pass / Fail — reason
-Low coupling:           Pass / Fail — reason
-Abstraction:            Pass / Fail — reason
-Command-query:          Pass / Fail / N/A — reason
-Failure safety:         Pass / Fail — reason
-Open/Closed:            Pass / Fail — reason
-Core protection:        Pass / Fail / N/A — reason
-KISS/YAGNI:             Pass / Fail — reason
-Single source of truth: Pass / Fail — reason
-```
-
-Any Fail means the artifact is not done. Fix it before submitting.
-
----
-
-## Standing Prohibitions
-
-- No `Manager`, `Helper`, `Util`, `Common`, or `Service` names unless the single responsibility is precise and explicit.
-- No extension methods that hide business rules, mutate state, or couple unrelated layers.
-- No business rules in controllers, repositories, DTOs, migrations, or adapters.
-- No CQRS, event sourcing, mediator frameworks, or generic repository abstractions unless they provably reduce complexity for the current problem.
-- No inheritance unless it is clearly simpler and safer than composition.
-
----
-
-## Output Format
-
-**Architecture proposals must include:**
-1. Artifact list with one-sentence responsibilities
-2. Dependency direction
-3. State ownership and source of truth
-4. Command / query split
-5. Failure-handling strategy
-6. Extensibility points — only where justified now
-7. What was intentionally left out and why
-
-**Code submissions must include:**
-1. Code
-2. Per-artifact rule audit
-3. Trade-offs
-4. Rejected alternatives and why they were rejected
-
----
-
-The goal is simple, enforceable, correct software. Every rule above is a red line. Treat it accordingly.
+An implementation handoff must state material changes, validation commands/results, unrun checks and reasons, contract/data/configuration/generated-output effects, migration/rollback/security/operational implications, plan deviations, residual risk, and excluded scope. Compilation alone is insufficient.
