@@ -7,7 +7,7 @@ namespace Tamin.Integration.Tests;
 
 public sealed class PrescriptionRequestMapperTests
 {
-    // Source contract fingerprint: 40fb25238c71df67c78854e4424a03a8aee9b809d2e32595b484a0de0071a08a
+    // Source contract fingerprint: b5d5e142af881c0fa3ba9a60190173c595b377b49e58c794a254d75d5c56ac16
     private readonly PrescriptionRequestMapper mapper = new();
 
     [Theory]
@@ -63,7 +63,7 @@ public sealed class PrescriptionRequestMapperTests
         Assert.Single(pilot.NoteDetailEprscs!); Assert.Single(pilot.NoteDetailsReferralList!);
         var detail = prod.NoteDetailEprscs![0];
         var mappedReferral = prod.NoteDetailsReferralList![0];
-        Assert.Equal(71, detail.DiagnosisID!.IcdId);
+        Assert.Equal(71, detail.NoteDetailDrug!.IcdId);
         Assert.Equal("X46.49", mappedReferral.Icd10s![0].IcdId);
         Assert.Equal(17, mappedReferral.Id);
         Assert.Equal("14040610", mappedReferral.ReferralHijriDate);
@@ -71,13 +71,65 @@ public sealed class PrescriptionRequestMapperTests
         Assert.Equal("complaint-id", mappedReferral.Complaints![0].Id);
         var pilotDetail = pilot.NoteDetailEprscs![0];
         var pilotReferral = pilot.NoteDetailsReferralList![0];
-        Assert.Equal(71, pilotDetail.DiagnosisID!.IcdId);
+        Assert.Equal(71, pilotDetail.NoteDetailDrug!.IcdId);
         Assert.Equal("X46.49", pilotReferral.Icd10s![0].IcdId);
         Assert.Equal(17, pilotReferral.Id);
         Assert.Equal("14040610", pilotReferral.ReferralHijriDate);
         Assert.Equal("complaint-ids", pilotReferral.Complaints![0].ComplaintIDs);
         Assert.Equal("complaint-id", pilotReferral.Complaints![0].Id);
         Assert.Equal(input.DocNationalCode, pilot.ClientId);
+    }
+
+    [Fact]
+    public void Mobile_is_optional_in_guide_v1_10_1_so_omission_is_allowed_but_blank_is_not()
+    {
+        var prod = mapper.MapProduction(Input(mobile: null));
+        var pilot = mapper.MapPilot(Input(mobile: null));
+        Assert.Null(prod.Mobile); Assert.Null(pilot.Mobile);
+        Assert.DoesNotContain("\"mobile\"", Serialize(prod));
+        Assert.DoesNotContain("\"mobile\"", Serialize(pilot));
+        Assert.Equal("0912", mapper.MapProduction(Input()).Mobile);
+    }
+
+    [Fact]
+    public void V1_10_1_request_fields_are_mapped_for_both_environments()
+    {
+        var referral = new PrescriptionReferralInput(null, new("special", "MAXA"), null, null, null, null, null, null, null, null, null, null);
+        var input = Input(details: [Detail(DentalServiceFlag.One)], referrals: [referral]);
+
+        var prod = mapper.MapProduction(input);
+        Assert.Equal(("siam-id", "SNOMEDCT"), (prod.SiamId, prod.Terminology));
+        Assert.Equal("complaints", prod.NoteHeadEprscSupplementary!.ComplaintIDs);
+        var prodDetail = prod.NoteDetailEprscs![0];
+        Assert.Equal(("dose", "dose-code", 307166007, 71), (prodDetail.Dose, prodDetail.DoseCode, prodDetail.MethodUsage!.Id, prodDetail.NoteDetailDrug!.IcdId));
+        Assert.Equal(("special", "MAXA"), (prod.NoteDetailsReferralList![0].DocSpecReferred!.SpecCode, prod.NoteDetailsReferralList![0].DocSpecReferred!.Terminology));
+
+        var pilot = mapper.MapPilot(input);
+        Assert.Equal(("siam-id", "SNOMEDCT"), (pilot.SiamId, pilot.Terminology));
+        Assert.Equal("complaints", pilot.NoteHeadEprscSupplementary!.ComplaintIDs);
+        var pilotDetail = pilot.NoteDetailEprscs![0];
+        Assert.Equal(("dose", "dose-code", 307166007, 71), (pilotDetail.Dose, pilotDetail.DoseCode, pilotDetail.MethodUsage!.Id, pilotDetail.NoteDetailDrug!.IcdId));
+        Assert.Equal(("special", "MAXA"), (pilot.NoteDetailsReferralList![0].DocSpecReferred!.SpecCode, pilot.NoteDetailsReferralList![0].DocSpecReferred!.Terminology));
+    }
+
+    [Fact]
+    public void V1_10_1_request_fields_use_the_documented_wire_names_and_drop_the_removed_ones()
+    {
+        var input = Input(details: [Detail(DentalServiceFlag.One)]);
+        foreach (var json in new[] { Serialize(mapper.MapProduction(input)), Serialize(mapper.MapPilot(input)) })
+        {
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            Assert.Equal("siam-id", root.GetProperty("siamId").GetString());
+            Assert.Equal("SNOMEDCT", root.GetProperty("terminology").GetString());
+            Assert.Equal("complaints", root.GetProperty("noteHeadEprscSupplementary").GetProperty("complaintIDs").GetString());
+            Assert.False(root.TryGetProperty("Complaint", out _) || root.TryGetProperty("complaint", out _));
+            var detail = root.GetProperty("noteDetailEprscs")[0];
+            Assert.Equal("dose-code", detail.GetProperty("doseCode").GetString());
+            Assert.Equal(307166007, detail.GetProperty("methodUsage").GetProperty("id").GetInt32());
+            Assert.Equal(71, detail.GetProperty("noteDetailDrug").GetProperty("icdId").GetInt32());
+            Assert.False(detail.TryGetProperty("DiagnosisID", out _) || detail.TryGetProperty("diagnosisID", out _));
+        }
     }
 
     [Fact]
@@ -97,11 +149,20 @@ public sealed class PrescriptionRequestMapperTests
         Assert.Equal(("B", null, "12"), (pilotSecondService.SrvCode, pilotSecondService.Terminology, pilot[1].ToothId));
     }
 
-    private static PrescriptionCreateInput Input(string mobile = "0912", IReadOnlyList<PrescriptionDetailInput>? details = null, IReadOnlyList<PrescriptionReferralInput>? referrals = null) =>
-        new("comments", new("complaints"), "creator", "doc", "doc-mobile", "national", "14040611", mobile,
-            details, referrals, "patient", "14040610", new(2), 42);
+    private static PrescriptionCreateInput Input(string? mobile = "0912", IReadOnlyList<PrescriptionDetailInput>? details = null, IReadOnlyList<PrescriptionReferralInput>? referrals = null,
+        string? siamId = "siam-id", string? terminology = "SNOMEDCT") =>
+        new("comments", "creator", "doc", "doc-mobile", "national", "14040611", mobile,
+            details, referrals, new("complaints"), "patient", "14040610", new(2), 42, siamId, terminology);
 
     private static PrescriptionDetailInput Detail(DentalServiceFlag flag) =>
-        new("14040610", new(71), "dose", new(3), "illness", flag, new Dictionary<string, object?> { ["opaque"] = 1 },
+        new("14040610", "dose", "dose-code", new(3), "illness", flag, new(307166007), new(71),
             9, "plan", 1, "repeat", new("service", "terminology"), 2, new(4), "11");
+
+    private static string Serialize(Microsoft.Kiota.Abstractions.Serialization.IParsable value)
+    {
+        using var writer = new Microsoft.Kiota.Serialization.Json.JsonSerializationWriter();
+        writer.WriteObjectValue(null, value);
+        using var reader = new StreamReader(writer.GetSerializedContent());
+        return reader.ReadToEnd();
+    }
 }

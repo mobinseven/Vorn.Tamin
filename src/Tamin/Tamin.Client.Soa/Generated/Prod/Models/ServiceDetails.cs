@@ -94,6 +94,14 @@ namespace Tamin.Client.Soa.Prod.Models
 #else
         public string IsDeleted { get; set; }
 #endif
+        /// <summary>The parTarefGrp property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public global::Tamin.Client.Soa.Prod.Models.ParTarefGroupDetails? ParTarefGrp { get; set; }
+#nullable restore
+#else
+        public global::Tamin.Client.Soa.Prod.Models.ParTarefGroupDetails ParTarefGrp { get; set; }
+#endif
         /// <summary>The srvBimSw property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -245,6 +253,7 @@ namespace Tamin.Client.Soa.Prod.Models
                 { "gSrvCode", n => { GSrvCode = n.GetStringValue(); } },
                 { "hosprescType", n => { HosprescType = n.GetStringValue(); } },
                 { "isDeleted", n => { IsDeleted = n.GetStringValue(); } },
+                { "parTarefGrp", n => { ParTarefGrp = n.GetObjectValue<global::Tamin.Client.Soa.Prod.Models.ParTarefGroupDetails>(global::Tamin.Client.Soa.Prod.Models.ParTarefGroupDetails.CreateFromDiscriminatorValue); } },
                 { "srvBimSw", n => { SrvBimSw = n.GetStringValue(); } },
                 { "srvCode", n => { SrvCode = n.GetStringValue(); } },
                 { "srvCodeComplete", n => { SrvCodeComplete = n.GetStringValue(); } },
@@ -280,6 +289,7 @@ namespace Tamin.Client.Soa.Prod.Models
             writer.WriteStringValue("gSrvCode", GSrvCode);
             writer.WriteStringValue("hosprescType", HosprescType);
             writer.WriteStringValue("isDeleted", IsDeleted);
+            writer.WriteObjectValue<global::Tamin.Client.Soa.Prod.Models.ParTarefGroupDetails>("parTarefGrp", ParTarefGrp);
             writer.WriteStringValue("srvBimSw", SrvBimSw);
             writer.WriteStringValue("srvCode", SrvCode);
             writer.WriteStringValue("srvCodeComplete", SrvCodeComplete);

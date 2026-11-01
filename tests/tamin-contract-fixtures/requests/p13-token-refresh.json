@@ -1,0 +1,6 @@
+{
+  "grant_type": "refresh_token",
+  "client_id": "portal-js",
+  "refresh_token": "eyJhbGciOi.masked",
+  "audience": "0000000000"
+}

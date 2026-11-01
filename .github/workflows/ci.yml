@@ -8,6 +8,7 @@ on:
       - "src/**"
       - "openapi/**"
       - "scripts/**"
+      - "tests/**"
       - ".config/dotnet-tools.json"
       - "Directory.Build.props"
       - "Vorn.Tamin.slnx"

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
-using Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2.Item.Item.Item.ReferentalPrescDetail;
+using Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2.Item.Item.Item.ReferentialPrescDetail;
 namespace Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2.Item.Item.Item
 {
     /// <summary>
@@ -15,10 +15,10 @@ namespace Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2.Item.Item.Item
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class WithTrackingCodeItemRequestBuilder : BaseRequestBuilder
     {
-        /// <summary>The referentalPrescDetail property</summary>
-        public global::Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2.Item.Item.Item.ReferentalPrescDetail.ReferentalPrescDetailRequestBuilder ReferentalPrescDetail
+        /// <summary>The referentialPrescDetail property</summary>
+        public global::Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2.Item.Item.Item.ReferentialPrescDetail.ReferentialPrescDetailRequestBuilder ReferentialPrescDetail
         {
-            get => new global::Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2.Item.Item.Item.ReferentalPrescDetail.ReferentalPrescDetailRequestBuilder(PathParameters, RequestAdapter);
+            get => new global::Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2.Item.Item.Item.ReferentialPrescDetail.ReferentialPrescDetailRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2.Item.Item.Item.WithTrackingCodeItemRequestBuilder"/> and sets the default values.

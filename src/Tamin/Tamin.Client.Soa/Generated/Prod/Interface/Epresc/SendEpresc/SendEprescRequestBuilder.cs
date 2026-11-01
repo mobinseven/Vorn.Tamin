@@ -7,7 +7,6 @@ using System.IO;
 using System.Threading.Tasks;
 using System;
 using Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2;
-using Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V7;
 namespace Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc
 {
     /// <summary>
@@ -20,11 +19,6 @@ namespace Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc
         public global::Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2.V2RequestBuilder V2
         {
             get => new global::Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V2.V2RequestBuilder(PathParameters, RequestAdapter);
-        }
-        /// <summary>The v7 property</summary>
-        public global::Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V7.V7RequestBuilder V7
-        {
-            get => new global::Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.V7.V7RequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Prod.Interface.Epresc.SendEpresc.SendEprescRequestBuilder"/> and sets the default values.

@@ -9,11 +9,12 @@ using System.Threading.Tasks;
 using System.Threading;
 using System;
 using Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item.Detail;
+using Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item.Item;
 using Tamin.Client.Soa.Pilot.Models;
 namespace Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item
 {
     /// <summary>
-    /// Builds and executes requests for operations under \api\v2\ep\{headerID}\{docNationalCode}\{docId}
+    /// Builds and executes requests for operations under \api\v2\ep\{header-id}\{docNatioanlCode-id}\{docId}
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class WithDocItemRequestBuilder : BaseRequestBuilder
@@ -23,12 +24,24 @@ namespace Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item
         {
             get => new global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item.Detail.DetailRequestBuilder(PathParameters, RequestAdapter);
         }
+        /// <summary>Gets an item from the Tamin.Client.Soa.Pilot.api.v2.ep.item.item.item.item collection</summary>
+        /// <param name="position">Prescription tracking code.</param>
+        /// <returns>A <see cref="global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item.Item.WithTrackingCodeItemRequestBuilder"/></returns>
+        public global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item.Item.WithTrackingCodeItemRequestBuilder this[int position]
+        {
+            get
+            {
+                var urlTplParams = new Dictionary<string, object>(PathParameters);
+                urlTplParams.Add("trackingCode", position);
+                return new global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item.Item.WithTrackingCodeItemRequestBuilder(urlTplParams, RequestAdapter);
+            }
+        }
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item.WithDocItemRequestBuilder"/> and sets the default values.
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public WithDocItemRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/v2/ep/{headerID}/{docNationalCode}/{docId}", pathParameters)
+        public WithDocItemRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/v2/ep/{header%2Did}/{docNatioanlCode%2Did}/{docId}", pathParameters)
         {
         }
         /// <summary>
@@ -36,7 +49,7 @@ namespace Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public WithDocItemRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/v2/ep/{headerID}/{docNationalCode}/{docId}", rawUrl)
+        public WithDocItemRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/v2/ep/{header%2Did}/{docNatioanlCode%2Did}/{docId}", rawUrl)
         {
         }
         /// <summary>

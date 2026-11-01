@@ -24,6 +24,8 @@ function Get-NormalizedTextHash([string]$Path) {
     return [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($text))).ToLowerInvariant()
 }
 
+& (Join-Path $PSScriptRoot 'verify-tamin-conformance.ps1') -RepositoryRoot $RepositoryRoot
+
 $sourceHashes = @(
     (Get-NormalizedTextHash (Join-Path $RepositoryRoot 'src/tamin-production.openapi.yaml')),
     (Get-NormalizedTextHash (Join-Path $RepositoryRoot 'src/tamin-pilot.openapi.yaml'))
@@ -43,7 +45,11 @@ foreach ($document in $documents) {
     $lint = $lintText | ConvertFrom-Json
     foreach ($problem in $lint.problems) { $warningCounts[$problem.ruleId] = 1 + $warningCounts[$problem.ruleId] }
 }
-$expectedWarnings = @{ 'operation-4xx-response' = 80; 'info-license' = 6; 'no-ambiguous-paths' = 2 }
+# no-ambiguous-paths (3): the guide's own routes collide. Prod: find-dentist-service-name-by-tooth/{selectedTooth}/{patientId}/{toothType} vs
+# {nationalCode}/{docId}/{trackingCode}/referentialPrescDetail. Pilot: /api/v2/ep/{headerID}/{docNationalCode}/{docId}/detail (p32) vs both
+# /api/v2/ep/update/{headerID}/{docNationalCode}/{docId} (p33) and /api/v2/ep/findNoteReferral/{nationalCode}/{docId}/{trackingCode} (p41; the
+# third warning, v1.10.1). Each pair shares a segment count and differs only where one side is a parameter, so the PDF defines the ambiguity.
+$expectedWarnings = @{ 'operation-4xx-response' = 94; 'info-license' = 6; 'no-ambiguous-paths' = 3 }
 if (($warningCounts.Keys | Where-Object { !$expectedWarnings.ContainsKey($_) }).Count -ne 0) { throw "Unexpected Redocly warning category: $($warningCounts.Keys -join ', ')." }
 foreach ($rule in $expectedWarnings.Keys) {
     if ($warningCounts[$rule] -ne $expectedWarnings[$rule]) { throw "Expected $($expectedWarnings[$rule]) $rule warnings; found $($warningCounts[$rule])." }
@@ -77,11 +83,11 @@ try {
     }
     foreach ($environment in @('prod','pilot')) {
         $ids = @($operationsByEnvironment[$environment])
-        if ($ids.Count -ne 40) { throw "Expected 40 $environment operations; found $($ids.Count)." }
-        if (($ids | Sort-Object -Unique).Count -ne 40) { throw "$environment operation IDs are not unique." }
+        if ($ids.Count -ne 47) { throw "Expected 47 $environment operations; found $($ids.Count)." }
+        if (($ids | Sort-Object -Unique).Count -ne 47) { throw "$environment operation IDs are not unique." }
     }
     $routeText = $allPaths -join "`n"
-    foreach ($literal in @('docNatioanlCode','/ep/api/v7/cartable-nurse/save','referentalPrescDetail','siamId','siam-id','siamid','docId','doc-id')) {
+    foreach ($literal in @('docNatioanlCode','/ep/api/v2/cartable-nurse/save','referentialPrescDetail','siamId','siam-id','siamid','docId','doc-id')) {
         if (!$routeText.Contains($literal)) { throw "Required D-15-D-18 route literal '$literal' is absent." }
     }
     if (!$allBundleText.ToString().Contains('docID')) { throw "Required D-18 field literal 'docID' is absent." }
@@ -100,4 +106,4 @@ if ($beforeGeneration -ne $afterGeneration) {
     throw "Canonical generation changed split specs, generated code, or Kiota lock files: $($changedPaths -join ', ')."
 }
 
-Write-Host 'Tamin contract verification passed: 6 documents, 80/6/2 allowed warnings, 40 operations per environment, deterministic generation.'
+Write-Host 'Tamin contract verification passed: 6 documents, PDF route manifest and payload fixtures, 94/6/3 allowed warnings, 47 operations per environment, deterministic generation.'

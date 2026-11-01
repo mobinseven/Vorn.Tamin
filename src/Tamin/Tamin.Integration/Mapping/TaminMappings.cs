@@ -9,16 +9,27 @@ namespace Tamin.Integration.Mapping;
 public sealed record UnconstrainedResponse(JsonElement Payload);
 public sealed record TaminEnvelope<T>(int? Status, string? Family, string? Reason, string? TraceId, T Data);
 public sealed record ReferralCartableItemDto(string? NoteHeadId, string? ReferralId, string? PatientId, string? DoctorId, string? PrescriptionDate, string? ReferralDate);
-public sealed record ReferralCartableDto(int? Total, IReadOnlyList<ReferralCartableItemDto> Items, long? Id, long? MasterParent, long? MasterChild, long? ReferralDate);
+public sealed record ReferralCartableDto(int? Total, IReadOnlyList<ReferralCartableItemDto> Items);
 public sealed record PrescriptionTypeDto(int? Id, string? Code, string? Description);
 public sealed record ReferralFeedbackPrescriptionDto(long? NoteHeadEprscId, string? Patient, string? PrescriptionDate, JsonElement Items, JsonElement? Referrals, PrescriptionTypeDto? PrescriptionType);
 public sealed record ReferralFeedbackDetailsDto(int? Total, IReadOnlyList<ReferralFeedbackPrescriptionDto> Items);
 public sealed record OpenReferralSpecialtyDto(string? SpecCode, string? SpecDesc, string? SpecGroup, string? Status, string? StatusDate, string? LStatus);
 public sealed record PatientOpenReferralsDto(int? Count, IReadOnlyList<OpenReferralSpecialtyDto> Referrals);
-public sealed record HospitalizationOrderDto(long? Id, long? MasterParent, long? ReferralDate, string? DoctorId, int? Quantity, bool? DoctorFamily);
+public sealed record HospitalizationOrderDto(long? Id, long? MasterParent, long? ReferralDate, string? DoctorId, int? Quantity, bool? DoctorFamily, string? PatientNationalCode = null);
 public sealed record FamilyDoctorShareDto(string? Price, bool? FamilyDoctor);
 public sealed record PatientDiseaseDto(int? Id, string? IllText, string? Status, string? Type, string? CodeMapping, string? IllName, int? PriorityOrder, string? StatusDate);
 public sealed record PatientDiseaseListDto(int? Total, IReadOnlyList<PatientDiseaseDto> Diseases);
+public sealed record MedicationInstructionOptionDto(string? Id, string? Code, string? Name, string? NameLatin);
+public sealed record FormAmountDto(string? Id, string? Code, string? Name, string? NameLatin, IReadOnlyList<MedicationInstructionOptionDto> DrugAmounts);
+public sealed record MedicationInstructionsDto(IReadOnlyList<MedicationInstructionOptionDto> DrugInstructions, IReadOnlyList<MedicationInstructionOptionDto> DrugUsages, IReadOnlyList<MedicationInstructionOptionDto> MethodUsages, IReadOnlyList<FormAmountDto> FormAmounts);
+public sealed record ReferralComplaintDto(int? Id, long? Code, string? DisplayName, string? EnglishName, string? Terminology, string? Status);
+public sealed record ReferralIcd10Dto(string? IcdId, string? IcdCode, string? IcdName);
+public sealed record ReferralFeedbackEntryDto(long? Id, long? MasterParent, long? MasterChild, long? ReferralDate, string? DoctorId, int? Quantity, string? Message, string? DiagnosisIds, string? SpecCodeReferral, string? SpecDescReferral, string? SpecCodeReferred, string? SpecDescReferred, IReadOnlyList<ReferralComplaintDto> Complaints, IReadOnlyList<ReferralIcd10Dto> Icd10Referrals);
+public sealed record ReferralFeedbackEntriesDto(int? Total, IReadOnlyList<ReferralFeedbackEntryDto> Entries);
+public sealed record NursingPrescriptionItemDto(long? NoteDetailsEprscId, long? ServiceId, string? ServiceCode, string? ServiceName, int? Quantity, int? RemainingQuantity, long? Price, string? IsOk, bool? ReadOnly);
+public sealed record NursingPrescriptionDto(long? NoteHeadId, long? DocEprscId, long? ClinicDocId, int? TrackingCode, string? NationalCode, string? PatientFirstName, string? PatientLastName, string? DoctorId, string? DoctorFirstName, string? DoctorLastName, int? PrescriptionType, int? IsSpecialPatient, string? IsOk, long? PrescriptionCreationTime, IReadOnlyList<NursingPrescriptionItemDto> Items);
+public sealed record NursingPrescriptionListDto(int? Total, IReadOnlyList<NursingPrescriptionDto> Prescriptions);
+public sealed record DoctorActiveCenterDto(string? DbLinkId, string? Name, string? SiamId, string? ProvinceName);
 public sealed record PrescriptionMutationResult(long? HeaderId, string? ComplementaryMessage, string? ErrorCode, string? ErrorMessage, long? TrackingCode);
 
 public interface IPrescriptionReferenceDataService
@@ -39,6 +50,9 @@ public interface IPrescriptionReferenceDataService
     UnconstrainedResponse MapDentistServicesWithoutTooth(SoaModels.JsonObject response);
     UnconstrainedResponse MapDentistServicesByTooth(SoaModels.JsonObject response);
     UnconstrainedResponse MapPilotReferenceData(PilotSoaModels.JsonObject response);
+    UnconstrainedResponse MapDosageForms(ApiModels.JsonObject response);
+    TaminEnvelope<MedicationInstructionsDto> MapMedicationInstructionsByDosageForm(ApiModels.MedicationInstructionsResponse response);
+    TaminEnvelope<MedicationInstructionsDto> MapMedicationInstructionsByDosageForm(PilotSoaModels.MedicationInstructionsResponse response);
 }
 public interface IPrescriptionMutationService
 {
@@ -76,12 +90,19 @@ public interface IReferralService
     TaminEnvelope<FamilyDoctorShareDto> MapFamilyDoctorShare(PilotApiModels.FamilyDoctorShareResponse response);
     UnconstrainedResponse MapPilotSoaUndocumented(PilotSoaModels.JsonObject response);
     UnconstrainedResponse MapPilotApiUndocumented(PilotApiModels.JsonObject response);
+    TaminEnvelope<ReferralFeedbackEntriesDto> MapReferralFeedbackEntries(SoaModels.ReferralListResponse response);
+    TaminEnvelope<ReferralFeedbackEntriesDto> MapReferralFeedbackEntries(PilotSoaModels.ReferralListResponse response);
+    TaminEnvelope<IReadOnlyList<HospitalizationOrderDto>> MapHospitalizationOrders(ApiModels.HospitalizationOrderResponse response);
+    TaminEnvelope<IReadOnlyList<DoctorActiveCenterDto>> MapDoctorActiveCenters(ApiModels.DoctorActiveCenterListResponse response);
+    TaminEnvelope<IReadOnlyList<DoctorActiveCenterDto>> MapDoctorActiveCenters(PilotSoaModels.DoctorActiveCenterListResponse response);
 }
 public interface INursingService
 {
-    UnconstrainedResponse MapUnclaimedPrescriptions(SoaModels.JsonObject response);
-    UnconstrainedResponse MapSaveActions(SoaModels.JsonObject response);
+    UnconstrainedResponse MapUnclaimedPrescriptions(ApiModels.JsonObject response);
+    UnconstrainedResponse MapSaveActions(ApiModels.JsonObject response);
     UnconstrainedResponse MapPilotNursingResponse(PilotSoaModels.JsonObject response);
+    NursingPrescriptionListDto MapDoctorNursingPrescriptions(ApiModels.NursingPrescriptionListResponse response);
+    NursingPrescriptionListDto MapDoctorNursingPrescriptions(PilotSoaModels.NursingPrescriptionListResponse response);
 }
 public interface IPatientDiseaseService
 {
@@ -111,6 +132,7 @@ public sealed class TaminMappingService : IPrescriptionReferenceDataService, IPr
     public UnconstrainedResponse MapDentistServicesWithoutTooth(SoaModels.JsonObject response) => Opaque(response);
     public UnconstrainedResponse MapDentistServicesByTooth(SoaModels.JsonObject response) => Opaque(response);
     public UnconstrainedResponse MapPilotReferenceData(PilotSoaModels.JsonObject response) => Opaque(response);
+    public UnconstrainedResponse MapDosageForms(ApiModels.JsonObject response) => Opaque(response); // The guide defines no response schema for the dosage-form list (p35).
     public UnconstrainedResponse MapPatientEntitlement(SoaModels.JsonObject response) => Opaque(response);
     public UnconstrainedResponse MapPrescriptionDetails(SoaModels.JsonObject response) => Opaque(response);
     public UnconstrainedResponse MapDeletePrescription(SoaModels.JsonObject response) => Opaque(response);
@@ -122,24 +144,24 @@ public sealed class TaminMappingService : IPrescriptionReferenceDataService, IPr
     public UnconstrainedResponse MapReferralFeedbackQuestions(ApiModels.JsonObject response) => Opaque(response);
     public UnconstrainedResponse MapReferralFeedbackAnswers(ApiModels.JsonObject response) => Opaque(response);
     public UnconstrainedResponse MapReferredServicePrescription(SoaModels.JsonObject response) => Opaque(response); // D-15/D-17/D-18: route quirks do not justify a response shape.
-    public UnconstrainedResponse MapUnclaimedPrescriptions(SoaModels.JsonObject response) => Opaque(response);
-    public UnconstrainedResponse MapSaveActions(SoaModels.JsonObject response) => Opaque(response); // D-16: the unusual /ep/api/ route does not imply a response schema.
+    public UnconstrainedResponse MapUnclaimedPrescriptions(ApiModels.JsonObject response) => Opaque(response);
+    public UnconstrainedResponse MapSaveActions(ApiModels.JsonObject response) => Opaque(response); // D-16: the unusual /ep/api/ route does not imply a response schema.
     public UnconstrainedResponse MapPilotUndocumentedMutation(PilotSoaModels.JsonObject response) => Opaque(response);
     public UnconstrainedResponse MapPilotSoaUndocumented(PilotSoaModels.JsonObject response) => Opaque(response);
     public UnconstrainedResponse MapPilotApiUndocumented(PilotApiModels.JsonObject response) => Opaque(response);
     public UnconstrainedResponse MapPilotNursingResponse(PilotSoaModels.JsonObject response) => Opaque(response); // D-16: preserves the pilot route without inferring a body.
 
-    public PrescriptionMutationResult MapCreatePrescription(SoaModels.PrescriptionMutationResponse response) => new(response.HeadEPRSCID, response.ComplementaryMsg, response.ErrorCode, response.ErrorMsg, response.TrackingCode);
-    public PrescriptionMutationResult MapMarkPatientDisease(ApiModels.PrescriptionMutationResponse response) => new(response.HeadEPRSCID, response.ComplementaryMsg, response.ErrorCode, response.ErrorMsg, response.TrackingCode); // D-20: reuse only the documented optional mutation fields.
-    public PrescriptionMutationResult MapCreatePrescription(PilotSoaModels.PrescriptionMutationResponse response) => new(response.HeadEPRSCID, response.ComplementaryMsg, response.ErrorCode, response.ErrorMsg, response.TrackingCode);
-    public PrescriptionMutationResult MapMarkPatientDisease(PilotApiModels.PrescriptionMutationResponse response) => new(response.HeadEPRSCID, response.ComplementaryMsg, response.ErrorCode, response.ErrorMsg, response.TrackingCode); // D-20: pilot uses the same optional mutation fields.
+    public PrescriptionMutationResult MapCreatePrescription(SoaModels.PrescriptionMutationResponse response) => new(response.HeadEPRSCID, response.ComplemantaryMsg, response.ErrorCode, response.ErrorMsg, response.TrackingCode);
+    public PrescriptionMutationResult MapMarkPatientDisease(ApiModels.PrescriptionMutationResponse response) => new(response.HeadEPRSCID, response.ComplemantaryMsg, response.ErrorCode, response.ErrorMsg, response.TrackingCode); // D-20: reuse only the documented optional mutation fields.
+    public PrescriptionMutationResult MapCreatePrescription(PilotSoaModels.PrescriptionMutationResponse response) => new(response.HeadEPRSCID, response.ComplemantaryMsg, response.ErrorCode, response.ErrorMsg, response.TrackingCode);
+    public PrescriptionMutationResult MapMarkPatientDisease(PilotApiModels.PrescriptionMutationResponse response) => new(response.HeadEPRSCID, response.ComplemantaryMsg, response.ErrorCode, response.ErrorMsg, response.TrackingCode); // D-20: pilot uses the same optional mutation fields.
 
     public TaminEnvelope<ReferralCartableDto> MapReferralCartable(JsonElement response)
     {
         var data = Object(response, "data");
         // D-12: patientID has an untrusted description, so it remains a string with no semantic reinterpretation.
         var items = Array(data, "list").Select(item => new ReferralCartableItemDto(String(item, "noteHeadId"), String(item, "referralId"), String(item, "patientID"), String(item, "docID"), String(item, "prescDate"), String(item, "referralDate"))).ToArray();
-        return Envelope(response, new ReferralCartableDto(Int(data, "total"), items, Long(data, "id"), Long(data, "masterParent"), Long(data, "masterChild"), Long(data, "referralDate")));
+        return Envelope(response, new ReferralCartableDto(Int(data, "total"), items));
     }
     public TaminEnvelope<ReferralCartableDto> MapReferralCartable(SoaModels.ReferralCartableResponse response)
     {
@@ -147,17 +169,17 @@ public sealed class TaminMappingService : IPrescriptionReferenceDataService, IPr
         var data = response.Data;
         // D-12: patientID has an untrusted description, so it remains a string with no semantic reinterpretation.
         var items = data?.List?.Select(item => new ReferralCartableItemDto(item.NoteHeadId, item.ReferralId, item.PatientID, item.DocID, item.PrescDate, item.ReferralDate)).ToArray() ?? [];
-        return new(response.Status, response.Family, response.Reason, null, new(data?.Total, items, data?.Id, data?.MasterParent, data?.MasterChild, data?.ReferralDate));
+        return new(response.Status, response.Family, response.Reason, null, new(data?.Total, items));
     }
     public TaminEnvelope<ReferralCartableDto> MapReferralCartable(PilotSoaModels.ReferralCartableResponse response)
     {
         var data = response.Data; // D-12: patientID semantics remain untrusted in pilot too.
         var items = data?.List?.Select(item => new ReferralCartableItemDto(item.NoteHeadId, item.ReferralId, item.PatientID, item.DocID, item.PrescDate, item.ReferralDate)).ToArray() ?? [];
-        return new(response.Status, response.Family, response.Reason, null, new(data?.Total, items, data?.Id, data?.MasterParent, data?.MasterChild, data?.ReferralDate));
+        return new(response.Status, response.Family, response.Reason, null, new(data?.Total, items));
     }
     public TaminEnvelope<ReferralFeedbackDetailsDto> MapReferralFeedbackDetails(JsonElement response)
     {
-        // D-13: mapping follows the declared v7 operation, not the conflicting v2 invocation examples.
+        // D-13: mapping follows the declared operation (v2 in guide v1.10.1), not the older conflicting invocation examples.
         var data = Object(response, "data");
         var items = Array(data, "list").Select(item => new ReferralFeedbackPrescriptionDto(Long(item, "noteHeadEprscId"), String(item, "patient"), String(item, "prescDate"), Property(item, "noteDetailEprscs"), OptionalProperty(item, "noteDetailsReferralList"), MapPrescriptionType(OptionalProperty(item, "prescType")))).ToArray();
         return Envelope(response, new ReferralFeedbackDetailsDto(Int(data, "total"), items));
@@ -165,7 +187,7 @@ public sealed class TaminMappingService : IPrescriptionReferenceDataService, IPr
     public TaminEnvelope<ReferralFeedbackDetailsDto> MapReferralFeedbackDetails(SoaModels.ReferralFeedbackDetailResponse response)
     {
         ArgumentNullException.ThrowIfNull(response);
-        // D-13: mapping follows the declared v7 operation, not the conflicting v2 invocation examples.
+        // D-13: mapping follows the declared operation (v2 in guide v1.10.1), not the older conflicting invocation examples.
         var items = response.Data?.List?.Select(item => new ReferralFeedbackPrescriptionDto(item.NoteHeadEprscId, item.Patient, item.PrescDate, JsonSerializer.SerializeToElement(item.NoteDetailEprscs), item.NoteDetailsReferralList is null ? null : JsonSerializer.SerializeToElement(item.NoteDetailsReferralList), item.PrescType is null ? null : new(item.PrescType.PrescTypeId, item.PrescType.PrescTypeCode, item.PrescType.PrescTypeDesc))).ToArray() ?? [];
         return new(response.Status, response.Family, response.Reason, null, new(response.Data?.Total, items));
     }
@@ -195,17 +217,23 @@ public sealed class TaminMappingService : IPrescriptionReferenceDataService, IPr
     public TaminEnvelope<IReadOnlyList<HospitalizationOrderDto>> MapHospitalizationOrders(JsonElement response)
     {
         var data = Array(response, "data");
-        return Envelope(response, (IReadOnlyList<HospitalizationOrderDto>)data.Select(item => new HospitalizationOrderDto(Long(item, "id"), Long(item, "masterParent"), Long(item, "referralDate"), String(item, "docId"), Int(item, "quantity"), Bool(item, "docFamily"))).ToArray());
+        return Envelope(response, (IReadOnlyList<HospitalizationOrderDto>)data.Select(item => new HospitalizationOrderDto(Long(item, "id"), Long(item, "masterParent"), Long(item, "referralDate"), String(item, "docId"), Int(item, "quantity"), Bool(item, "docFamily"), String(item, "patientNationalCode"))).ToArray());
     }
     public TaminEnvelope<IReadOnlyList<HospitalizationOrderDto>> MapHospitalizationOrders(SoaModels.HospitalizationOrderResponse response)
     {
         ArgumentNullException.ThrowIfNull(response);
-        var data = response.Data?.Select(item => new HospitalizationOrderDto(item.Id, item.MasterParent, item.ReferralDate, item.DocId, item.Quantity, item.DocFamily)).ToArray() ?? [];
+        var data = response.Data?.Select(item => new HospitalizationOrderDto(item.Id, item.MasterParent, item.ReferralDate, item.DocId, item.Quantity, item.DocFamily, item.PatientNationalCode)).ToArray() ?? [];
+        return new(response.Status, response.Family, response.Reason, response.TraceId, data);
+    }
+    public TaminEnvelope<IReadOnlyList<HospitalizationOrderDto>> MapHospitalizationOrders(ApiModels.HospitalizationOrderResponse response)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+        var data = response.Data?.Select(item => new HospitalizationOrderDto(item.Id, item.MasterParent, item.ReferralDate, item.DocId, item.Quantity, item.DocFamily, item.PatientNationalCode)).ToArray() ?? [];
         return new(response.Status, response.Family, response.Reason, response.TraceId, data);
     }
     public TaminEnvelope<IReadOnlyList<HospitalizationOrderDto>> MapHospitalizationOrders(PilotSoaModels.HospitalizationOrderResponse response)
     {
-        var data = response.Data?.Select(item => new HospitalizationOrderDto(item.Id, item.MasterParent, item.ReferralDate, item.DocId, item.Quantity, item.DocFamily)).ToArray() ?? [];
+        var data = response.Data?.Select(item => new HospitalizationOrderDto(item.Id, item.MasterParent, item.ReferralDate, item.DocId, item.Quantity, item.DocFamily, item.PatientNationalCode)).ToArray() ?? [];
         return new(response.Status, response.Family, response.Reason, response.TraceId, data);
     }
     public TaminEnvelope<FamilyDoctorShareDto> MapFamilyDoctorShare(JsonElement response)
@@ -237,11 +265,75 @@ public sealed class TaminMappingService : IPrescriptionReferenceDataService, IPr
         return new(response.Status, response.Family, response.Reason, response.TraceId, new(response.Data?.Total, diseases));
     }
 
+    public TaminEnvelope<MedicationInstructionsDto> MapMedicationInstructionsByDosageForm(ApiModels.MedicationInstructionsResponse response)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+        var data = response.Data;
+        return new(response.Status, response.Family, response.Reason, response.TraceId, new(
+            data?.DrugInstructions?.Select(o => new MedicationInstructionOptionDto(o.Id, o.Code, o.Name, o.NameLatin)).ToArray() ?? [],
+            data?.DrugUsages?.Select(o => new MedicationInstructionOptionDto(o.Id, o.Code, o.Name, o.NameLatin)).ToArray() ?? [],
+            data?.MethodUsages?.Select(o => new MedicationInstructionOptionDto(o.Id, o.Code, o.Name, o.NameLatin)).ToArray() ?? [],
+            data?.FormAmounts?.Select(f => new FormAmountDto(f.Id, f.Code, f.Name, f.NameLatin, f.DrugAmounts?.Select(o => new MedicationInstructionOptionDto(o.Id, o.Code, o.Name, o.NameLatin)).ToArray() ?? [])).ToArray() ?? []));
+    }
+    public TaminEnvelope<MedicationInstructionsDto> MapMedicationInstructionsByDosageForm(PilotSoaModels.MedicationInstructionsResponse response)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+        var data = response.Data;
+        return new(response.Status, response.Family, response.Reason, response.TraceId, new(
+            data?.DrugInstructions?.Select(o => new MedicationInstructionOptionDto(o.Id, o.Code, o.Name, o.NameLatin)).ToArray() ?? [],
+            data?.DrugUsages?.Select(o => new MedicationInstructionOptionDto(o.Id, o.Code, o.Name, o.NameLatin)).ToArray() ?? [],
+            data?.MethodUsages?.Select(o => new MedicationInstructionOptionDto(o.Id, o.Code, o.Name, o.NameLatin)).ToArray() ?? [],
+            data?.FormAmounts?.Select(f => new FormAmountDto(f.Id, f.Code, f.Name, f.NameLatin, f.DrugAmounts?.Select(o => new MedicationInstructionOptionDto(o.Id, o.Code, o.Name, o.NameLatin)).ToArray() ?? [])).ToArray() ?? []));
+    }
+    public TaminEnvelope<ReferralFeedbackEntriesDto> MapReferralFeedbackEntries(SoaModels.ReferralListResponse response)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+        var entries = response.Data?.List?.Select(e => new ReferralFeedbackEntryDto(e.Id, e.MasterParent, e.MasterChild, e.ReferralDate, e.DocId, e.Quantity, e.Message, e.DiagnosisIDs, e.SpecCodeReferral, e.SpecDescReferral, e.SpecCodeReferred, e.SpecDescReferred,
+            e.Complaints?.Select(c => new ReferralComplaintDto(c.Id, c.Code, c.DisplayName, c.EnglishName, c.Terminology, c.Status)).ToArray() ?? [],
+            e.Icd10Referrals?.Select(i => new ReferralIcd10Dto(i.IcdId, i.IcdCode, i.IcdName)).ToArray() ?? [])).ToArray() ?? [];
+        return new(response.Status, response.Family, response.Reason, null, new(response.Data?.Total, entries));
+    }
+    public TaminEnvelope<ReferralFeedbackEntriesDto> MapReferralFeedbackEntries(PilotSoaModels.ReferralListResponse response)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+        var entries = response.Data?.List?.Select(e => new ReferralFeedbackEntryDto(e.Id, e.MasterParent, e.MasterChild, e.ReferralDate, e.DocId, e.Quantity, e.Message, e.DiagnosisIDs, e.SpecCodeReferral, e.SpecDescReferral, e.SpecCodeReferred, e.SpecDescReferred,
+            e.Complaints?.Select(c => new ReferralComplaintDto(c.Id, c.Code, c.DisplayName, c.EnglishName, c.Terminology, c.Status)).ToArray() ?? [],
+            e.Icd10Referrals?.Select(i => new ReferralIcd10Dto(i.IcdId, i.IcdCode, i.IcdName)).ToArray() ?? [])).ToArray() ?? [];
+        return new(response.Status, response.Family, response.Reason, null, new(response.Data?.Total, entries));
+    }
+    public NursingPrescriptionListDto MapDoctorNursingPrescriptions(ApiModels.NursingPrescriptionListResponse response)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+        // p53: the payload has top-level total and list, with no status/family/reason envelope.
+        var prescriptions = response.List?.Select(p => new NursingPrescriptionDto(p.NoteHeadId, p.DocEprscId, p.ClinicDocId, p.TrackingCode, p.NationalCode, p.PatientFirstName, p.PatientLastName, p.DocId, p.DocFirstName, p.DocLastName, p.PrescType, p.IsSpecialPatient, p.IsOk, p.PrescCreationTime,
+            p.NoteDetailEprscs?.Select(i => new NursingPrescriptionItemDto(i.NoteDetailsEprscId, i.SrvId?.SrvId, i.SrvId?.SrvCode, i.SrvId?.SrvName, i.SrvQty, i.SrvRem, i.SrvPrice, i.IsOk, i.ReadOnly)).ToArray() ?? [])).ToArray() ?? [];
+        return new(response.Total, prescriptions);
+    }
+    public NursingPrescriptionListDto MapDoctorNursingPrescriptions(PilotSoaModels.NursingPrescriptionListResponse response)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+        var prescriptions = response.List?.Select(p => new NursingPrescriptionDto(p.NoteHeadId, p.DocEprscId, p.ClinicDocId, p.TrackingCode, p.NationalCode, p.PatientFirstName, p.PatientLastName, p.DocId, p.DocFirstName, p.DocLastName, p.PrescType, p.IsSpecialPatient, p.IsOk, p.PrescCreationTime,
+            p.NoteDetailEprscs?.Select(i => new NursingPrescriptionItemDto(i.NoteDetailsEprscId, i.SrvId?.SrvId, i.SrvId?.SrvCode, i.SrvId?.SrvName, i.SrvQty, i.SrvRem, i.SrvPrice, i.IsOk, i.ReadOnly)).ToArray() ?? [])).ToArray() ?? [];
+        return new(response.Total, prescriptions);
+    }
+    public TaminEnvelope<IReadOnlyList<DoctorActiveCenterDto>> MapDoctorActiveCenters(ApiModels.DoctorActiveCenterListResponse response)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+        var data = response.Data?.Select(c => new DoctorActiveCenterDto(c.DbLinkId, c.HosName, c.SiamId, c.ProvinceName)).ToArray() ?? [];
+        return new(response.Status, response.Family, response.Reason, response.TraceId, data);
+    }
+    public TaminEnvelope<IReadOnlyList<DoctorActiveCenterDto>> MapDoctorActiveCenters(PilotSoaModels.DoctorActiveCenterListResponse response)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+        var data = response.Data?.Select(c => new DoctorActiveCenterDto(c.DbLinkId, c.HosName, c.SiamId, c.ProvinceName)).ToArray() ?? [];
+        return new(response.Status, response.Family, response.Reason, response.TraceId, data);
+    }
+
     private static UnconstrainedResponse Opaque(SoaModels.JsonObject response) => new(JsonSerializer.SerializeToElement(response.AdditionalData));
     private static UnconstrainedResponse Opaque(ApiModels.JsonObject response) => new(JsonSerializer.SerializeToElement(response.AdditionalData));
     private static UnconstrainedResponse Opaque(PilotSoaModels.JsonObject response) => new(JsonSerializer.SerializeToElement(response.AdditionalData));
     private static UnconstrainedResponse Opaque(PilotApiModels.JsonObject response) => new(JsonSerializer.SerializeToElement(response.AdditionalData));
-    private static PrescriptionMutationResult MapMutation(JsonElement response) => new(Long(response, "head_EPRSC_ID"), String(response, "complementary_Msg"), String(response, "error_Code"), String(response, "error_Msg"), Long(response, "trackingCode"));
+    private static PrescriptionMutationResult MapMutation(JsonElement response) => new(Long(response, "head_EPRSC_ID"), String(response, "complemantary_Msg"), String(response, "error_Code"), String(response, "error_Msg"), Long(response, "trackingCode"));
     private static TaminEnvelope<T> Envelope<T>(JsonElement response, T data) => new(Int(response, "status"), String(response, "family"), String(response, "reason"), String(response, "traceId"), data);
     private static JsonElement Object(JsonElement element, string name) => Property(element, name);
     private static IEnumerable<JsonElement> Array(JsonElement element, string name) => OptionalProperty(element, name) is { ValueKind: JsonValueKind.Array } value ? value.EnumerateArray() : [];

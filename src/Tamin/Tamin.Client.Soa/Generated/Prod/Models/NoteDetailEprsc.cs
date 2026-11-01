@@ -22,21 +22,21 @@ namespace Tamin.Client.Soa.Prod.Models
 #else
         public string DateDo { get; set; }
 #endif
-        /// <summary>The DiagnosisID property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public global::Tamin.Client.Soa.Prod.Models.DiagnosisID? DiagnosisID { get; set; }
-#nullable restore
-#else
-        public global::Tamin.Client.Soa.Prod.Models.DiagnosisID DiagnosisID { get; set; }
-#endif
-        /// <summary>Consumption instructions.</summary>
+        /// <summary>Usage route (p16). For SNOMED drug prescriptions the route is sent as doseCode instead.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
         public string? Dose { get; set; }
 #nullable restore
 #else
         public string Dose { get; set; }
+#endif
+        /// <summary>Usage-route code; required for drug prescriptions that use SNOMED coding (p16). The value is the id of a drugUsages entry (p31).</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? DoseCode { get; set; }
+#nullable restore
+#else
+        public string DoseCode { get; set; }
 #endif
         /// <summary>The drugInstruction property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -46,7 +46,7 @@ namespace Tamin.Client.Soa.Prod.Models
 #else
         public global::Tamin.Client.Soa.Prod.Models.DrugInstruction DrugInstruction { get; set; }
 #endif
-        /// <summary>Physiotherapy illness id or comma-separated ids. Optional; each service in a prescription must use a different selected illness.</summary>
+        /// <summary>Physiotherapy illness id or comma-separated ids. Optional. The illness selected for a service must not differ from the illness of the other services in the same prescription, and the service quantity must be the same for all services in the prescription; otherwise the server returns an error (p27).</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
         public string? IllnessId { get; set; }
@@ -56,13 +56,21 @@ namespace Tamin.Client.Soa.Prod.Models
 #endif
         /// <summary>1 when the service is tied to a tooth; 0 otherwise.</summary>
         public global::Tamin.Client.Soa.Prod.Models.NoteDetailEprsc_isDentalService? IsDentalService { get; set; }
-        /// <summary>Unconstrained JSON object because the source does not document its fields.</summary>
+        /// <summary>Method of use for SNOMED drug prescriptions (p19-20).</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public global::Tamin.Client.Soa.Prod.Models.JsonObject? NoteDetailDrug { get; set; }
+        public global::Tamin.Client.Soa.Prod.Models.MethodUsage? MethodUsage { get; set; }
 #nullable restore
 #else
-        public global::Tamin.Client.Soa.Prod.Models.JsonObject NoteDetailDrug { get; set; }
+        public global::Tamin.Client.Soa.Prod.Models.MethodUsage MethodUsage { get; set; }
+#endif
+        /// <summary>Initial diagnosis; currently documented for drug prescriptions only (p16).</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public global::Tamin.Client.Soa.Prod.Models.DiagnosisID? NoteDetailDrug { get; set; }
+#nullable restore
+#else
+        public global::Tamin.Client.Soa.Prod.Models.DiagnosisID NoteDetailDrug { get; set; }
 #endif
         /// <summary>Item identifier shown in referred-service and response examples.</summary>
         public long? NoteDetailsEprscId { get; set; }
@@ -136,12 +144,13 @@ namespace Tamin.Client.Soa.Prod.Models
             return new Dictionary<string, Action<IParseNode>>
             {
                 { "dateDo", n => { DateDo = n.GetStringValue(); } },
-                { "DiagnosisID", n => { DiagnosisID = n.GetObjectValue<global::Tamin.Client.Soa.Prod.Models.DiagnosisID>(global::Tamin.Client.Soa.Prod.Models.DiagnosisID.CreateFromDiscriminatorValue); } },
                 { "dose", n => { Dose = n.GetStringValue(); } },
+                { "doseCode", n => { DoseCode = n.GetStringValue(); } },
                 { "drugInstruction", n => { DrugInstruction = n.GetObjectValue<global::Tamin.Client.Soa.Prod.Models.DrugInstruction>(global::Tamin.Client.Soa.Prod.Models.DrugInstruction.CreateFromDiscriminatorValue); } },
                 { "illnessId", n => { IllnessId = n.GetStringValue(); } },
                 { "isDentalService", n => { IsDentalService = n.GetEnumValue<global::Tamin.Client.Soa.Prod.Models.NoteDetailEprsc_isDentalService>(); } },
-                { "noteDetailDrug", n => { NoteDetailDrug = n.GetObjectValue<global::Tamin.Client.Soa.Prod.Models.JsonObject>(global::Tamin.Client.Soa.Prod.Models.JsonObject.CreateFromDiscriminatorValue); } },
+                { "methodUsage", n => { MethodUsage = n.GetObjectValue<global::Tamin.Client.Soa.Prod.Models.MethodUsage>(global::Tamin.Client.Soa.Prod.Models.MethodUsage.CreateFromDiscriminatorValue); } },
+                { "noteDetailDrug", n => { NoteDetailDrug = n.GetObjectValue<global::Tamin.Client.Soa.Prod.Models.DiagnosisID>(global::Tamin.Client.Soa.Prod.Models.DiagnosisID.CreateFromDiscriminatorValue); } },
                 { "noteDetailsEprscId", n => { NoteDetailsEprscId = n.GetLongValue(); } },
                 { "planId", n => { PlanId = n.GetStringValue(); } },
                 { "referenceStatus", n => { ReferenceStatus = n.GetIntValue(); } },
@@ -160,12 +169,13 @@ namespace Tamin.Client.Soa.Prod.Models
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("dateDo", DateDo);
-            writer.WriteObjectValue<global::Tamin.Client.Soa.Prod.Models.DiagnosisID>("DiagnosisID", DiagnosisID);
             writer.WriteStringValue("dose", Dose);
+            writer.WriteStringValue("doseCode", DoseCode);
             writer.WriteObjectValue<global::Tamin.Client.Soa.Prod.Models.DrugInstruction>("drugInstruction", DrugInstruction);
             writer.WriteStringValue("illnessId", IllnessId);
             writer.WriteEnumValue<global::Tamin.Client.Soa.Prod.Models.NoteDetailEprsc_isDentalService>("isDentalService", IsDentalService);
-            writer.WriteObjectValue<global::Tamin.Client.Soa.Prod.Models.JsonObject>("noteDetailDrug", NoteDetailDrug);
+            writer.WriteObjectValue<global::Tamin.Client.Soa.Prod.Models.MethodUsage>("methodUsage", MethodUsage);
+            writer.WriteObjectValue<global::Tamin.Client.Soa.Prod.Models.DiagnosisID>("noteDetailDrug", NoteDetailDrug);
             writer.WriteLongValue("noteDetailsEprscId", NoteDetailsEprscId);
             writer.WriteStringValue("planId", PlanId);
             writer.WriteIntValue("referenceStatus", ReferenceStatus);

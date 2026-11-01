@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "family": "SUCCESSFUL",
+  "reason": "OK",
+  "traceId": "37f75065-e696-42e1-9903-b44785d12899",
+  "data": [
+    {
+      "dbLinkId": "1377",
+      "hosName": "تخصصی دیابت",
+      "siamId": "614E4BCC-***E-40A5-B80F-043*******EF",
+      "provinceName": "تهران"
+    }
+  ]
+}

@@ -38,7 +38,7 @@ namespace Tamin.Client.Soa.Prod.Models
 #else
         public global::Tamin.Client.Soa.Prod.Models.ServiceType SrvType { get; set; }
 #endif
-        /// <summary>When set to thritha.BEHDAISHT for a paraclinical prescription, srvCode follows the Ministry of Health coding.</summary>
+        /// <summary>When set to thritha.BEHDASHT for a paraclinical prescription, srvCode follows the Ministry of Health coding; otherwise the usual Tamin coding applies (p21).</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
         public string? Terminology { get; set; }

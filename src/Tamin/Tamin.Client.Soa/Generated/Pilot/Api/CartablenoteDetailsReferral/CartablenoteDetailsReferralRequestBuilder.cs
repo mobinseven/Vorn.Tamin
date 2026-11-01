@@ -16,7 +16,7 @@ namespace Tamin.Client.Soa.Pilot.Api.CartablenoteDetailsReferral
     public partial class CartablenoteDetailsReferralRequestBuilder : BaseRequestBuilder
     {
         /// <summary>Gets an item from the Tamin.Client.Soa.Pilot.api.cartablenoteDetailsReferral.item collection</summary>
-        /// <param name="position">Doctor national code.</param>
+        /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::Tamin.Client.Soa.Pilot.Api.CartablenoteDetailsReferral.Item.WithDocNationalCodeItemRequestBuilder"/></returns>
         public global::Tamin.Client.Soa.Pilot.Api.CartablenoteDetailsReferral.Item.WithDocNationalCodeItemRequestBuilder this[string position]
         {

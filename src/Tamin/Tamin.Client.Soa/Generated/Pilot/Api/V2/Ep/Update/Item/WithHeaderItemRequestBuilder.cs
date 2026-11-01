@@ -16,7 +16,7 @@ namespace Tamin.Client.Soa.Pilot.Api.V2.Ep.Update.Item
     public partial class WithHeaderItemRequestBuilder : BaseRequestBuilder
     {
         /// <summary>Gets an item from the Tamin.Client.Soa.Pilot.api.v2.ep.update.item.item collection</summary>
-        /// <param name="position">Doctor national code.</param>
+        /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Update.Item.Item.WithDocNationalCodeItemRequestBuilder"/></returns>
         public global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Update.Item.Item.WithDocNationalCodeItemRequestBuilder this[string position]
         {

@@ -1,0 +1,42 @@
+{
+  "status": 200,
+  "family": "SUCCESSFUL",
+  "reason": "OK",
+  "data": {
+    "total": 2,
+    "list": [
+      {
+        "id": 327241062,
+        "masterParent": 327240269,
+        "masterChild": 327247893,
+        "referralDate": 1750517662000,
+        "docId": "2000200090",
+        "quantity": 1,
+        "specCodeReferral": "00100",
+        "specDescReferral": "پزشک عمومی",
+        "specCodeReferred": "00138",
+        "specDescReferred": "متخصص قلب و عروق",
+        "icd10Referrals": null,
+        "complaints": null,
+        "message": "بیماری تشخیص داده شده و توضیحات",
+        "diagnosisIDs": "W27.19"
+      },
+      {
+        "id": 0,
+        "masterParent": 327247893,
+        "masterChild": null,
+        "referralDate": 1747839599371,
+        "docId": null,
+        "quantity": 0,
+        "specCodeReferral": "00138",
+        "specDescReferral": "متخصص قلب و عروق",
+        "specCodeReferred": null,
+        "specDescReferred": null,
+        "icd10Referrals": null,
+        "complaints": null,
+        "message": null,
+        "diagnosisIDs": null
+      }
+    ]
+  }
+}

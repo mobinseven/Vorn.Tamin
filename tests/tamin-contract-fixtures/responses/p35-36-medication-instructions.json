@@ -1,0 +1,48 @@
+{
+  "status": 200,
+  "family": "SUCCESSFUL",
+  "reason": "OK",
+  "traceId": "b4dd4cc9-5b26-4334-82d5-d155f2b49b2c",
+  "data": {
+    "methodUsages": [
+      {
+        "id": "307166007",
+        "name": "قبل از ورزش",
+        "code": "307166007",
+        "nameLatin": "Before exercise (qualifier value)"
+      }
+    ],
+    "drugUsages": [
+      {
+        "id": "231271000",
+        "name": "داخل مفصلی",
+        "code": "231271000",
+        "nameLatin": "Injection into joint (procedure)"
+      }
+    ],
+    "drugInstructions": [
+      {
+        "id": "2546009",
+        "name": "شب",
+        "code": "2546009",
+        "nameLatin": "Night time (qualifier value)"
+      }
+    ],
+    "formAmounts": [
+      {
+        "id": "24",
+        "name": "عدد",
+        "code": "111",
+        "nameLatin": "Each",
+        "drugAmounts": [
+          {
+            "id": "580",
+            "name": "یک چهارم عدد",
+            "code": "580",
+            "nameLatin": "1/4 (یک چهارم) Each"
+          }
+        ]
+      }
+    ]
+  }
+}

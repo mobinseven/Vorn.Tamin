@@ -37,7 +37,7 @@ namespace Tamin.Client.Soa.Pilot.Api.V2.SendEpresc
         /// Create an electronic prescription
         /// </summary>
         /// <returns>A <see cref="global::Tamin.Client.Soa.Pilot.Models.PrescriptionMutationResponse"/></returns>
-        /// <param name="body">Electronic prescription payload. prescDate cannot be later than the current date. For prescTypeId 3, noteDetailEprscs must be empty. For prescTypeId 1, every srvType must be 01. For prescTypeId 2, srvType must be one of 02 through the documented service types. prescTypeId 6 accepts only medical-service items. Conditional referral, hospitalization, nursing, dentistry, and physiotherapy rules are described on the corresponding properties because the source does not provide a single machine-enforceable discriminator contract.</param>
+        /// <param name="body">Electronic prescription payload. prescDate cannot be later than the current date. For prescTypeId 3, noteDetailEprscs must be empty. For prescTypeId 1, every srvType must be 01. For prescTypeId 2, srvType must be one of 02 through 08 or 11 through 14 (p64). prescTypeId 6 accepts only medical-service items. Conditional referral, hospitalization, nursing, dentistry, and physiotherapy rules are described on the corresponding properties because the source does not provide a single machine-enforceable discriminator contract.</param>
         /// <param name="cancellationToken">Cancellation token to use when cancelling requests</param>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
         /// <exception cref="global::Tamin.Client.Soa.Pilot.Models.PrescriptionMutationResponse">When receiving a 4XX or 5XX status code</exception>
@@ -62,7 +62,7 @@ namespace Tamin.Client.Soa.Pilot.Api.V2.SendEpresc
         /// Create an electronic prescription
         /// </summary>
         /// <returns>A <see cref="RequestInformation"/></returns>
-        /// <param name="body">Electronic prescription payload. prescDate cannot be later than the current date. For prescTypeId 3, noteDetailEprscs must be empty. For prescTypeId 1, every srvType must be 01. For prescTypeId 2, srvType must be one of 02 through the documented service types. prescTypeId 6 accepts only medical-service items. Conditional referral, hospitalization, nursing, dentistry, and physiotherapy rules are described on the corresponding properties because the source does not provide a single machine-enforceable discriminator contract.</param>
+        /// <param name="body">Electronic prescription payload. prescDate cannot be later than the current date. For prescTypeId 3, noteDetailEprscs must be empty. For prescTypeId 1, every srvType must be 01. For prescTypeId 2, srvType must be one of 02 through 08 or 11 through 14 (p64). prescTypeId 6 accepts only medical-service items. Conditional referral, hospitalization, nursing, dentistry, and physiotherapy rules are described on the corresponding properties because the source does not provide a single machine-enforceable discriminator contract.</param>
         /// <param name="requestConfiguration">Configuration for the request such as headers, query parameters, and middleware options.</param>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
+using Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.Forward;
 using Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder;
 using Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.Noteheads;
 namespace Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral
@@ -16,6 +17,11 @@ namespace Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class NoteDetailsReferralRequestBuilder : BaseRequestBuilder
     {
+        /// <summary>The forward property</summary>
+        public global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.Forward.ForwardRequestBuilder Forward
+        {
+            get => new global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.Forward.ForwardRequestBuilder(PathParameters, RequestAdapter);
+        }
         /// <summary>The hospitalizationOrder property</summary>
         public global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.HospitalizationOrderRequestBuilder HospitalizationOrder
         {

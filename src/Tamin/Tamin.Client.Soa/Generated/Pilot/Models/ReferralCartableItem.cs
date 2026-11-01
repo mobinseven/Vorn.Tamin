@@ -80,7 +80,7 @@ namespace Tamin.Client.Soa.Pilot.Models
 #else
         public string ReferralDate { get; set; }
 #endif
-        /// <summary>Placeholder text is used in the source example; the actual scalar type is undocumented.</summary>
+        /// <summary>Identifier of the registered referral; it is the input of the referral feedback list operation (p43-44). Placeholder text is used in the source example, so the actual scalar type is undocumented.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
         public string? ReferralId { get; set; }

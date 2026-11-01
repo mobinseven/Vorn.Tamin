@@ -1,0 +1,30 @@
+{
+  "status": 200,
+  "family": "SUCCESSFUL",
+  "reason": "OK",
+  "data": {
+    "total": 1,
+    "list": [
+      {
+        "noteHeadId": "0000000000",
+        "referralId": "0000000000",
+        "patientID": "0000000000",
+        "docID": "0000000000",
+        "prescDate": "14050101",
+        "firstName": "نام بیمار",
+        "lastName": "نام خانوادگی بیمار",
+        "prescType": {
+          "prescTypeId": 7,
+          "prescTypeCode": "07",
+          "prescTypeDesc": "نسخه ارجاع"
+        },
+        "masterChild": 327247893,
+        "referralDate": "14050101",
+        "specCodeReferral": "00100",
+        "specDescReferral": "عنوان تخصص پزشک ارجاع دهنده",
+        "specCodeReferred": "00138",
+        "specDescReferred": "عنوان تخصص پزشک ارجاع شده"
+      }
+    ]
+  }
+}

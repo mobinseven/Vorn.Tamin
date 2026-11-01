@@ -20,15 +20,16 @@ public sealed record DiagnosisIdInput(int? IcdId);
 public sealed record ReferralIcd10Input(string? IcdId);
 public sealed record ComplaintInput(string? ComplaintIDs);
 public sealed record ReferralComplaintInput(string? ComplaintIDs, string? Id);
-public sealed record SpecialInput(string? SpecCode);
+public sealed record SpecialInput(string? SpecCode, string? Terminology = null);
+public sealed record MethodUsageInput(int? Id);
 public sealed record ReferralFeedbackAnswerInput(int? DrugAnswerId);
 public sealed record ReferralFeedbackItemInput(ReferralFeedbackAnswerInput? AnswerId, string? Comments, int? QuestionId);
 public sealed record ServiceInput(string? SrvCode, string? Terminology);
 public sealed record DrugInstructionInput(int? DrugInstId);
 public sealed record DrugAmountInput(int? DrugAmntId);
 public sealed record PrescriptionDetailInput(
-    string? DateDo, DiagnosisIdInput? DiagnosisID, string? Dose, DrugInstructionInput? DrugInstruction,
-    string? IllnessId, DentalServiceFlag IsDentalService, IReadOnlyDictionary<string, object?>? NoteDetailDrug,
+    string? DateDo, string? Dose, string? DoseCode, DrugInstructionInput? DrugInstruction,
+    string? IllnessId, DentalServiceFlag IsDentalService, MethodUsageInput? MethodUsage, DiagnosisIdInput? NoteDetailDrug,
     long? NoteDetailsEprscId, string? PlanId, int? ReferenceStatus, string? Repeat, ServiceInput? SrvId,
     int? SrvQty, DrugAmountInput? TimesAday, string? ToothId);
 public sealed record PrescriptionReferralInput(
@@ -37,11 +38,13 @@ public sealed record PrescriptionReferralInput(
     string? PatientNationalCode, int? Quantity, int? ReferenceStatus,
     IReadOnlyList<ReferralFeedbackItemInput>? ReferralFeedbackList, string? ReferralHijriDate, string? SiamId);
 public sealed record PrescriptionCreateInput(
-    string? Comments, ComplaintInput? Complaint, string? CreatorType, string? DocId, string? DocMobileNo,
-    string? DocNationalCode, string? ExpireDate, string Mobile,
+    string? Comments, string? CreatorType, string? DocId, string? DocMobileNo,
+    string? DocNationalCode, string? ExpireDate, string? Mobile,
     IReadOnlyList<PrescriptionDetailInput>? NoteDetailEprscs,
     IReadOnlyList<PrescriptionReferralInput>? NoteDetailsReferralList,
-    string? Patient, string? PrescDate, PrescriptionTypeInput? PrescType, long? ReferralFeedbackId);
+    ComplaintInput? NoteHeadEprscSupplementary,
+    string? Patient, string? PrescDate, PrescriptionTypeInput? PrescType, long? ReferralFeedbackId,
+    string? SiamId, string? Terminology);
 
 public sealed record DentistGridInput(ServiceInput? SrvId, string? ToothId);
 public sealed record DentistRuleInput(IReadOnlyList<DentistGridInput>? AllGridData, string? DocId, string? PatientId, ServiceInput? SrvId, string? ToothId);
@@ -61,15 +64,16 @@ public sealed class PrescriptionRequestMapper : IPrescriptionRequestMapper
         Validate(input);
         return new()
         {
-            Comments = input.Comments, Complaint = Map(input.Complaint), CreatorType = input.CreatorType,
+            Comments = input.Comments, CreatorType = input.CreatorType,
             DocId = input.DocId, DocMobileNo = input.DocMobileNo, DocNationalCode = input.DocNationalCode,
             ExpireDate = input.ExpireDate, Mobile = input.Mobile,
             // D-05: these are the only two canonical collection names emitted.
             NoteDetailEprscs = input.NoteDetailEprscs?.Select(Map).ToList(),
             NoteDetailsReferralList = input.NoteDetailsReferralList?.Select(Map).ToList(),
+            NoteHeadEprscSupplementary = Map(input.NoteHeadEprscSupplementary),
             Patient = input.Patient, PrescDate = input.PrescDate,
             PrescType = input.PrescType is null ? null : new() { PrescTypeId = input.PrescType.PrescTypeId },
-            ReferralFeedbackId = input.ReferralFeedbackId
+            ReferralFeedbackId = input.ReferralFeedbackId, SiamId = input.SiamId, Terminology = input.Terminology
         };
     }
 
@@ -80,15 +84,16 @@ public sealed class PrescriptionRequestMapper : IPrescriptionRequestMapper
         {
             // Pilot contract requires the doctor's national code as clientId.
             ClientId = input.DocNationalCode,
-            Comments = input.Comments, Complaint = MapPilot(input.Complaint), CreatorType = input.CreatorType,
+            Comments = input.Comments, CreatorType = input.CreatorType,
             DocId = input.DocId, DocMobileNo = input.DocMobileNo, DocNationalCode = input.DocNationalCode,
             ExpireDate = input.ExpireDate, Mobile = input.Mobile,
             // D-05: these are the only two canonical collection names emitted.
             NoteDetailEprscs = input.NoteDetailEprscs?.Select(MapPilot).ToList(),
             NoteDetailsReferralList = input.NoteDetailsReferralList?.Select(MapPilot).ToList(),
+            NoteHeadEprscSupplementary = MapPilot(input.NoteHeadEprscSupplementary),
             Patient = input.Patient, PrescDate = input.PrescDate,
             PrescType = input.PrescType is null ? null : new() { PrescTypeId = input.PrescType.PrescTypeId },
-            ReferralFeedbackId = input.ReferralFeedbackId
+            ReferralFeedbackId = input.ReferralFeedbackId, SiamId = input.SiamId, Terminology = input.Terminology
         };
     }
 
@@ -109,28 +114,31 @@ public sealed class PrescriptionRequestMapper : IPrescriptionRequestMapper
     private static void Validate(PrescriptionCreateInput input)
     {
         ArgumentNullException.ThrowIfNull(input);
-        // D-06: presence is known; no undocumented mobile regex is invented.
-        if (string.IsNullOrWhiteSpace(input.Mobile)) throw new TaminRequestValidationException("mobile", "a nonblank value is required");
+        // D-06: guide v1.10.1 no longer requires mobile (p14-15), but p65 rejects an empty value when sent: omit it or send a nonblank value.
+        // No undocumented mobile regex is invented.
+        if (input.Mobile is not null && string.IsNullOrWhiteSpace(input.Mobile)) throw new TaminRequestValidationException("mobile", "omit the field or send a nonblank value");
     }
 
     private static ProdModels.NoteDetailEprsc Map(PrescriptionDetailInput x) => new()
     {
-        DateDo = x.DateDo, DiagnosisID = x.DiagnosisID is null ? null : new() { IcdId = x.DiagnosisID.IcdId },
-        Dose = x.Dose, DrugInstruction = x.DrugInstruction is null ? null : new() { DrugInstId = x.DrugInstruction.DrugInstId },
+        DateDo = x.DateDo, Dose = x.Dose, DoseCode = x.DoseCode,
+        DrugInstruction = x.DrugInstruction is null ? null : new() { DrugInstId = x.DrugInstruction.DrugInstId },
         // D-07: the normalized flag maps to the generated wire enum without coercing other values.
         IllnessId = x.IllnessId, IsDentalService = x.IsDentalService == DentalServiceFlag.Zero ? ProdModels.NoteDetailEprsc_isDentalService.Zero : ProdModels.NoteDetailEprsc_isDentalService.One,
-        NoteDetailDrug = JsonObject<ProdModels.JsonObject>(x.NoteDetailDrug), NoteDetailsEprscId = x.NoteDetailsEprscId,
+        MethodUsage = x.MethodUsage is null ? null : new() { Id = x.MethodUsage.Id },
+        NoteDetailDrug = x.NoteDetailDrug is null ? null : new() { IcdId = x.NoteDetailDrug.IcdId }, NoteDetailsEprscId = x.NoteDetailsEprscId,
         PlanId = x.PlanId, ReferenceStatus = x.ReferenceStatus, Repeat = x.Repeat, SrvId = Map(x.SrvId), SrvQty = x.SrvQty,
         TimesAday = x.TimesAday is null ? null : new() { DrugAmntId = x.TimesAday.DrugAmntId }, ToothId = x.ToothId
     };
 
     private static PilotModels.NoteDetailEprsc MapPilot(PrescriptionDetailInput x) => new()
     {
-        DateDo = x.DateDo, DiagnosisID = x.DiagnosisID is null ? null : new() { IcdId = x.DiagnosisID.IcdId },
-        Dose = x.Dose, DrugInstruction = x.DrugInstruction is null ? null : new() { DrugInstId = x.DrugInstruction.DrugInstId },
+        DateDo = x.DateDo, Dose = x.Dose, DoseCode = x.DoseCode,
+        DrugInstruction = x.DrugInstruction is null ? null : new() { DrugInstId = x.DrugInstruction.DrugInstId },
         // D-07: the normalized flag maps to the generated wire enum without coercing other values.
         IllnessId = x.IllnessId, IsDentalService = x.IsDentalService == DentalServiceFlag.Zero ? PilotModels.NoteDetailEprsc_isDentalService.Zero : PilotModels.NoteDetailEprsc_isDentalService.One,
-        NoteDetailDrug = JsonObject<PilotModels.JsonObject>(x.NoteDetailDrug), NoteDetailsEprscId = x.NoteDetailsEprscId,
+        MethodUsage = x.MethodUsage is null ? null : new() { Id = x.MethodUsage.Id },
+        NoteDetailDrug = x.NoteDetailDrug is null ? null : new() { IcdId = x.NoteDetailDrug.IcdId }, NoteDetailsEprscId = x.NoteDetailsEprscId,
         PlanId = x.PlanId, ReferenceStatus = x.ReferenceStatus, Repeat = x.Repeat, SrvId = MapPilot(x.SrvId), SrvQty = x.SrvQty,
         TimesAday = x.TimesAday is null ? null : new() { DrugAmntId = x.TimesAday.DrugAmntId }, ToothId = x.ToothId
     };
@@ -139,7 +147,7 @@ public sealed class PrescriptionRequestMapper : IPrescriptionRequestMapper
     private static ProdModels.NoteDetailsReferral Map(PrescriptionReferralInput x) => new()
     {
         Complaints = x.Complaints?.Select(c => new ProdModels.ReferralComplaint { ComplaintIDs = c.ComplaintIDs, Id = c.Id }).ToList(),
-        DocSpecReferred = x.DocSpecReferred is null ? null : new() { SpecCode = x.DocSpecReferred.SpecCode },
+        DocSpecReferred = x.DocSpecReferred is null ? null : new() { SpecCode = x.DocSpecReferred.SpecCode, Terminology = x.DocSpecReferred.Terminology },
         Icd10s = x.Icd10s?.Select(i => new ProdModels.ReferralIcd10 { IcdId = i.IcdId }).ToList(), Id = x.Id, Message = x.Message,
         NoteDetailsEprscId = x.NoteDetailsEprscId, PatientNationalCode = x.PatientNationalCode, Quantity = x.Quantity,
         ReferenceStatus = x.ReferenceStatus, ReferralFeedbackList = x.ReferralFeedbackList?.Select(Map).ToList(), ReferralHijriDate = x.ReferralHijriDate, SiamId = x.SiamId
@@ -147,7 +155,7 @@ public sealed class PrescriptionRequestMapper : IPrescriptionRequestMapper
     private static PilotModels.NoteDetailsReferral MapPilot(PrescriptionReferralInput x) => new()
     {
         Complaints = x.Complaints?.Select(c => new PilotModels.ReferralComplaint { ComplaintIDs = c.ComplaintIDs, Id = c.Id }).ToList(),
-        DocSpecReferred = x.DocSpecReferred is null ? null : new() { SpecCode = x.DocSpecReferred.SpecCode },
+        DocSpecReferred = x.DocSpecReferred is null ? null : new() { SpecCode = x.DocSpecReferred.SpecCode, Terminology = x.DocSpecReferred.Terminology },
         Icd10s = x.Icd10s?.Select(i => new PilotModels.ReferralIcd10 { IcdId = i.IcdId }).ToList(), Id = x.Id, Message = x.Message,
         NoteDetailsEprscId = x.NoteDetailsEprscId, PatientNationalCode = x.PatientNationalCode, Quantity = x.Quantity,
         ReferenceStatus = x.ReferenceStatus, ReferralFeedbackList = x.ReferralFeedbackList?.Select(MapPilot).ToList(), ReferralHijriDate = x.ReferralHijriDate, SiamId = x.SiamId
@@ -158,13 +166,6 @@ public sealed class PrescriptionRequestMapper : IPrescriptionRequestMapper
     private static PilotModels.Complaint? MapPilot(ComplaintInput? x) => x is null ? null : new() { ComplaintIDs = x.ComplaintIDs };
     private static ProdModels.Service? Map(ServiceInput? x) => x is null ? null : new() { SrvCode = x.SrvCode, Terminology = x.Terminology };
     private static PilotModels.Service? MapPilot(ServiceInput? x) => x is null ? null : new() { SrvCode = x.SrvCode, Terminology = x.Terminology };
-    private static T? JsonObject<T>(IReadOnlyDictionary<string, object?>? values) where T : Microsoft.Kiota.Abstractions.Serialization.IAdditionalDataHolder, new()
-    {
-        if (values is null) return default;
-        var result = new T();
-        foreach (var pair in values) result.AdditionalData[pair.Key] = pair.Value!;
-        return result;
-    }
 }
 
 // D-07: normalize the two documented string and numeric representations at the transport boundary.

@@ -16,9 +16,9 @@ namespace Tamin.Client.Soa.Pilot.Api.V2.Ep.Update
     public partial class UpdateRequestBuilder : BaseRequestBuilder
     {
         /// <summary>Gets an item from the Tamin.Client.Soa.Pilot.api.v2.ep.update.item collection</summary>
-        /// <param name="position">Unique prescription number returned as head_EPRSC_ID.</param>
+        /// <param name="position">Unique identifier of the item</param>
         /// <returns>A <see cref="global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Update.Item.WithHeaderItemRequestBuilder"/></returns>
-        public global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Update.Item.WithHeaderItemRequestBuilder this[long position]
+        public global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Update.Item.WithHeaderItemRequestBuilder this[string position]
         {
             get
             {

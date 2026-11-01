@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System;
 using Tamin.Client.Soa.Pilot.Api.V2.Referral.Count;
+using Tamin.Client.Soa.Pilot.Api.V2.Referral.ReferredList;
 namespace Tamin.Client.Soa.Pilot.Api.V2.Referral
 {
     /// <summary>
@@ -19,6 +20,11 @@ namespace Tamin.Client.Soa.Pilot.Api.V2.Referral
         public global::Tamin.Client.Soa.Pilot.Api.V2.Referral.Count.CountRequestBuilder Count
         {
             get => new global::Tamin.Client.Soa.Pilot.Api.V2.Referral.Count.CountRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The referredList property</summary>
+        public global::Tamin.Client.Soa.Pilot.Api.V2.Referral.ReferredList.ReferredListRequestBuilder ReferredList
+        {
+            get => new global::Tamin.Client.Soa.Pilot.Api.V2.Referral.ReferredList.ReferredListRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Pilot.Api.V2.Referral.ReferralRequestBuilder"/> and sets the default values.

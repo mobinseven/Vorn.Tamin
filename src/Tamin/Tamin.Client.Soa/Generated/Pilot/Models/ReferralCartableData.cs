@@ -14,40 +14,6 @@ namespace Tamin.Client.Soa.Pilot.Models
     {
         /// <summary>Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.</summary>
         public IDictionary<string, object> AdditionalData { get; set; }
-        /// <summary>The complaints property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public List<global::Tamin.Client.Soa.Pilot.Models.ReferralComplaint>? Complaints { get; set; }
-#nullable restore
-#else
-        public List<global::Tamin.Client.Soa.Pilot.Models.ReferralComplaint> Complaints { get; set; }
-#endif
-        /// <summary>The diagnosisIDs property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public string? DiagnosisIDs { get; set; }
-#nullable restore
-#else
-        public string DiagnosisIDs { get; set; }
-#endif
-        /// <summary>The docId property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public string? DocId { get; set; }
-#nullable restore
-#else
-        public string DocId { get; set; }
-#endif
-        /// <summary>The icd10Referrals property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public List<global::Tamin.Client.Soa.Pilot.Models.ReferralIcd10>? Icd10Referrals { get; set; }
-#nullable restore
-#else
-        public List<global::Tamin.Client.Soa.Pilot.Models.ReferralIcd10> Icd10Referrals { get; set; }
-#endif
-        /// <summary>The id property</summary>
-        public long? Id { get; set; }
         /// <summary>The list property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -55,54 +21,6 @@ namespace Tamin.Client.Soa.Pilot.Models
 #nullable restore
 #else
         public List<global::Tamin.Client.Soa.Pilot.Models.ReferralCartableItem> List { get; set; }
-#endif
-        /// <summary>The masterChild property</summary>
-        public long? MasterChild { get; set; }
-        /// <summary>The masterParent property</summary>
-        public long? MasterParent { get; set; }
-        /// <summary>The message property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public string? Message { get; set; }
-#nullable restore
-#else
-        public string Message { get; set; }
-#endif
-        /// <summary>The quantity property</summary>
-        public int? Quantity { get; set; }
-        /// <summary>Epoch-like numeric value as shown in the source example; unit is undocumented.</summary>
-        public long? ReferralDate { get; set; }
-        /// <summary>The specCodeReferral property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public string? SpecCodeReferral { get; set; }
-#nullable restore
-#else
-        public string SpecCodeReferral { get; set; }
-#endif
-        /// <summary>The specCodeReferred property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public string? SpecCodeReferred { get; set; }
-#nullable restore
-#else
-        public string SpecCodeReferred { get; set; }
-#endif
-        /// <summary>The specDescReferral property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public string? SpecDescReferral { get; set; }
-#nullable restore
-#else
-        public string SpecDescReferral { get; set; }
-#endif
-        /// <summary>The specDescReferred property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public string? SpecDescReferred { get; set; }
-#nullable restore
-#else
-        public string SpecDescReferred { get; set; }
 #endif
         /// <summary>The total property</summary>
         public int? Total { get; set; }
@@ -131,21 +49,7 @@ namespace Tamin.Client.Soa.Pilot.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
-                { "complaints", n => { Complaints = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Pilot.Models.ReferralComplaint>(global::Tamin.Client.Soa.Pilot.Models.ReferralComplaint.CreateFromDiscriminatorValue)?.AsList(); } },
-                { "diagnosisIDs", n => { DiagnosisIDs = n.GetStringValue(); } },
-                { "docId", n => { DocId = n.GetStringValue(); } },
-                { "icd10Referrals", n => { Icd10Referrals = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Pilot.Models.ReferralIcd10>(global::Tamin.Client.Soa.Pilot.Models.ReferralIcd10.CreateFromDiscriminatorValue)?.AsList(); } },
-                { "id", n => { Id = n.GetLongValue(); } },
                 { "list", n => { List = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Pilot.Models.ReferralCartableItem>(global::Tamin.Client.Soa.Pilot.Models.ReferralCartableItem.CreateFromDiscriminatorValue)?.AsList(); } },
-                { "masterChild", n => { MasterChild = n.GetLongValue(); } },
-                { "masterParent", n => { MasterParent = n.GetLongValue(); } },
-                { "message", n => { Message = n.GetStringValue(); } },
-                { "quantity", n => { Quantity = n.GetIntValue(); } },
-                { "referralDate", n => { ReferralDate = n.GetLongValue(); } },
-                { "specCodeReferral", n => { SpecCodeReferral = n.GetStringValue(); } },
-                { "specCodeReferred", n => { SpecCodeReferred = n.GetStringValue(); } },
-                { "specDescReferral", n => { SpecDescReferral = n.GetStringValue(); } },
-                { "specDescReferred", n => { SpecDescReferred = n.GetStringValue(); } },
                 { "total", n => { Total = n.GetIntValue(); } },
             };
         }
@@ -156,21 +60,7 @@ namespace Tamin.Client.Soa.Pilot.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
-            writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Pilot.Models.ReferralComplaint>("complaints", Complaints);
-            writer.WriteStringValue("diagnosisIDs", DiagnosisIDs);
-            writer.WriteStringValue("docId", DocId);
-            writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Pilot.Models.ReferralIcd10>("icd10Referrals", Icd10Referrals);
-            writer.WriteLongValue("id", Id);
             writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Pilot.Models.ReferralCartableItem>("list", List);
-            writer.WriteLongValue("masterChild", MasterChild);
-            writer.WriteLongValue("masterParent", MasterParent);
-            writer.WriteStringValue("message", Message);
-            writer.WriteIntValue("quantity", Quantity);
-            writer.WriteLongValue("referralDate", ReferralDate);
-            writer.WriteStringValue("specCodeReferral", SpecCodeReferral);
-            writer.WriteStringValue("specCodeReferred", SpecCodeReferred);
-            writer.WriteStringValue("specDescReferral", SpecDescReferral);
-            writer.WriteStringValue("specDescReferred", SpecDescReferred);
             writer.WriteIntValue("total", Total);
             writer.WriteAdditionalData(AdditionalData);
         }

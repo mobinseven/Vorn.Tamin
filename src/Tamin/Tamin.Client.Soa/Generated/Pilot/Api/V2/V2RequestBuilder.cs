@@ -6,13 +6,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
+using Tamin.Client.Soa.Pilot.Api.V2.CartableNurse;
 using Tamin.Client.Soa.Pilot.Api.V2.CheckRulesInDetail;
+using Tamin.Client.Soa.Pilot.Api.V2.DoctorActiveClinics;
 using Tamin.Client.Soa.Pilot.Api.V2.Ep;
 using Tamin.Client.Soa.Pilot.Api.V2.Patients;
 using Tamin.Client.Soa.Pilot.Api.V2.Referral;
 using Tamin.Client.Soa.Pilot.Api.V2.SendEpresc;
 using Tamin.Client.Soa.Pilot.Api.V2.WsDentistBase;
 using Tamin.Client.Soa.Pilot.Api.V2.WsDrugAmount;
+using Tamin.Client.Soa.Pilot.Api.V2.WsDrugForm;
+using Tamin.Client.Soa.Pilot.Api.V2.WsDrugFormsOptions;
 using Tamin.Client.Soa.Pilot.Api.V2.WsDrugInstruction;
 using Tamin.Client.Soa.Pilot.Api.V2.WsDrugUsage;
 using Tamin.Client.Soa.Pilot.Api.V2.WsParTaref;
@@ -29,10 +33,20 @@ namespace Tamin.Client.Soa.Pilot.Api.V2
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class V2RequestBuilder : BaseRequestBuilder
     {
+        /// <summary>The cartableNurse property</summary>
+        public global::Tamin.Client.Soa.Pilot.Api.V2.CartableNurse.CartableNurseRequestBuilder CartableNurse
+        {
+            get => new global::Tamin.Client.Soa.Pilot.Api.V2.CartableNurse.CartableNurseRequestBuilder(PathParameters, RequestAdapter);
+        }
         /// <summary>The checkRulesInDetail property</summary>
         public global::Tamin.Client.Soa.Pilot.Api.V2.CheckRulesInDetail.CheckRulesInDetailRequestBuilder CheckRulesInDetail
         {
             get => new global::Tamin.Client.Soa.Pilot.Api.V2.CheckRulesInDetail.CheckRulesInDetailRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The doctorActiveClinics property</summary>
+        public global::Tamin.Client.Soa.Pilot.Api.V2.DoctorActiveClinics.DoctorActiveClinicsRequestBuilder DoctorActiveClinics
+        {
+            get => new global::Tamin.Client.Soa.Pilot.Api.V2.DoctorActiveClinics.DoctorActiveClinicsRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The ep property</summary>
         public global::Tamin.Client.Soa.Pilot.Api.V2.Ep.EpRequestBuilder Ep
@@ -63,6 +77,16 @@ namespace Tamin.Client.Soa.Pilot.Api.V2
         public global::Tamin.Client.Soa.Pilot.Api.V2.WsDrugAmount.WsDrugAmountRequestBuilder WsDrugAmount
         {
             get => new global::Tamin.Client.Soa.Pilot.Api.V2.WsDrugAmount.WsDrugAmountRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The wsDrugForm property</summary>
+        public global::Tamin.Client.Soa.Pilot.Api.V2.WsDrugForm.WsDrugFormRequestBuilder WsDrugForm
+        {
+            get => new global::Tamin.Client.Soa.Pilot.Api.V2.WsDrugForm.WsDrugFormRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The wsDrugFormsOptions property</summary>
+        public global::Tamin.Client.Soa.Pilot.Api.V2.WsDrugFormsOptions.WsDrugFormsOptionsRequestBuilder WsDrugFormsOptions
+        {
+            get => new global::Tamin.Client.Soa.Pilot.Api.V2.WsDrugFormsOptions.WsDrugFormsOptionsRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The wsDrugInstruction property</summary>
         public global::Tamin.Client.Soa.Pilot.Api.V2.WsDrugInstruction.WsDrugInstructionRequestBuilder WsDrugInstruction

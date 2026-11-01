@@ -1,0 +1,8 @@
+{
+  "redirect_uri": "https://app.example.test/callback",
+  "grant_type": "authorization_code",
+  "client_id": "portal-js",
+  "code": "eyJhbGciOiJSUzI",
+  "code_verifier": "R056ZkU2OTlMOFI5ekVvaU4wemRMZEtJTTNjVmlQeXg",
+  "audience": "0000000000"
+}

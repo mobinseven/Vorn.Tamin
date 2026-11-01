@@ -38,7 +38,7 @@ namespace Tamin.Client.Soa.Pilot.Models
 #else
         public List<global::Tamin.Client.Soa.Pilot.Models.ReferralIcd10> Icd10s { get; set; }
 #endif
-        /// <summary>The structure table labels this field as the referral date, while examples use referralHijriDate; both documented wire names are retained.</summary>
+        /// <summary>The id property</summary>
         public long? Id { get; set; }
         /// <summary>The message property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -70,7 +70,7 @@ namespace Tamin.Client.Soa.Pilot.Models
 #else
         public List<global::Tamin.Client.Soa.Pilot.Models.ReferralFeedbackItem> ReferralFeedbackList { get; set; }
 #endif
-        /// <summary>Solar Hijri date encoded as an eight-digit string, for example 14040610.</summary>
+        /// <summary>Referral deadline, for example 14040510 (p18). For hospitalization orders it carries the hospitalization date (p28).</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
         public string? ReferralHijriDate { get; set; }

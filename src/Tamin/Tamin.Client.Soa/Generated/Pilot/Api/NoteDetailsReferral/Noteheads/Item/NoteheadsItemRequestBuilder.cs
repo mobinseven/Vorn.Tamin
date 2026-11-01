@@ -16,7 +16,7 @@ namespace Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.Noteheads.Item
     public partial class NoteheadsItemRequestBuilder : BaseRequestBuilder
     {
         /// <summary>Gets an item from the Tamin.Client.Soa.Pilot.api.noteDetailsReferral.noteheads.item.item collection</summary>
-        /// <param name="position">Parent referral identifier from the referral-cartable response.</param>
+        /// <param name="position">Parent referral identifier (masterParent) from the referral feedback list response (p44-45).</param>
         /// <returns>A <see cref="global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.Noteheads.Item.Item.WithMasterParentItemRequestBuilder"/></returns>
         public global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.Noteheads.Item.Item.WithMasterParentItemRequestBuilder this[long position]
         {

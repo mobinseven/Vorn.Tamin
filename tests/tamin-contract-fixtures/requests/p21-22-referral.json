@@ -1,0 +1,36 @@
+{
+  "patient": "**********",
+  "prescType": {
+    "prescTypeId": 7
+  },
+  "prescDate": "14021012",
+  "docId": "*********",
+  "docMobileNo": "**********",
+  "docNationalCode": "***********",
+  "comments": "",
+  "expireDate": "14021011",
+  "noteDetailEprscs": [],
+  "noteDetailsReferralList": [
+    {
+      "docSpecReferred": {
+        "specCode": "00100"
+      },
+      "icd10s": [
+        {
+          "icdId": "X46.49"
+        },
+        {
+          "icdId": "X46.51"
+        }
+      ],
+      "complaints": [
+        {
+          "id": "704425001"
+        }
+      ],
+      "message": "توضیحات پزشک",
+      "referralHijriDate": "14030401",
+      "quantity": 3
+    }
+  ]
+}

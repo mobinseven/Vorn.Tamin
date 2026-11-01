@@ -1,0 +1,55 @@
+{
+  "patient": "***********",
+  "prescType": {
+    "prescTypeId": 8
+  },
+  "prescDate": "14050325",
+  "docId": "******",
+  "docMobileNo": "******",
+  "docNationalCode": "*****",
+  "comments": "doctor-comments",
+  "expireDate": "14050324",
+  "noteDetailEprscs": [],
+  "referralFeedbackId": 123456789,
+  "noteDetailsReferralList": [
+    {
+      "referralFeedbackList": [
+        {
+          "questionId": 1,
+          "answerId": {
+            "drugAnswerId": 100
+          },
+          "comments": "doctor-comments"
+        },
+        {
+          "questionId": 2,
+          "answerId": {
+            "drugAnswerId": 101
+          },
+          "comments": ""
+        },
+        {
+          "questionId": 3,
+          "answerId": {
+            "drugAnswerId": 101
+          },
+          "comments": ""
+        },
+        {
+          "questionId": 4,
+          "answerId": {
+            "drugAnswerId": 101
+          },
+          "comments": ""
+        },
+        {
+          "questionId": 5,
+          "answerId": {
+            "drugAnswerId": 100
+          },
+          "comments": "doctor-comments"
+        }
+      ]
+    }
+  ]
+}

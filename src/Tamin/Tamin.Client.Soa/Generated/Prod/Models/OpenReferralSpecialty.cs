@@ -34,6 +34,8 @@ namespace Tamin.Client.Soa.Prod.Models
         public int? MaxNormal { get; set; }
         /// <summary>The maxSpecial property</summary>
         public int? MaxSpecial { get; set; }
+        /// <summary>Epoch timestamp of the patient referral (p50, added in document version 1.9.9).</summary>
+        public long? ReferralDate { get; set; }
         /// <summary>The specCode property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -111,6 +113,7 @@ namespace Tamin.Client.Soa.Prod.Models
                 { "lstatus", n => { Lstatus = n.GetStringValue(); } },
                 { "maxNormal", n => { MaxNormal = n.GetIntValue(); } },
                 { "maxSpecial", n => { MaxSpecial = n.GetIntValue(); } },
+                { "referralDate", n => { ReferralDate = n.GetLongValue(); } },
                 { "specCode", n => { SpecCode = n.GetStringValue(); } },
                 { "specDesc", n => { SpecDesc = n.GetStringValue(); } },
                 { "specGRP", n => { SpecGRP = n.GetStringValue(); } },
@@ -130,6 +133,7 @@ namespace Tamin.Client.Soa.Prod.Models
             writer.WriteStringValue("lstatus", Lstatus);
             writer.WriteIntValue("maxNormal", MaxNormal);
             writer.WriteIntValue("maxSpecial", MaxSpecial);
+            writer.WriteLongValue("referralDate", ReferralDate);
             writer.WriteStringValue("specCode", SpecCode);
             writer.WriteStringValue("specDesc", SpecDesc);
             writer.WriteStringValue("specGRP", SpecGRP);

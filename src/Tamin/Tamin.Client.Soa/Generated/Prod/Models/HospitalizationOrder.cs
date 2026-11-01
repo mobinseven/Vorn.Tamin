@@ -17,10 +17,10 @@ namespace Tamin.Client.Soa.Prod.Models
         /// <summary>The complaints property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public List<global::Tamin.Client.Soa.Prod.Models.ReferralComplaint>? Complaints { get; set; }
+        public List<global::Tamin.Client.Soa.Prod.Models.ReferralComplaintResponse>? Complaints { get; set; }
 #nullable restore
 #else
-        public List<global::Tamin.Client.Soa.Prod.Models.ReferralComplaint> Complaints { get; set; }
+        public List<global::Tamin.Client.Soa.Prod.Models.ReferralComplaintResponse> Complaints { get; set; }
 #endif
         /// <summary>The diagnosisIDs property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -43,10 +43,10 @@ namespace Tamin.Client.Soa.Prod.Models
         /// <summary>The icd10Referrals property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public List<global::Tamin.Client.Soa.Prod.Models.ReferralIcd10>? Icd10Referrals { get; set; }
+        public List<global::Tamin.Client.Soa.Prod.Models.ReferralIcd10Response>? Icd10Referrals { get; set; }
 #nullable restore
 #else
-        public List<global::Tamin.Client.Soa.Prod.Models.ReferralIcd10> Icd10Referrals { get; set; }
+        public List<global::Tamin.Client.Soa.Prod.Models.ReferralIcd10Response> Icd10Referrals { get; set; }
 #endif
         /// <summary>The id property</summary>
         public long? Id { get; set; }
@@ -62,9 +62,17 @@ namespace Tamin.Client.Soa.Prod.Models
 #else
         public string Message { get; set; }
 #endif
+        /// <summary>Patient national code (added in document version 1.9.8, p57).</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? PatientNationalCode { get; set; }
+#nullable restore
+#else
+        public string PatientNationalCode { get; set; }
+#endif
         /// <summary>The quantity property</summary>
         public int? Quantity { get; set; }
-        /// <summary>Epoch-like numeric value as shown in the source example; unit is undocumented.</summary>
+        /// <summary>Epoch timestamp (documented as Epoch TimeStamp for the same field on p50). The p57 sample value has 12 digits, one fewer than the 13-digit millisecond values on p44 and p47.</summary>
         public long? ReferralDate { get; set; }
         /// <summary>The specCodeReferral property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -123,15 +131,16 @@ namespace Tamin.Client.Soa.Prod.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
-                { "complaints", n => { Complaints = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.ReferralComplaint>(global::Tamin.Client.Soa.Prod.Models.ReferralComplaint.CreateFromDiscriminatorValue)?.AsList(); } },
+                { "complaints", n => { Complaints = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.ReferralComplaintResponse>(global::Tamin.Client.Soa.Prod.Models.ReferralComplaintResponse.CreateFromDiscriminatorValue)?.AsList(); } },
                 { "diagnosisIDs", n => { DiagnosisIDs = n.GetStringValue(); } },
                 { "docFamily", n => { DocFamily = n.GetBoolValue(); } },
                 { "docId", n => { DocId = n.GetStringValue(); } },
-                { "icd10Referrals", n => { Icd10Referrals = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.ReferralIcd10>(global::Tamin.Client.Soa.Prod.Models.ReferralIcd10.CreateFromDiscriminatorValue)?.AsList(); } },
+                { "icd10Referrals", n => { Icd10Referrals = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.ReferralIcd10Response>(global::Tamin.Client.Soa.Prod.Models.ReferralIcd10Response.CreateFromDiscriminatorValue)?.AsList(); } },
                 { "id", n => { Id = n.GetLongValue(); } },
                 { "masterChild", n => { MasterChild = n.GetLongValue(); } },
                 { "masterParent", n => { MasterParent = n.GetLongValue(); } },
                 { "message", n => { Message = n.GetStringValue(); } },
+                { "patientNationalCode", n => { PatientNationalCode = n.GetStringValue(); } },
                 { "quantity", n => { Quantity = n.GetIntValue(); } },
                 { "referralDate", n => { ReferralDate = n.GetLongValue(); } },
                 { "specCodeReferral", n => { SpecCodeReferral = n.GetStringValue(); } },
@@ -147,15 +156,16 @@ namespace Tamin.Client.Soa.Prod.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
-            writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.ReferralComplaint>("complaints", Complaints);
+            writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.ReferralComplaintResponse>("complaints", Complaints);
             writer.WriteStringValue("diagnosisIDs", DiagnosisIDs);
             writer.WriteBoolValue("docFamily", DocFamily);
             writer.WriteStringValue("docId", DocId);
-            writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.ReferralIcd10>("icd10Referrals", Icd10Referrals);
+            writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.ReferralIcd10Response>("icd10Referrals", Icd10Referrals);
             writer.WriteLongValue("id", Id);
             writer.WriteLongValue("masterChild", MasterChild);
             writer.WriteLongValue("masterParent", MasterParent);
             writer.WriteStringValue("message", Message);
+            writer.WriteStringValue("patientNationalCode", PatientNationalCode);
             writer.WriteIntValue("quantity", Quantity);
             writer.WriteLongValue("referralDate", ReferralDate);
             writer.WriteStringValue("specCodeReferral", SpecCodeReferral);

@@ -14,14 +14,8 @@ namespace Tamin.Client.Account.Pilot.Models
     {
         /// <summary>Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.</summary>
         public IDictionary<string, object> AdditionalData { get; set; }
-        /// <summary>The client_id property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public string? ClientId { get; set; }
-#nullable restore
-#else
-        public string ClientId { get; set; }
-#endif
+        /// <summary>The source requires portal-js in the pilot environment (p13).</summary>
+        public global::Tamin.Client.Account.Pilot.Models.AuthorizationCodeTokenRequest_client_id? ClientId { get; set; }
         /// <summary>Authorization code returned to redirect_uri.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -73,7 +67,7 @@ namespace Tamin.Client.Account.Pilot.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
-                { "client_id", n => { ClientId = n.GetStringValue(); } },
+                { "client_id", n => { ClientId = n.GetEnumValue<global::Tamin.Client.Account.Pilot.Models.AuthorizationCodeTokenRequest_client_id>(); } },
                 { "code", n => { Code = n.GetStringValue(); } },
                 { "code_verifier", n => { CodeVerifier = n.GetStringValue(); } },
                 { "grant_type", n => { GrantType = n.GetEnumValue<global::Tamin.Client.Account.Pilot.Models.AuthorizationCodeTokenRequest_grant_type>(); } },
@@ -87,7 +81,7 @@ namespace Tamin.Client.Account.Pilot.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
-            writer.WriteStringValue("client_id", ClientId);
+            writer.WriteEnumValue<global::Tamin.Client.Account.Pilot.Models.AuthorizationCodeTokenRequest_client_id>("client_id", ClientId);
             writer.WriteStringValue("code", Code);
             writer.WriteStringValue("code_verifier", CodeVerifier);
             writer.WriteEnumValue<global::Tamin.Client.Account.Pilot.Models.AuthorizationCodeTokenRequest_grant_type>("grant_type", GrantType);
