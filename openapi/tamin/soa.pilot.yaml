@@ -2248,7 +2248,7 @@ components:
     NursingPrescriptionItem:
       type: object
       additionalProperties: true
-      description: 'Prescription item inside a nursing-cartable prescription (p53-56). Every optional member in the sample is null, so a type can only be taken from the same-named request field that the guide documents (p16-20). Members with such a type are declared nullable. Members without one are not declared and pass through additionalProperties: isBrand, isPayable, organId, organDesc, organDet, organDetDesc, illnessDesc, planDesc, confirmStatusflag, noteHeadEprscId, repeatDays, messages, dialysisType. repeat, dateDo and isDentalService are also not declared because their wire types are still undecided pending pilot testing.'
+      description: 'Prescription item inside a nursing-cartable prescription (p53-56). Every optional member in the sample is null, so a type can only be taken from the same-named request field that the guide documents (p16-20). Members with such a type are declared nullable. Members whose type no such request field settles are declared untyped ({}): isBrand, isPayable, organId, organDesc, organDet, organDetDesc, illnessDesc, planDesc, confirmStatusflag, noteHeadEprscId, repeatDays, messages, dialysisType. repeat, dateDo and isDentalService are also untyped because their wire types are still undecided pending pilot testing.'
       required:
         - noteDetailsEprscId
         - srvId
@@ -2321,6 +2321,22 @@ components:
           type: string
         readOnly:
           type: boolean
+        isBrand: {}
+        isPayable: {}
+        organId: {}
+        organDesc: {}
+        organDet: {}
+        organDetDesc: {}
+        illnessDesc: {}
+        planDesc: {}
+        confirmStatusflag: {}
+        noteHeadEprscId: {}
+        repeatDays: {}
+        messages: {}
+        dialysisType: {}
+        repeat: {}
+        dateDo: {}
+        isDentalService: {}
     DoctorActiveCenterListResponse:
       type: object
       additionalProperties: true

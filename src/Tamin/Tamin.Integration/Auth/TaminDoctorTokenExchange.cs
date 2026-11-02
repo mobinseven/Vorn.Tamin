@@ -6,7 +6,7 @@ namespace Tamin.Integration.Auth;
 /// <summary>
 /// Executes the single discriminated v2 token route without Kiota's unsupported oneOf form serializer.
 /// </summary>
-public sealed class TaminDoctorTokenExchange(HttpClient httpClient, Uri tokenEndpoint, bool isPilot) : IDoctorTokenExchange
+internal sealed class TaminDoctorTokenExchange(HttpClient httpClient, Uri tokenEndpoint, bool isPilot) : IDoctorTokenExchange
 {
     public Task<DoctorToken> ExchangeAuthorizationCodeAsync(DoctorAuthorizationCode grant, CancellationToken cancellationToken)
     {

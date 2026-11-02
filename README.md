@@ -8,7 +8,7 @@
 
 A .NET 10 client SDK for the EP.Tamin electronic prescription APIs of the Social Security Insurance of Iran (سازمان تأمین اجتماعی).
 
-Clients are **generated from audited OpenAPI specifications** using [Kiota](https://github.com/microsoft/kiota), then wrapped by an integration layer that provides authentication, HTTP resilience, and request/response mapping.
+Clients are **generated from audited OpenAPI specifications** using [Kiota](https://github.com/microsoft/kiota), then wrapped by an environment-neutral client, `ITaminClient`, that provides every operation with authentication, HTTP resilience, and request/response mapping.
 
 ---
 
@@ -19,10 +19,10 @@ Clients are **generated from audited OpenAPI specifications** using [Kiota](http
 │                  Your Application                   │
 ├─────────────────────────────────────────────────────┤
 │  Tamin.Integration                                  │
-│  ├── Auth / TaminTokenProvider   (PKCE + refresh)   │
-│  ├── Http  / TaminClientFactory  (pipeline wiring)  │
-│  ├── Http  / TaminResponseHandler + Retry           │
-│  └── Mapping / PrescriptionRequestMapper            │
+│  ├── ITaminClient / TaminClient  (operation facade) │
+│  ├── Auth    (PKCE + refresh)                       │
+│  ├── Http    (retry, failures, operation IDs)       │
+│  └── Mapping (request + response mapping)           │
 ├──────────┬──────────┬───────────────────────────────┤
 │ Account  │   SOA    │           API                 │
 │ (Auth)   │ (Services│   (Clinical operations)       │
@@ -61,7 +61,7 @@ If you only need specific clients without the integration layer:
 
 | Package | Description |
 |---|---|
-| `Vorn.Tamin` | Integration layer — auth, HTTP pipeline, request/response mapping. Depends on all three clients below. |
+| `Vorn.Tamin` | `ITaminClient`, with auth, HTTP pipeline and request/response mapping. Depends on all three clients below. |
 | `Tamin.Client.Account` | Kiota-generated OAuth/auth client (token exchange, PKCE, signout). |
 | `Tamin.Client.Api` | Kiota-generated clinical API client (eprescription, referrals, notes, hospitalization, etc.). |
 | `Tamin.Client.Soa` | Kiota-generated SOA client (auth, family doctor, patient disease, referral feedback). |
@@ -88,131 +88,71 @@ dotnet add package Tamin.Client.Soa
 
 ## Quick start
 
-### 1. Create clients
+### 1. Create the client
+
+`ITaminClient` has one method per contract operation, and the same methods in both environments. Choosing an environment is the only difference in calling code. Hosts come from the OpenAPI documents.
 
 ```csharp
-using Tamin.Integration.Auth;
-using Tamin.Integration.Http;
+using Tamin.Integration;
 
-// Base URLs for each service.
-var bases = new TaminClientBases(
-    Account: new Uri("https://auth.tamin.ir/"),
-    Soa:     new Uri("https://soa.tamin.ir/"),
-    Api:     new Uri("https://api.tamin.ir/")
-);
+// Keep one handler for the life of the application. You own it and dispose it.
+var handler = new SocketsHttpHandler();
+var options = new TaminClientOptions(
+    ClientId: "YOUR_CLIENT_ID",     // The pilot contract allows only "portal-js".
+    Audience: "YOUR_AUDIENCE",
+    PrimaryHandler: handler,
+    LoggerFactory: loggerFactory);  // Optional.
 
-// Token provider handles PKCE and auto-refresh.
-var tokenProvider = new TaminTokenProvider(
-    exchange: new TaminDoctorTokenExchange(httpClient, new Uri("https://auth.tamin.ir/auth/server/v2/token"), isPilot: false),
-    clientId: "YOUR_CLIENT_ID",
-    audience: "YOUR_AUDIENCE",
-    allowedHosts: new[] { "auth.tamin.ir", "soa.tamin.ir", "api.tamin.ir" }
-);
-
-// Wire up the HTTP pipeline and create all three clients.
-var clients = TaminClientFactory.CreateProduction(
-    bases,
-    tokenProvider,
-    primaryHandler: new HttpClientHandler(),
-    loggerFactory:  LoggerFactory.Create(b => b.AddConsole()),
-    operationIdResolver: req => req.RequestUri?.AbsolutePath ?? "unknown"
-);
-
-// clients.Account  — Tamin.Client.Account.Prod.ProdAccountClient
-// clients.Soa      — Tamin.Client.Soa.Prod.ProdSoaClient
-// clients.Api      — Tamin.Client.Api.Prod.ProdApiClient
+ITaminClient tamin = TaminClient.CreateProduction(options); // Or TaminClient.CreatePilot(options).
 ```
-
-For the pilot environment, use `TaminClientFactory.CreatePilot(...)` which returns `PilotTaminClients`.
 
 ### 2. Authenticate with PKCE
 
 ```csharp
-using Tamin.Integration.Auth;
-
-// Generate PKCE verifier and state before redirecting.
-string codeVerifier = TaminTokenProvider.CreateCodeVerifier();
+string codeVerifier = TaminClient.CreateCodeVerifier();
 string state = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
 
-// Build the authorization URL and redirect the user there.
-// After callback, exchange the code:
-await tokenProvider.CompleteAuthorizationAsync(
-    code: "AUTHORIZATION_CODE",
-    redirectUri: new Uri("https://your-app.example/callback"),
-    codeVerifier: codeVerifier
-);
+// Redirect the doctor's browser here.
+Uri login = tamin.CreateAuthorizationUri(redirectUri, TaminClient.CreateCodeChallenge(codeVerifier), state);
 
-// Token is now cached. All subsequent Kiota requests include the Bearer token.
+// In the callback, after checking state:
+await tamin.CompleteAuthorizationAsync(code, redirectUri, codeVerifier);
 ```
 
-If the refresh token is expired or missing, `TaminReauthorizationRequiredException` is thrown — the user must re-authorize.
+The token is held in memory and refreshed automatically. If the refresh token is missing or rejected, calls throw `TaminReauthorizationRequiredException` and the doctor must log in again. A network failure during refresh surfaces as `HttpRequestException` and keeps the refresh token, so a later call can try again.
 
-### 3. Make API calls
-
-All generated clients use Kiota's fluent request builder pattern:
+### 3. Call operations
 
 ```csharp
-// Example: fetch reference data via the SOA client
-var services = await clients.Soa.Interface.Epresc.SendEpresc.V2.Services
-    .GetAsync();
+var cartable = await tamin.GetReferralCartableAsync(docNationalCode, patientNationalCode, trackingCode);
+// cartable.Data.Items, cartable.Status, cartable.TraceId
 
-// Example: fetch patient referrals via the API client
-var referrals = await clients.Api.V2.Referral
-    .Count
-    .WithNationalCodeItem("{patientNationalCode}")
-    .GetAsync();
+var created = await tamin.CreatePrescriptionAsync(new PrescriptionCreateInput(/* ... */));
+// created.HeaderId, created.TrackingCode, created.ErrorCode
 ```
 
-### 4. Map responses to domain DTOs
+Method names follow the contract's `operationId`: `getReferralCartable` is `GetReferralCartableAsync`.
 
-`TaminMappingService` converts generated Kiota responses into stable DTOs:
+Parameters that only the pilot route carries, such as `docNationalCode` on `DeletePrescriptionAsync`, are required in both environments so that calling code does not change. Production validates them and does not send them.
 
-```csharp
-var mapper = new TaminMappingService();
+### 4. Read responses without a schema
 
-// Structured response
-var result = mapper.MapCreatePrescription(response);
-// result.HeaderId, result.TrackingCode, result.ErrorCode, etc.
-
-// Undocumented / opaque responses remain as JsonElement
-var raw = mapper.MapPrescriptionTypes(jsonResponse);
-// raw.Payload — JsonElement you can inspect freely
-```
-
-### 5. Map domain inputs to Kiota requests
-
-`PrescriptionRequestMapper` maps your domain input records to generated Kiota request objects:
+The guide defines no response schema for 29 operations, so they return `UnconstrainedResponse`. Its `Payload` is the response body as a `JsonElement`, and its `ValueKind` is `Undefined` if the body was empty.
 
 ```csharp
-var requestMapper = new PrescriptionRequestMapper();
-
-var input = new PrescriptionCreateInput(
-    Mobile: "09123456789",
-    DocNationalCode: "0012345678",
-    Patient: "Patient Name",
-    PrescDate: "14030601",
-    PrescType: new PrescriptionTypeInput(PrescTypeId: 1),
-    NoteDetailEprscs: [/* prescription items */]
-);
-
-// For production:
-ProdModels.PrescriptionCreateRequest prodRequest = requestMapper.MapProduction(input);
-
-// For pilot:
-PilotModels.PrescriptionCreateRequest pilotRequest = requestMapper.MapPilot(input);
+var complaints = await tamin.ListComplaintsAsync();
+foreach (var item in complaints.Payload.EnumerateArray()) { /* ... */ }
 ```
 
 ---
 
 ## HTTP pipeline
 
-`TaminClientFactory` wraps each client's HTTP handler with:
+1. **Retries**: GET requests are retried up to 2 times on HTTP 5xx or network errors. Mutations are **never** retried, because the provider contract documents no idempotency key.
 
-1. **`TaminTransientFaultHandler`** — retries GET requests up to 2 times on HTTP 5xx or network errors (Polly). Mutations are **not** retried since the provider contract does not document idempotency keys.
+2. **Failures**: non-success responses throw `TaminApiException` with the status code, operation ID and raw body. Logs contain only the operation ID and status. Bodies and URLs are never logged, because they carry national codes and patient data.
 
-2. **`TaminResponseHandler`** — non-success responses throw `TaminApiException` with the status code, operation ID, and raw body. Logs redact credential fields (`access_token`, `refresh_token`, `code`, `code_verifier`).
-
-3. **Authentication** — Account endpoints use anonymous access; SOA and API endpoints use `BaseBearerTokenAuthenticationProvider` backed by `TaminTokenProvider`.
+3. **Authentication**: Account operations are anonymous. SOA and API operations send the doctor's bearer token, only to the hosts of those services.
 
 ---
 
@@ -271,9 +211,12 @@ src/Tamin/
 ├── Tamin.Client.Soa/             # Generated SOA client (Kiota)
 │   └── Generated/{Pilot,Prod}/
 ├── Tamin.Integration/            # Integration layer
+│   ├── ITaminClient.cs           # Public operations
+│   ├── TaminClient.cs            # Creates a client for an environment
+│   ├── {Production,Pilot}TaminClient.cs  # Operations on each generated client
 │   ├── Auth/                     # Token provider, PKCE, OAuth exchange
-│   ├── Http/                     # Client factory, response handler, retry
-│   └── Mapping/                  # Request mapper, response mapper, DTOs
+│   ├── Http/                     # Operation sending, failures, retry
+│   └── Mapping/                  # Inputs, DTOs, request and response mapping
 └── Tamin.Integration.Tests/      # Tests
 
 scripts/
@@ -290,9 +233,9 @@ scripts/
 
 | Exception | Meaning |
 |---|---|
-| `TaminApiException` | Non-success HTTP response from the Tamin API. Inspect `StatusCode`, `OperationId`, `RawBody`. |
+| `TaminApiException` | Non-success HTTP response, or a success whose body is empty or unreadable (`StatusCode` is null). Inspect `StatusCode`, `OperationId`, `RawBody`. `RawBody` can hold personal data. |
 | `TaminReauthorizationRequiredException` | Token refresh failed or no refresh token available. User must re-authorize via PKCE. |
-| `TaminRequestValidationException` | Request field failed validation before the HTTP call was made. |
+| `TaminRequestValidationException` | Request field failed validation before the HTTP call was made. A blank route value throws `ArgumentException`. |
 
 ---
 

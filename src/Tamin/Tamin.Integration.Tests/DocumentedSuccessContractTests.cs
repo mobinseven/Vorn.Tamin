@@ -37,18 +37,6 @@ public sealed class DocumentedSuccessContractTests
     }
 
     [Fact]
-    public void Maps_referral_feedback_prescription_type_from_raw_json_and_preserves_absence()
-    {
-        using var presentDocument = JsonDocument.Parse("""{"status":200,"data":{"total":1,"list":[{"prescType":{"prescTypeId":7,"prescTypeCode":"07","prescTypeDesc":"referral"},"noteDetailEprscs":[]}]}}""");
-        var present = mapper.MapReferralFeedbackDetails(presentDocument.RootElement);
-        Assert.Equal(new PrescriptionTypeDto(7, "07", "referral"), Assert.Single(present.Data.Items).PrescriptionType);
-
-        using var absentDocument = JsonDocument.Parse("""{"status":200,"data":{"total":1,"list":[{"noteDetailEprscs":[]}]}}""");
-        var absent = mapper.MapReferralFeedbackDetails(absentDocument.RootElement);
-        Assert.Null(Assert.Single(absent.Data.Items).PrescriptionType);
-    }
-
-    [Fact]
     public void Maps_patient_open_referrals_documented_example()
     {
         var result = mapper.MapPatientOpenReferrals(Kiota("""{"status":200,"family":"SUCCESSFUL","reason":"OK","data":{"noteDetailsReferrals":[{"specCode":"00199","specDesc":"پزشکی-بیولوژی","specGRP":"6","status":"1","statusstDate":"13900101","lstatus":"0"}],"count":1}}""", SoaModels.PatientOpenReferralsResponse.CreateFromDiscriminatorValue));
@@ -90,14 +78,6 @@ public sealed class DocumentedSuccessContractTests
     }
 
     [Fact]
-    public void All_30_schema_less_operations_remain_opaque()
-    {
-        var environmentAdapters = new HashSet<string>(StringComparer.Ordinal) { "MapPilotUndocumentedMutation", "MapPilotSoaUndocumented", "MapPilotApiUndocumented", "MapPilotNursingResponse" };
-        var count = typeof(TaminMappingService).GetMethods().Count(method => method.IsPublic && method.DeclaringType == typeof(TaminMappingService) && method.ReturnType == typeof(UnconstrainedResponse) && !environmentAdapters.Contains(method.Name));
-        Assert.Equal(30, count);
-    }
-
-    [Fact]
     public void Pilot_generated_variants_preserve_all_six_equivalent_success_contracts()
     {
         var cartable = mapper.MapReferralCartable(Kiota("""{"status":200,"family":"SUCCESSFUL","reason":"OK","data":{"total":1,"list":[{"noteHeadId":"head","referralId":"ref","patientID":"patient","docID":"doctor","prescDate":"date","referralDate":"ref-date"}]}}""", PilotSoaModels.ReferralCartableResponse.CreateFromDiscriminatorValue));
@@ -132,8 +112,6 @@ public sealed class DocumentedSuccessContractTests
         Assert.Equal(expected, Assert.Single(mapper.MapHospitalizationOrders(Kiota(payload, SoaModels.HospitalizationOrderResponse.CreateFromDiscriminatorValue)).Data));
         Assert.Equal(expected, Assert.Single(mapper.MapHospitalizationOrders(Kiota(payload, ApiModels.HospitalizationOrderResponse.CreateFromDiscriminatorValue)).Data));
         Assert.Equal(expected, Assert.Single(mapper.MapHospitalizationOrders(Kiota(payload, PilotSoaModels.HospitalizationOrderResponse.CreateFromDiscriminatorValue)).Data));
-        using var document = JsonDocument.Parse(payload);
-        Assert.Equal(expected, Assert.Single(mapper.MapHospitalizationOrders(document.RootElement).Data));
     }
 
     private const string MedicationInstructionsPayload = """{"status":200,"family":"SUCCESSFUL","reason":"OK","traceId":"trace","data":{"methodUsages":[{"id":"307166007","name":"before exercise","code":"307166007","nameLatin":"Before exercise (qualifier value)"}],"drugUsages":[{"id":"231271000","name":"joint","code":"231271000","nameLatin":"Injection into joint (procedure)"}],"drugInstructions":[{"id":"2546009","name":"night","code":"2546009","nameLatin":"Night time (qualifier value)"}],"formAmounts":[{"id":"24","name":"each","code":"111","nameLatin":"Each","drugAmounts":[{"id":"580","name":"quarter","code":"580","nameLatin":"1/4 Each"}]}]}}""";
@@ -163,14 +141,6 @@ public sealed class DocumentedSuccessContractTests
         var form = Assert.Single(actual.FormAmounts);
         Assert.Equal(("24", "111", "each", "Each"), (form.Id, form.Code, form.Name, form.NameLatin));
         Assert.Equal(expected.FormAmounts[0].DrugAmounts, form.DrugAmounts);
-    }
-
-    [Fact]
-    public void Maps_dosage_form_list_as_opaque_because_the_guide_defines_no_schema()
-    {
-        var response = new ApiModels.JsonObject();
-        response.AdditionalData["anything"] = 1;
-        Assert.Equal(JsonValueKind.Object, mapper.MapDosageForms(response).Payload.ValueKind);
     }
 
     private const string ReferralFeedbackEntriesPayload = """{"status":200,"family":"SUCCESSFUL","reason":"OK","data":{"total":2,"list":[{"id":327241062,"masterParent":327240269,"masterChild":327247893,"referralDate":1750517662000,"docId":"2000200090","quantity":1,"specCodeReferral":"00100","specDescReferral":"general","specCodeReferred":"00138","specDescReferred":"cardiology","icd10Referrals":[{"icdId":"W27.19","icdCode":"W27.19","icdName":"name"}],"complaints":[{"id":7,"code":9000000001,"displayName":"cough","englishName":"Cough","terminology":"SNOMEDCT","status":"1"}],"message":"note","diagnosisIDs":"W27.19"},{"id":0,"masterParent":327247893,"masterChild":null,"referralDate":1747839599371,"docId":null,"quantity":0,"specCodeReferral":"00138","specDescReferral":"cardiology","specCodeReferred":null,"specDescReferred":null,"icd10Referrals":null,"complaints":null,"message":null,"diagnosisIDs":null}]}}""";

@@ -2,6 +2,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using PilotModels = Tamin.Client.Soa.Pilot.Models;
 using ProdModels = Tamin.Client.Soa.Prod.Models;
+using PilotApiModels = Tamin.Client.Api.Pilot.Models;
+using ProdApiModels = Tamin.Client.Api.Prod.Models;
 
 namespace Tamin.Integration.Mapping;
 
@@ -48,16 +50,11 @@ public sealed record PrescriptionCreateInput(
 
 public sealed record DentistGridInput(ServiceInput? SrvId, string? ToothId);
 public sealed record DentistRuleInput(IReadOnlyList<DentistGridInput>? AllGridData, string? DocId, string? PatientId, ServiceInput? SrvId, string? ToothId);
+public sealed record NursingActionInput(string SiamId, IReadOnlyList<long> NoteDetailsEprscIds, string NurseNationalCode);
+public enum PatientIllnessType { One = 1, Two = 2, Three = 3 }
+public sealed record PatientIllnessInput(string PatientNationalCode, int IllId, string MobileNumber, string SiamId, PatientIllnessType? Type = null);
 
-public interface IPrescriptionRequestMapper
-{
-    ProdModels.PrescriptionCreateRequest MapProduction(PrescriptionCreateInput input);
-    PilotModels.PrescriptionCreateRequest MapPilot(PrescriptionCreateInput input);
-    ProdModels.DentistRuleRequest MapProduction(DentistRuleInput input);
-    PilotModels.DentistRuleRequest MapPilot(DentistRuleInput input);
-}
-
-public sealed class PrescriptionRequestMapper : IPrescriptionRequestMapper
+internal sealed class PrescriptionRequestMapper
 {
     public ProdModels.PrescriptionCreateRequest MapProduction(PrescriptionCreateInput input)
     {
@@ -110,6 +107,71 @@ public sealed class PrescriptionRequestMapper : IPrescriptionRequestMapper
         AllGridData = input.AllGridData?.Select(x => new PilotModels.GridData { SrvId = MapPilot(x.SrvId), ToothId = x.ToothId }).ToList(),
         DocId = input.DocId, PatientId = input.PatientId, SrvId = MapPilot(input.SrvId), ToothId = input.ToothId
     };
+
+    public List<ProdModels.NoteDetailEprsc> MapProductionDetails(IReadOnlyList<PrescriptionDetailInput> items)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        return items.Select(Map).ToList();
+    }
+
+    public List<PilotModels.NoteDetailEprsc> MapPilotDetails(IReadOnlyList<PrescriptionDetailInput> items)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        return items.Select(MapPilot).ToList();
+    }
+
+    public ProdApiModels.NursingActionRequest MapProduction(NursingActionInput input)
+    {
+        Validate(input);
+        return new() { SiamId = input.SiamId, NoteDetailsEprscIds = input.NoteDetailsEprscIds.Select(id => (long?)id).ToList(), NurseNationalCode = input.NurseNationalCode };
+    }
+
+    public PilotModels.NursingActionRequest MapPilot(NursingActionInput input)
+    {
+        Validate(input);
+        return new() { SiamId = input.SiamId, NoteDetailsEprscIds = input.NoteDetailsEprscIds.Select(id => (long?)id).ToList(), NurseNationalCode = input.NurseNationalCode };
+    }
+
+    public ProdApiModels.PatientIllnessRequest MapProduction(PatientIllnessInput input)
+    {
+        Validate(input);
+        return new()
+        {
+            PatientNationalCode = input.PatientNationalCode, IllId = input.IllId, MobileNumber = input.MobileNumber, SiamId = input.SiamId, InputType = 1,
+            Type = input.Type switch { PatientIllnessType.One => ProdApiModels.PatientIllnessRequest_type.One, PatientIllnessType.Two => ProdApiModels.PatientIllnessRequest_type.Two, PatientIllnessType.Three => ProdApiModels.PatientIllnessRequest_type.Three, _ => null }
+        };
+    }
+
+    public PilotApiModels.PatientIllnessRequest MapPilot(PatientIllnessInput input)
+    {
+        Validate(input);
+        return new()
+        {
+            PatientNationalCode = input.PatientNationalCode, IllId = input.IllId, MobileNumber = input.MobileNumber, SiamId = input.SiamId, InputType = 1,
+            Type = input.Type switch { PatientIllnessType.One => PilotApiModels.PatientIllnessRequest_type.One, PatientIllnessType.Two => PilotApiModels.PatientIllnessRequest_type.Two, PatientIllnessType.Three => PilotApiModels.PatientIllnessRequest_type.Three, _ => null }
+        };
+    }
+
+    private static void Validate(NursingActionInput input)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        Required("siamId", input.SiamId);
+        Required("nurseNationalCode", input.NurseNationalCode);
+        if (input.NoteDetailsEprscIds is null || input.NoteDetailsEprscIds.Count == 0) throw new TaminRequestValidationException("noteDetailsEprscIds", "at least one item is required");
+    }
+
+    private static void Validate(PatientIllnessInput input)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        Required("patientNationalCode", input.PatientNationalCode);
+        Required("mobileNumber", input.MobileNumber);
+        Required("siamId", input.SiamId);
+    }
+
+    private static void Required(string field, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) throw new TaminRequestValidationException(field, "a value is required");
+    }
 
     private static void Validate(PrescriptionCreateInput input)
     {

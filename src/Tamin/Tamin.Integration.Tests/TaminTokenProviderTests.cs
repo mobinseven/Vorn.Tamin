@@ -126,6 +126,28 @@ public sealed class TaminTokenProviderTests
         Assert.IsType<InvalidOperationException>(failure.InnerException);
     }
 
+    [Fact]
+    public async Task Transient_refresh_failure_keeps_the_refresh_token_for_a_later_attempt()
+    {
+        var exchange = new RecordingExchange { RefreshFailure = new HttpRequestException("network down") };
+        var provider = Provider(exchange);
+        await provider.CompleteAuthorizationAsync("code", "https://callback.example", new string('a', 43));
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => provider.GetAuthorizationTokenAsync(new Uri("https://soa.tamin.ir/resource")));
+        await Assert.ThrowsAsync<HttpRequestException>(() => provider.GetAuthorizationTokenAsync(new Uri("https://soa.tamin.ir/resource")));
+        Assert.Equal(2, exchange.RefreshCalls);
+    }
+
+    [Fact]
+    public async Task Rejected_refresh_token_requires_reauthorization()
+    {
+        var exchange = new RecordingExchange { RefreshFailure = new HttpRequestException("rejected", null, System.Net.HttpStatusCode.BadRequest) };
+        var provider = Provider(exchange);
+        await provider.CompleteAuthorizationAsync("code", "https://callback.example", new string('a', 43));
+
+        await Assert.ThrowsAsync<TaminReauthorizationRequiredException>(() => provider.GetAuthorizationTokenAsync(new Uri("https://soa.tamin.ir/resource")));
+    }
+
     private static TaminTokenProvider Provider(IDoctorTokenExchange exchange) => new(exchange, "client", "audience", ["soa.tamin.ir"]);
 
     private sealed class RecordingExchange : IDoctorTokenExchange

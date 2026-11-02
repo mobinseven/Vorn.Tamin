@@ -22,14 +22,20 @@ Moves the contract from the earlier `docs/EP-TAMIN-API.md` transcription (docume
   - `ParTarefGroup.parGrpCode` enum values change from the wire values `0.00` to `0.04` to `000` to `004`; the generated `ParTarefGroup_parGrpCode` member values on the wire change accordingly.
   - Pilot `AuthorizationCodeTokenRequest.ClientId` changes from `string?` to the enum `AuthorizationCodeTokenRequest_client_id`, and the authorize query parameter `ClientId` from `string?` to the enum `GetClient_idQueryParameterType`; the only value is `portal-js`.
   - `NoteDetailsReferralResponse`, `ReferralComplaintResponse` and `ReferralIcd10Response` replace the request-shaped models in `ReferralFeedbackPrescription.noteDetailsReferralList` and hospitalization-order responses.
-- `Tamin.Integration`:
+- `Tamin.Integration` public surface, replaced by the `ITaminClient` facade:
+  - New: `ITaminClient`, with one method per contract operation and the same signatures in both environments, created by `TaminClient.CreateProduction` or `TaminClient.CreatePilot` from `TaminClientOptions`. Callers no longer use Kiota types.
+  - Removed from the public API: `TaminClientFactory`, `TaminClientBases`, `ProductionTaminClients`, `PilotTaminClients`, `TaminMappingService` and its five interfaces, `PrescriptionRequestMapper` and `IPrescriptionRequestMapper`, `TaminTokenProvider`, `TaminDoctorTokenExchange`, `IDoctorTokenExchange`, `DoctorToken`, `DoctorAuthorizationCode`, `TaminResponseHandler` and `TaminTransientFaultHandler`. Use `TaminClient.CreateCodeVerifier` in place of `TaminTokenProvider.CreateCodeVerifier`.
+  - Hosts now come from the OpenAPI documents; base URLs can no longer be supplied.
+  - Responses without a schema now hold the actual response body in `UnconstrainedResponse.Payload`, including array roots.
+  - Failure logs no longer include the response body.
+  - A network or 5xx failure during token refresh now throws `HttpRequestException` and keeps the refresh token. It used to clear the token and require a new login.
   - `PrescriptionCreateInput`: `Complaint` is replaced by `NoteHeadEprscSupplementary` (moved after `NoteDetailsReferralList`), `Mobile` is now `string?`, and `SiamId` and `Terminology` are new trailing parameters.
   - `PrescriptionDetailInput`: the `DiagnosisID` and dictionary-typed `NoteDetailDrug` parameters are replaced by a single `NoteDetailDrug` of type `DiagnosisIdInput`; `DoseCode` and `MethodUsage` are new. The parameter order changed.
   - `PrescriptionRequestMapper` no longer requires `Mobile`; it still rejects a blank (empty or whitespace) value.
   - `ReferralCartableDto` no longer has `Id`, `MasterParent`, `MasterChild` and `ReferralDate` (the guide does not document them at that level).
   - `HospitalizationOrderDto` has a new trailing `PatientNationalCode` parameter.
   - `INursingService.MapUnclaimedPrescriptions` and `MapSaveActions` now take `Tamin.Client.Api.Prod.Models.JsonObject` (they took the SOA model).
-  - The number of opaque (`UnconstrainedResponse`) operations is now 30 (was 29).
+  - 29 operations return `UnconstrainedResponse`. The earlier figure of 30 also counted a pilot-only mapper.
 - Contract tooling: `npm ci` now also installs `ajv` and `js-yaml`, which are declared as devDependencies.
 
 ### Added
@@ -38,6 +44,7 @@ Moves the contract from the earlier `docs/EP-TAMIN-API.md` transcription (docume
   - `TaminMappingService`: `MapDosageForms`, `MapMedicationInstructionsByDosageForm`, `MapReferralFeedbackEntries`, `MapDoctorNursingPrescriptions`, `MapHospitalizationOrders(Api...)` and `MapDoctorActiveCenters`, with pilot overloads where the pilot models differ.
 - Request fields `terminology`, `siamId`, `noteHeadEprscSupplementary`, `doseCode`, `methodUsage` and `Special.terminology`, mapped by `PrescriptionRequestMapper`.
 - Response fields `parTarefGrp` on `ServiceDetails`, and the nursing-prescription item members the guide documents (`noteDetailDrug`, `timesAday`, `dose`, `doseCode`, `drugInstruction`, `illnessId`, `planId`, `drugAmntId`, `drugInstId`, `toothId`, `referenceStatus`).
+- `NursingPrescriptionItem` now declares `isBrand`, `isPayable`, `organId`, `organDesc`, `organDet`, `organDetDesc`, `illnessDesc`, `planDesc`, `confirmStatusflag`, `noteHeadEprscId`, `repeatDays`, `messages`, `dialysisType`, `repeat`, `dateDo` and `isDentalService` without a type, because they are null in every guide sample (p53-56).
 - Conformance checks against the guide: `openapi/tamin-route-manifest.json`, `scripts/verify-tamin-conformance.ps1` and the sample payloads in `tests/tamin-contract-fixtures`; `verify-tamin-contracts.ps1` runs them.
 
 ### Changed
@@ -46,6 +53,7 @@ Moves the contract from the earlier `docs/EP-TAMIN-API.md` transcription (docume
 - Updated implementation-status documentation to describe only contract-backed public SDK surfaces.
 
 ### Fixed
+- `getReferralPrescription` and `getReferredServicePrescription` no longer risk losing leading zeros from national codes: the generated indexers for these routes take a `long`, so the facade passes the route value as a string. Callers using the generated clients directly must still avoid those indexers.
 - Corrected stale documentation and changelog claims for non-existent identity, pharmacy, paraclinic, pricing, allowed-count, and entitlement helper APIs.
 
 ## [0.1.0] - Initial Release

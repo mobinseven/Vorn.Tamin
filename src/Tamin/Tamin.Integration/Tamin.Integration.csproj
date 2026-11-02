@@ -1,6 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Tamin.Integration.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../Tamin.Client.Account/Tamin.Client.Account.csproj" />
     <ProjectReference Include="../Tamin.Client.Soa/Tamin.Client.Soa.csproj" />
     <ProjectReference Include="../Tamin.Client.Api/Tamin.Client.Api.csproj" />
