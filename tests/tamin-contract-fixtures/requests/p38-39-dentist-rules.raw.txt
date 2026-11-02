@@ -1,0 +1,21 @@
+{
+"srvId": {
+                "srvType": {
+                    "srvType": "17"
+                },
+                "srvCode": "0000840462"
+            },
+"patientId": "**********",
+"docId": "**********",
+"toothId": "12",
+"allGridData": [
+        {
+            "srvId": {
+                "srvType": {
+                    "srvType": "17"
+                },
+                "srvCode": "00000D1352",
+            },
+            "toothId": "12"
+        }
+    ]

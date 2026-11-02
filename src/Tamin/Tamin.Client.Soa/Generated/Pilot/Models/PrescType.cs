@@ -30,7 +30,7 @@ namespace Tamin.Client.Soa.Pilot.Models
 #else
         public string PrescTypeDesc { get; private set; }
 #endif
-        /// <summary>1 drug; 2 paraclinical; 3 visit; 5 services; 6 referred services; 7 doctor referral; 8 doctor-referral feedback; 9 hospitalization order.</summary>
+        /// <summary>1 drug; 2 paraclinical (srvType 02 through 08 and 11 through 14 only, p64); 3 visit; 5 services; 6 referred services; 7 doctor referral; 8 doctor-referral feedback; 9 hospitalization order.</summary>
         public int? PrescTypeId { get; set; }
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Pilot.Models.PrescType"/> and sets the default values.

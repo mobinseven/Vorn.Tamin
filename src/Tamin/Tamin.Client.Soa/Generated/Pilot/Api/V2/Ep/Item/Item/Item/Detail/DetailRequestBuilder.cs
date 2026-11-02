@@ -12,7 +12,7 @@ using Tamin.Client.Soa.Pilot.Models;
 namespace Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item.Detail
 {
     /// <summary>
-    /// Builds and executes requests for operations under \api\v2\ep\{headerID}\{docNationalCode}\{docId}\detail
+    /// Builds and executes requests for operations under \api\v2\ep\{header-id}\{docNatioanlCode-id}\{docId}\detail
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class DetailRequestBuilder : BaseRequestBuilder
@@ -22,7 +22,7 @@ namespace Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item.Detail
         /// </summary>
         /// <param name="pathParameters">Path parameters for the request</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public DetailRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/v2/ep/{headerID}/{docNationalCode}/{docId}/detail", pathParameters)
+        public DetailRequestBuilder(Dictionary<string, object> pathParameters, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/v2/ep/{header%2Did}/{docNatioanlCode%2Did}/{docId}/detail", pathParameters)
         {
         }
         /// <summary>
@@ -30,7 +30,7 @@ namespace Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.Item.Item.Detail
         /// </summary>
         /// <param name="rawUrl">The raw URL to use for the request builder.</param>
         /// <param name="requestAdapter">The request adapter to use to execute the requests.</param>
-        public DetailRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/v2/ep/{headerID}/{docNationalCode}/{docId}/detail", rawUrl)
+        public DetailRequestBuilder(string rawUrl, IRequestAdapter requestAdapter) : base(requestAdapter, "{+baseurl}/api/v2/ep/{header%2Did}/{docNatioanlCode%2Did}/{docId}/detail", rawUrl)
         {
         }
         /// <summary>

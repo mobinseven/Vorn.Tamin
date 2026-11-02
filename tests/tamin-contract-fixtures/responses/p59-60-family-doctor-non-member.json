@@ -1,0 +1,10 @@
+{
+  "status": 200,
+  "family": "SUCCESSFUL",
+  "reason": "OK",
+  "traceId": "63854023-1eb1-4f68-a2c6-9d00d9a83c65",
+  "data": {
+    "price": "مراجعه خارج از پزشک خانواده",
+    "familyDoctor": false
+  }
+}

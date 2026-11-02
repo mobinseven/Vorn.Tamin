@@ -1,0 +1,23 @@
+{
+    "status": 200,
+    "family": "SUCCESSFUL",
+    "reason": "OK",
+    "data": {
+        "noteDetailsReferrals": [
+            {
+                "specCode": "00199",
+                "specDesc": "بیولوژی پزشکی",
+                "specGRP": "6",
+                "docComment": null,
+                "status": "1",
+                "statusstDate": "13900101",
+                "typeSpec": null,
+                "maxNormal": null,
+                "maxSpecial": null,
+                "lstatus": "0"
+                "referralDate": 1792075765000,
+            }
+        ],
+        "count": 1
+    }
+}

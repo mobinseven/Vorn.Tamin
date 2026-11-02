@@ -1,0 +1,34 @@
+{
+  "patient": "0000000000",
+  "prescType": {
+    "prescTypeId": "01"
+  },
+  "prescDate": "14050802",
+  "docId": "000000000",
+  "docMobileNo": "09120000000",
+  "docNationalCode": "000000000",
+  "comments": "",
+  "terminology": "SNOMED",
+  "expireDate": "14051025",
+  "noteDetailEprscs": [
+    {
+      "srvId": {
+        "srvType": {
+          "srvType": "01"
+        },
+        "srvCode": "00125"
+      },
+      "srvQty": 1,
+      "timesAday": {
+        "drugAmntId": 580
+      },
+      "drugInstruction": {
+        "drugInstId": 2546009
+      },
+      "doseCode": "231271000",
+      "methodUsage": {
+        "id": 12
+      }
+    }
+  ]
+}

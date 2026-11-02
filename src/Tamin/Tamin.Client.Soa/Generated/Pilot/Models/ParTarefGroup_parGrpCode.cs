@@ -3,27 +3,27 @@ using System.Runtime.Serialization;
 using System;
 namespace Tamin.Client.Soa.Pilot.Models
 {
-    /// <summary>0.01 pathology; 0.02 genetics; 0.03 global genetics; 0.00 unknown; 0.04 medical diagnostics. ASCII digits normalize the localized numerals printed in the source.</summary>
+    /// <summary>001 pathology; 002 genetics; 003 global genetics; 000 unknown; 004 medical diagnostics (p18). The codes are three-digit strings; ASCII digits normalize the localized numerals printed in the source.</summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public enum ParTarefGroup_parGrpCode
     {
-        [EnumMember(Value = "0.00")]
+        [EnumMember(Value = "000")]
         #pragma warning disable CS1591
         ZeroZeroZero,
         #pragma warning restore CS1591
-        [EnumMember(Value = "0.01")]
+        [EnumMember(Value = "001")]
         #pragma warning disable CS1591
         ZeroZeroOne,
         #pragma warning restore CS1591
-        [EnumMember(Value = "0.02")]
+        [EnumMember(Value = "002")]
         #pragma warning disable CS1591
         ZeroZeroTwo,
         #pragma warning restore CS1591
-        [EnumMember(Value = "0.03")]
+        [EnumMember(Value = "003")]
         #pragma warning disable CS1591
         ZeroZeroThree,
         #pragma warning restore CS1591
-        [EnumMember(Value = "0.04")]
+        [EnumMember(Value = "004")]
         #pragma warning disable CS1591
         ZeroZeroFour,
         #pragma warning restore CS1591

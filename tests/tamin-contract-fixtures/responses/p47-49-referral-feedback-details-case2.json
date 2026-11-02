@@ -1,0 +1,85 @@
+{
+  "status": 200,
+  "family": "SUCCESSFUL",
+  "reason": "OK",
+  "data": {
+    "total": 2,
+    "list": [
+      {
+        "noteHeadEprscId": 9149988022,
+        "patient": "0000000000",
+        "prescType": {
+          "prescTypeId": 2,
+          "prescTypeCode": "02",
+          "prescTypeDesc": "پاراکلینیک"
+        },
+        "prescDate": null,
+        "comments": null,
+        "noteDetailEprscs": [
+          {
+            "noteDetailsEprscId": 9149988023,
+            "srvId": {
+              "srvId": 84364,
+              "srvType": {
+                "srvType": "02",
+                "srvTypeDes": "آزمایشگاه",
+                "status": "1",
+                "statusstDate": "13940101",
+                "custType": "4",
+                "prescTypeId": 2,
+                "headExpireDate": 62
+              },
+              "srvCode": "030246-300",
+              "srvName": "30246-3 - CMV - PCR ???? ???? CMV /???",
+              "srvName2": "30246-3 - CMV - Cytomegalovirus DNA [Presence] in ",
+              "srvBimSw": "1",
+              "srvSex": null,
+              "srvPrice": 564650,
+              "srvPriceDate": "13990201",
+              "doseCode": null,
+              "formCode": null,
+              "parTarefGrp": {
+                "parGrpCode": "002",
+                "parGrpDesc": "",
+                "parGrpRem": "1",
+                "status": "1",
+                "statusStDate": "13830101"
+              },
+              "status": "1",
+              "statusstDate": "13991214",
+              "bGType": null,
+              "gSrvCode": null,
+              "agreementFlag": null,
+              "isDeleted": "0",
+              "visible": null,
+              "dentalServiceType": null,
+              "wsSrvCode": "030246-300",
+              "hosprescType": "0",
+              "srvRule": null,
+              "countIsRestricted": null,
+              "drugWarning": "0",
+              "terminology": null,
+              "srvCodeComplete": "030246-300"
+            },
+            "srvQty": 1,
+            "dateDo": null
+          }
+        ],
+        "noteDetailsReferralList": null
+      },
+      {
+        "noteHeadEprscId": 9149982811,
+        "patient": "0000000000",
+        "prescType": {
+          "prescTypeId": 8,
+          "prescTypeCode": "08",
+          "prescTypeDesc": ""
+        },
+        "prescDate": null,
+        "comments": "توضیحات پزشک در بازخورد ارجاع انجام شده",
+        "noteDetailEprscs": [],
+        "noteDetailsReferralList": null
+      }
+    ]
+  }
+}

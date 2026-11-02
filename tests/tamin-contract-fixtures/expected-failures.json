@@ -1,0 +1,206 @@
+{
+  "$comment": "Known, intentional conflicts between PDF samples (v1.10.1) and the OpenAPI schemas. The checker requires each listed fixture/environment to fail with exactly these errors (path = JSON pointer into the sample, keyword = failing JSON Schema keyword, unknownProperty = field the schema does not declare, json-syntax = sample is not valid JSON). A listed item that starts passing fails the check, so remove entries when the spec or this list is fixed. Do not edit samples or loosen schemas to clear an entry.",
+  "expectedFailures": [
+    {
+      "fixture": "p20-21-dentistry-request",
+      "page": 21,
+      "reason": "p20 states isDentalService is a string \"0\"/\"1\", but the p21 sample sends the number 1. The spec follows the prose (string enum 0/1); the sample is kept verbatim.",
+      "errors": [
+        {
+          "path": "/noteDetailEprscs/0/isDentalService",
+          "keyword": "type"
+        },
+        {
+          "path": "/noteDetailEprscs/0/isDentalService",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "fixture": "p26-27-nursing-request",
+      "envs": [
+        "prod"
+      ],
+      "page": 26,
+      "reason": "The p26 sample carries clientId, but p15 declares clientId a pilot-only field, so the production request schema does not declare it. The pilot run passes.",
+      "errors": [
+        {
+          "path": "/clientId",
+          "keyword": "unknownProperty"
+        }
+      ]
+    },
+    {
+      "fixture": "p30-31-drug-snomed-request",
+      "page": 30,
+      "reason": "The p30 sample sends prescTypeId as the string \"01\", while the p15 table types it Integer (1) and the enum is integer. The spec follows the table; the sample is kept verbatim.",
+      "errors": [
+        {
+          "path": "/prescType/prescTypeId",
+          "keyword": "type"
+        },
+        {
+          "path": "/prescType/prescTypeId",
+          "keyword": "enum"
+        }
+      ]
+    },
+    {
+      "fixture": "p38-39-dentist-rules-request-raw",
+      "page": 39,
+      "reason": "The p38-39 sample is not valid JSON: trailing comma after srvCode \"00000D1352\" and the closing brace of the object is missing. A syntax-only repaired copy is validated separately.",
+      "errors": [
+        {
+          "path": "",
+          "keyword": "json-syntax"
+        }
+      ]
+    },
+    {
+      "fixture": "p49-50-patient-open-referrals-response-raw",
+      "page": 50,
+      "reason": "The p49-50 sample is not valid JSON: comma missing after \"lstatus\": \"0\" and trailing comma after referralDate. A syntax-only repaired copy is validated separately.",
+      "errors": [
+        {
+          "path": "",
+          "keyword": "json-syntax"
+        }
+      ]
+    },
+    {
+      "fixture": "p53-56-doctor-nursing-prescriptions-response",
+      "page": 53,
+      "reason": "The p53-56 sample returns 16 prescription-detail fields per item that the response schema does not declare: repeat, isBrand, dateDo, isPayable, organId, organDesc, illnessDesc, planDesc, organDet, organDetDesc, confirmStatusflag, isDentalService, noteHeadEprscId, repeatDays, messages, dialysisType. All are null in the sample, so no type can be inferred and the guide documents none for them; repeat, dateDo and isDentalService are additionally undecided pending pilot testing. The fields that have a documented request-side type are declared nullable. Spec gap in optional response fields; report, do not loosen.",
+      "errors": [
+        {
+          "path": "/list/0/noteDetailEprscs/0/repeat",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/isBrand",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/dateDo",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/isPayable",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/organId",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/organDesc",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/illnessDesc",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/planDesc",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/organDet",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/organDetDesc",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/confirmStatusflag",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/isDentalService",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/noteHeadEprscId",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/repeatDays",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/messages",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/0/dialysisType",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/repeat",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/isBrand",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/dateDo",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/isPayable",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/organId",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/organDesc",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/illnessDesc",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/planDesc",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/organDet",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/organDetDesc",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/confirmStatusflag",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/isDentalService",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/noteHeadEprscId",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/repeatDays",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/messages",
+          "keyword": "unknownProperty"
+        },
+        {
+          "path": "/list/0/noteDetailEprscs/1/dialysisType",
+          "keyword": "unknownProperty"
+        }
+      ]
+    }
+  ]
+}

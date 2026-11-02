@@ -6,8 +6,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
+using Tamin.Client.Api.Prod.Ep.DoctorActiveClinics;
+using Tamin.Client.Api.Prod.Ep.DoctorActiveHospitals;
+using Tamin.Client.Api.Prod.Ep.DosageForms;
+using Tamin.Client.Api.Prod.Ep.InpatientPrescriptions;
+using Tamin.Client.Api.Prod.Ep.MedicationInstructionsByDosageForm;
+using Tamin.Client.Api.Prod.Ep.NurseCartable;
+using Tamin.Client.Api.Prod.Ep.NursingPrescriptionAction;
 using Tamin.Client.Api.Prod.Ep.PatientAdmission;
 using Tamin.Client.Api.Prod.Ep.PatientDiseasesList;
+using Tamin.Client.Api.Prod.Ep.PatientNursingServices;
 using Tamin.Client.Api.Prod.Ep.ReferralFeedbackQuestions;
 using Tamin.Client.Api.Prod.Ep.ReferralFeedbackResponses;
 using Tamin.Client.Api.Prod.Ep.SavePatientInfoIllness;
@@ -19,6 +27,41 @@ namespace Tamin.Client.Api.Prod.Ep
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class EpRequestBuilder : BaseRequestBuilder
     {
+        /// <summary>The doctorActiveClinics property</summary>
+        public global::Tamin.Client.Api.Prod.Ep.DoctorActiveClinics.DoctorActiveClinicsRequestBuilder DoctorActiveClinics
+        {
+            get => new global::Tamin.Client.Api.Prod.Ep.DoctorActiveClinics.DoctorActiveClinicsRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The doctorActiveHospitals property</summary>
+        public global::Tamin.Client.Api.Prod.Ep.DoctorActiveHospitals.DoctorActiveHospitalsRequestBuilder DoctorActiveHospitals
+        {
+            get => new global::Tamin.Client.Api.Prod.Ep.DoctorActiveHospitals.DoctorActiveHospitalsRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The dosageForms property</summary>
+        public global::Tamin.Client.Api.Prod.Ep.DosageForms.DosageFormsRequestBuilder DosageForms
+        {
+            get => new global::Tamin.Client.Api.Prod.Ep.DosageForms.DosageFormsRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The inpatientPrescriptions property</summary>
+        public global::Tamin.Client.Api.Prod.Ep.InpatientPrescriptions.InpatientPrescriptionsRequestBuilder InpatientPrescriptions
+        {
+            get => new global::Tamin.Client.Api.Prod.Ep.InpatientPrescriptions.InpatientPrescriptionsRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The medicationInstructionsByDosageForm property</summary>
+        public global::Tamin.Client.Api.Prod.Ep.MedicationInstructionsByDosageForm.MedicationInstructionsByDosageFormRequestBuilder MedicationInstructionsByDosageForm
+        {
+            get => new global::Tamin.Client.Api.Prod.Ep.MedicationInstructionsByDosageForm.MedicationInstructionsByDosageFormRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The nurseCartable property</summary>
+        public global::Tamin.Client.Api.Prod.Ep.NurseCartable.NurseCartableRequestBuilder NurseCartable
+        {
+            get => new global::Tamin.Client.Api.Prod.Ep.NurseCartable.NurseCartableRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The nursingPrescriptionAction property</summary>
+        public global::Tamin.Client.Api.Prod.Ep.NursingPrescriptionAction.NursingPrescriptionActionRequestBuilder NursingPrescriptionAction
+        {
+            get => new global::Tamin.Client.Api.Prod.Ep.NursingPrescriptionAction.NursingPrescriptionActionRequestBuilder(PathParameters, RequestAdapter);
+        }
         /// <summary>The patientAdmission property</summary>
         public global::Tamin.Client.Api.Prod.Ep.PatientAdmission.PatientAdmissionRequestBuilder PatientAdmission
         {
@@ -28,6 +71,11 @@ namespace Tamin.Client.Api.Prod.Ep
         public global::Tamin.Client.Api.Prod.Ep.PatientDiseasesList.PatientDiseasesListRequestBuilder PatientDiseasesList
         {
             get => new global::Tamin.Client.Api.Prod.Ep.PatientDiseasesList.PatientDiseasesListRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The patientNursingServices property</summary>
+        public global::Tamin.Client.Api.Prod.Ep.PatientNursingServices.PatientNursingServicesRequestBuilder PatientNursingServices
+        {
+            get => new global::Tamin.Client.Api.Prod.Ep.PatientNursingServices.PatientNursingServicesRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>The referralFeedbackQuestions property</summary>
         public global::Tamin.Client.Api.Prod.Ep.ReferralFeedbackQuestions.ReferralFeedbackQuestionsRequestBuilder ReferralFeedbackQuestions

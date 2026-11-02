@@ -12,7 +12,6 @@ using Tamin.Client.Soa.Pilot.Api.Icd10;
 using Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral;
 using Tamin.Client.Soa.Pilot.Api.Specials;
 using Tamin.Client.Soa.Pilot.Api.V2;
-using Tamin.Client.Soa.Pilot.Api.V7;
 namespace Tamin.Client.Soa.Pilot.Api
 {
     /// <summary>
@@ -50,11 +49,6 @@ namespace Tamin.Client.Soa.Pilot.Api
         public global::Tamin.Client.Soa.Pilot.Api.V2.V2RequestBuilder V2
         {
             get => new global::Tamin.Client.Soa.Pilot.Api.V2.V2RequestBuilder(PathParameters, RequestAdapter);
-        }
-        /// <summary>The v7 property</summary>
-        public global::Tamin.Client.Soa.Pilot.Api.V7.V7RequestBuilder V7
-        {
-            get => new global::Tamin.Client.Soa.Pilot.Api.V7.V7RequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Pilot.Api.ApiRequestBuilder"/> and sets the default values.

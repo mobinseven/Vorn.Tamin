@@ -8,6 +8,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
+using Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.Item.Item.Item;
 using Tamin.Client.Soa.Pilot.Models;
 namespace Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.Item.Item
 {
@@ -17,6 +18,18 @@ namespace Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.It
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class WithSecretaryNationalCodeItemRequestBuilder : BaseRequestBuilder
     {
+        /// <summary>Gets an item from the Tamin.Client.Soa.Pilot.api.noteDetailsReferral.hospitalizationOrder.item.item.item collection</summary>
+        /// <param name="position">Patient national code.</param>
+        /// <returns>A <see cref="global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.Item.Item.Item.WithPatientNationalCodeItemRequestBuilder"/></returns>
+        public global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.Item.Item.Item.WithPatientNationalCodeItemRequestBuilder this[string position]
+        {
+            get
+            {
+                var urlTplParams = new Dictionary<string, object>(PathParameters);
+                urlTplParams.Add("patientNationalCode", position);
+                return new global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.Item.Item.Item.WithPatientNationalCodeItemRequestBuilder(urlTplParams, RequestAdapter);
+            }
+        }
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.Item.Item.WithSecretaryNationalCodeItemRequestBuilder"/> and sets the default values.
         /// </summary>

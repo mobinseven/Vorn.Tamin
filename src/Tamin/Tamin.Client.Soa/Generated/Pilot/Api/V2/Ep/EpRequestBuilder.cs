@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
+using Tamin.Client.Soa.Pilot.Api.V2.Ep.FindNoteReferral;
 using Tamin.Client.Soa.Pilot.Api.V2.Ep.Item;
 using Tamin.Client.Soa.Pilot.Api.V2.Ep.Update;
 namespace Tamin.Client.Soa.Pilot.Api.V2.Ep
@@ -16,6 +17,11 @@ namespace Tamin.Client.Soa.Pilot.Api.V2.Ep
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class EpRequestBuilder : BaseRequestBuilder
     {
+        /// <summary>The findNoteReferral property</summary>
+        public global::Tamin.Client.Soa.Pilot.Api.V2.Ep.FindNoteReferral.FindNoteReferralRequestBuilder FindNoteReferral
+        {
+            get => new global::Tamin.Client.Soa.Pilot.Api.V2.Ep.FindNoteReferral.FindNoteReferralRequestBuilder(PathParameters, RequestAdapter);
+        }
         /// <summary>The update property</summary>
         public global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Update.UpdateRequestBuilder Update
         {
@@ -23,14 +29,14 @@ namespace Tamin.Client.Soa.Pilot.Api.V2.Ep
         }
         /// <summary>Gets an item from the Tamin.Client.Soa.Pilot.api.v2.ep.item collection</summary>
         /// <param name="position">Unique prescription number returned as head_EPRSC_ID.</param>
-        /// <returns>A <see cref="global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.WithHeaderItemRequestBuilder"/></returns>
-        public global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.WithHeaderItemRequestBuilder this[long position]
+        /// <returns>A <see cref="global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.HeaderItemRequestBuilder"/></returns>
+        public global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.HeaderItemRequestBuilder this[long position]
         {
             get
             {
                 var urlTplParams = new Dictionary<string, object>(PathParameters);
-                urlTplParams.Add("headerID", position);
-                return new global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.WithHeaderItemRequestBuilder(urlTplParams, RequestAdapter);
+                urlTplParams.Add("header%2Did", position);
+                return new global::Tamin.Client.Soa.Pilot.Api.V2.Ep.Item.HeaderItemRequestBuilder(urlTplParams, RequestAdapter);
             }
         }
         /// <summary>

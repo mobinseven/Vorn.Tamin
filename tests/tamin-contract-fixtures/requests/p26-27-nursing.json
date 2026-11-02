@@ -1,0 +1,45 @@
+{
+  "patient": "*********",
+  "mobile": "*********",
+  "prescType": {
+    "prescTypeId": 5
+  },
+  "prescDate": "14030106",
+  "docId": "*******",
+  "docMobileNo": "09110000000",
+  "docNationalCode": "*********",
+  "creatorType": "7",
+  "siamId": "00000000-0000-0000-0000-000000000000",
+  "comments": "",
+  "expireDate": "14021130",
+  "clientId": "sdsdsd",
+  "noteDetailEprscs": [
+    {
+      "srvId": {
+        "srvType": {
+          "srvType": "21"
+        },
+        "srvCode": "0000903575"
+      },
+      "srvQty": 1
+    },
+    {
+      "srvId": {
+        "srvType": {
+          "srvType": "21"
+        },
+        "srvCode": "0000903570"
+      },
+      "srvQty": 1
+    },
+    {
+      "srvId": {
+        "srvType": {
+          "srvType": "17"
+        },
+        "srvCode": "0000602595"
+      },
+      "srvQty": 1
+    }
+  ]
+}

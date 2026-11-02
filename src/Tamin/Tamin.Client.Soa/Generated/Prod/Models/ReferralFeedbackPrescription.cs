@@ -33,10 +33,10 @@ namespace Tamin.Client.Soa.Prod.Models
         /// <summary>The noteDetailsReferralList property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public List<global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferral>? NoteDetailsReferralList { get; set; }
+        public List<global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferralResponse>? NoteDetailsReferralList { get; set; }
 #nullable restore
 #else
-        public List<global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferral> NoteDetailsReferralList { get; set; }
+        public List<global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferralResponse> NoteDetailsReferralList { get; set; }
 #endif
         /// <summary>The noteHeadEprscId property</summary>
         public long? NoteHeadEprscId { get; set; }
@@ -91,7 +91,7 @@ namespace Tamin.Client.Soa.Prod.Models
             {
                 { "comments", n => { Comments = n.GetStringValue(); } },
                 { "noteDetailEprscs", n => { NoteDetailEprscs = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.PrescriptionDetailItem>(global::Tamin.Client.Soa.Prod.Models.PrescriptionDetailItem.CreateFromDiscriminatorValue)?.AsList(); } },
-                { "noteDetailsReferralList", n => { NoteDetailsReferralList = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferral>(global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferral.CreateFromDiscriminatorValue)?.AsList(); } },
+                { "noteDetailsReferralList", n => { NoteDetailsReferralList = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferralResponse>(global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferralResponse.CreateFromDiscriminatorValue)?.AsList(); } },
                 { "noteHeadEprscId", n => { NoteHeadEprscId = n.GetLongValue(); } },
                 { "patient", n => { Patient = n.GetStringValue(); } },
                 { "prescDate", n => { PrescDate = n.GetStringValue(); } },
@@ -107,7 +107,7 @@ namespace Tamin.Client.Soa.Prod.Models
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("comments", Comments);
             writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.PrescriptionDetailItem>("noteDetailEprscs", NoteDetailEprscs);
-            writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferral>("noteDetailsReferralList", NoteDetailsReferralList);
+            writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferralResponse>("noteDetailsReferralList", NoteDetailsReferralList);
             writer.WriteLongValue("noteHeadEprscId", NoteHeadEprscId);
             writer.WriteStringValue("patient", Patient);
             writer.WriteStringValue("prescDate", PrescDate);

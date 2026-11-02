@@ -83,16 +83,9 @@ namespace Tamin.Client.Account.Pilot.Auth.Server.Authorize
         [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
         public partial class AuthorizeRequestBuilderGetQueryParameters 
         {
-            /// <summary>Client identifier issued to the integrating company.</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
+            /// <summary>Client identifier issued to the integrating company. The source requires the value portal-js in the pilot environment (p13).</summary>
             [QueryParameter("client_id")]
-            public string? ClientId { get; set; }
-#nullable restore
-#else
-            [QueryParameter("client_id")]
-            public string ClientId { get; set; }
-#endif
+            public global::Tamin.Client.Account.Pilot.Auth.Server.Authorize.GetClient_idQueryParameterType? ClientId { get; set; }
             /// <summary>BASE64URL-ENCODE(SHA256(ASCII(code_verifier))).</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable

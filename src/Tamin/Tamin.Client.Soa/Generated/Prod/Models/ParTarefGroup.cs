@@ -14,7 +14,7 @@ namespace Tamin.Client.Soa.Prod.Models
     {
         /// <summary>Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.</summary>
         public IDictionary<string, object> AdditionalData { get; set; }
-        /// <summary>0.01 pathology; 0.02 genetics; 0.03 global genetics; 0.00 unknown; 0.04 medical diagnostics. ASCII digits normalize the localized numerals printed in the source.</summary>
+        /// <summary>001 pathology; 002 genetics; 003 global genetics; 000 unknown; 004 medical diagnostics (p18). The codes are three-digit strings; ASCII digits normalize the localized numerals printed in the source.</summary>
         public global::Tamin.Client.Soa.Prod.Models.ParTarefGroup_parGrpCode? ParGrpCode { get; set; }
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Prod.Models.ParTarefGroup"/> and sets the default values.

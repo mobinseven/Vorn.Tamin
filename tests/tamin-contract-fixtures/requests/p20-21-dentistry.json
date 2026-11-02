@@ -1,0 +1,27 @@
+{
+  "patient": "*******",
+  "mobile": "******",
+  "prescType": {
+    "prescTypeId": 5
+  },
+  "prescDate": "14010818",
+  "docId": "000000000",
+  "docMobileNo": "09120000000",
+  "docNationalCode": "0000000000",
+  "comments": "test",
+  "expireDate": "14011018",
+  "creatorType": "4",
+  "noteDetailEprscs": [
+    {
+      "srvId": {
+        "srvType": {
+          "srvType": "17"
+        },
+        "srvCode": "046386-901"
+      },
+      "srvQty": 1,
+      "isDentalService": 1,
+      "toothId": "11"
+    }
+  ]
+}

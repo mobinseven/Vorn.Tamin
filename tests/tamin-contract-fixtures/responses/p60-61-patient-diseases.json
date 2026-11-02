@@ -1,0 +1,51 @@
+{
+  "status": 200,
+  "family": "SUCCESSFUL",
+  "reason": "OK",
+  "traceId": "2bcffbca-f1ee-4e7e-9da0-470ffd7dd6c6",
+  "data": {
+    "total": 4,
+    "list": [
+      {
+        "id": 86,
+        "illText": "رتینوپاتی دیابتی",
+        "status": "1",
+        "statusDate": null,
+        "type": "1",
+        "priorityOrder": null,
+        "codeMapping": "H36.0",
+        "illName": "H36.0"
+      },
+      {
+        "id": 89,
+        "illText": "پرفشاری خون کنترل شده",
+        "status": "1",
+        "statusDate": null,
+        "type": "1",
+        "priorityOrder": null,
+        "codeMapping": "UnderControlHypertesion_I10",
+        "illName": "UnderControlHypertesion_I10"
+      },
+      {
+        "id": 87,
+        "illText": "دیابت نوع دو",
+        "status": "1",
+        "statusDate": null,
+        "type": "1",
+        "priorityOrder": null,
+        "codeMapping": "noninsulin_E11",
+        "illName": "noninsulin_E11"
+      },
+      {
+        "id": 88,
+        "illText": "پرفشاری خون",
+        "status": "1",
+        "statusDate": null,
+        "type": "1",
+        "priorityOrder": null,
+        "codeMapping": "I10",
+        "illName": "I10"
+      }
+    ]
+  }
+}

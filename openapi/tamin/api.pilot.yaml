@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: Tamin Electronic Prescription API - Pilot
-  version: 1.9.7
-  description: Pilot OpenAPI contract transcribed solely from EP-TAMIN-API.md, document version 1.9.7 dated 1405/04/20. Where the source does not define a response payload, the response remains deliberately unconstrained and is identified as such in the companion audit.
+  version: 1.10.1
+  description: Pilot OpenAPI contract transcribed solely from the Tamin electronic-prescription service guide (PDF), document version 1.10.1 dated 1405/08/03; it supersedes the earlier Markdown transcription, which has been removed from the repository. Where the source does not define a response payload, the response remains deliberately unconstrained (an UndocumentedJsonSuccess response with a free-form JSON object).
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 servers:
   - url: https://ep-test.tamin.ir
@@ -176,7 +176,7 @@ components:
   securitySchemes:
     taminOAuth:
       type: oauth2
-      description: PKCE authorization-code authentication documented by Tamin. The source states that the resulting token is used for the remaining services but does not state the HTTP Authorization header format or any scopes.
+      description: PKCE authorization-code authentication documented by Tamin. The source states that the resulting token is used for the remaining services; its only documented use is as a Bearer token in the Authorization header (p30 curl sample). No scopes are documented.
       flows:
         authorizationCode:
           authorizationUrl: https://account-pilot.tamin.ir/auth/server/authorize
@@ -270,12 +270,13 @@ components:
           type:
             - integer
             - 'null'
+          format: int64
           description: Prescription identifier.
-        complementary_Msg:
+        complemantary_Msg:
           type:
             - string
             - 'null'
-          description: Populated on success.
+          description: Populated on success. The wire name is spelled complemantary_Msg in the source (p62).
         error_Code:
           type:
             - string

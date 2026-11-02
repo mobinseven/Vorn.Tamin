@@ -15,13 +15,13 @@ namespace Tamin.Client.Api.Prod.Models
     {
         /// <summary>Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.</summary>
         public IDictionary<string, object> AdditionalData { get; set; }
-        /// <summary>Populated on success.</summary>
+        /// <summary>Populated on success. The wire name is spelled complemantary_Msg in the source (p62).</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
-        public string? ComplementaryMsg { get; set; }
+        public string? ComplemantaryMsg { get; set; }
 #nullable restore
 #else
-        public string ComplementaryMsg { get; set; }
+        public string ComplemantaryMsg { get; set; }
 #endif
         /// <summary>Populated on failure.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -40,7 +40,7 @@ namespace Tamin.Client.Api.Prod.Models
         public string ErrorMsg { get; set; }
 #endif
         /// <summary>Prescription identifier.</summary>
-        public int? HeadEPRSCID { get; set; }
+        public long? HeadEPRSCID { get; set; }
         /// <summary>The primary error message.</summary>
         public override string Message { get => base.Message; }
         /// <summary>Prescription tracking code.</summary>
@@ -70,10 +70,10 @@ namespace Tamin.Client.Api.Prod.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
-                { "complementary_Msg", n => { ComplementaryMsg = n.GetStringValue(); } },
+                { "complemantary_Msg", n => { ComplemantaryMsg = n.GetStringValue(); } },
                 { "error_Code", n => { ErrorCode = n.GetStringValue(); } },
                 { "error_Msg", n => { ErrorMsg = n.GetStringValue(); } },
-                { "head_EPRSC_ID", n => { HeadEPRSCID = n.GetIntValue(); } },
+                { "head_EPRSC_ID", n => { HeadEPRSCID = n.GetLongValue(); } },
                 { "trackingCode", n => { TrackingCode = n.GetIntValue(); } },
             };
         }
@@ -84,10 +84,10 @@ namespace Tamin.Client.Api.Prod.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
-            writer.WriteStringValue("complementary_Msg", ComplementaryMsg);
+            writer.WriteStringValue("complemantary_Msg", ComplemantaryMsg);
             writer.WriteStringValue("error_Code", ErrorCode);
             writer.WriteStringValue("error_Msg", ErrorMsg);
-            writer.WriteIntValue("head_EPRSC_ID", HeadEPRSCID);
+            writer.WriteLongValue("head_EPRSC_ID", HeadEPRSCID);
             writer.WriteIntValue("trackingCode", TrackingCode);
             writer.WriteAdditionalData(AdditionalData);
         }

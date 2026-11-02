@@ -8,7 +8,7 @@ using System;
 namespace Tamin.Client.Soa.Prod.Models
 {
     /// <summary>
-    /// Electronic prescription payload. prescDate cannot be later than the current date. For prescTypeId 3, noteDetailEprscs must be empty. For prescTypeId 1, every srvType must be 01. For prescTypeId 2, srvType must be one of 02 through the documented service types. prescTypeId 6 accepts only medical-service items. Conditional referral, hospitalization, nursing, dentistry, and physiotherapy rules are described on the corresponding properties because the source does not provide a single machine-enforceable discriminator contract.
+    /// Electronic prescription payload. prescDate cannot be later than the current date. For prescTypeId 3, noteDetailEprscs must be empty. For prescTypeId 1, every srvType must be 01. For prescTypeId 2, srvType must be one of 02 through 08 or 11 through 14 (p64). prescTypeId 6 accepts only medical-service items. Conditional referral, hospitalization, nursing, dentistry, and physiotherapy rules are described on the corresponding properties because the source does not provide a single machine-enforceable discriminator contract.
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class PrescriptionCreateRequest : IAdditionalDataHolder, IParsable
@@ -22,14 +22,6 @@ namespace Tamin.Client.Soa.Prod.Models
 #nullable restore
 #else
         public string Comments { get; set; }
-#endif
-        /// <summary>The Complaint property</summary>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-#nullable enable
-        public global::Tamin.Client.Soa.Prod.Models.Complaint? Complaint { get; set; }
-#nullable restore
-#else
-        public global::Tamin.Client.Soa.Prod.Models.Complaint Complaint { get; set; }
 #endif
         /// <summary>Present in the documented dentistry example; its meaning and constraints are not defined.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -71,7 +63,7 @@ namespace Tamin.Client.Soa.Prod.Models
 #else
         public string ExpireDate { get; set; }
 #endif
-        /// <summary>Patient mobile number; validation errors show that it is required and format-checked.</summary>
+        /// <summary>Patient mobile number. The PDF field table (p14-15) does not list this field, but p65 documents errors for an empty or malformed mobile value and the samples on p20 and p26 send it, so it is kept as an optional property.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
         public string? Mobile { get; set; }
@@ -94,6 +86,14 @@ namespace Tamin.Client.Soa.Prod.Models
 #nullable restore
 #else
         public List<global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferral> NoteDetailsReferralList { get; set; }
+#endif
+        /// <summary>Complaint of the prescription (p15).</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public global::Tamin.Client.Soa.Prod.Models.Complaint? NoteHeadEprscSupplementary { get; set; }
+#nullable restore
+#else
+        public global::Tamin.Client.Soa.Prod.Models.Complaint NoteHeadEprscSupplementary { get; set; }
 #endif
         /// <summary>Patient national code.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -121,6 +121,22 @@ namespace Tamin.Client.Soa.Prod.Models
 #endif
         /// <summary>Identifier of the original referral prescription; required for prescTypeId 8.</summary>
         public long? ReferralFeedbackId { get; set; }
+        /// <summary>SIAM identifier of the clinic. Nursing prescriptions must be registered from a clinic, so it is required for them (p26).</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? SiamId { get; set; }
+#nullable restore
+#else
+        public string SiamId { get; set; }
+#endif
+        /// <summary>Coding system of the prescription. Send SNOMED for drug prescriptions that use SNOMED coding (p15, p29).</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? Terminology { get; set; }
+#nullable restore
+#else
+        public string Terminology { get; set; }
+#endif
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Prod.Models.PrescriptionCreateRequest"/> and sets the default values.
         /// </summary>
@@ -147,7 +163,6 @@ namespace Tamin.Client.Soa.Prod.Models
             return new Dictionary<string, Action<IParseNode>>
             {
                 { "comments", n => { Comments = n.GetStringValue(); } },
-                { "Complaint", n => { Complaint = n.GetObjectValue<global::Tamin.Client.Soa.Prod.Models.Complaint>(global::Tamin.Client.Soa.Prod.Models.Complaint.CreateFromDiscriminatorValue); } },
                 { "creatorType", n => { CreatorType = n.GetStringValue(); } },
                 { "docId", n => { DocId = n.GetStringValue(); } },
                 { "docMobileNo", n => { DocMobileNo = n.GetStringValue(); } },
@@ -156,10 +171,13 @@ namespace Tamin.Client.Soa.Prod.Models
                 { "mobile", n => { Mobile = n.GetStringValue(); } },
                 { "noteDetailEprscs", n => { NoteDetailEprscs = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.NoteDetailEprsc>(global::Tamin.Client.Soa.Prod.Models.NoteDetailEprsc.CreateFromDiscriminatorValue)?.AsList(); } },
                 { "noteDetailsReferralList", n => { NoteDetailsReferralList = n.GetCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferral>(global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferral.CreateFromDiscriminatorValue)?.AsList(); } },
+                { "noteHeadEprscSupplementary", n => { NoteHeadEprscSupplementary = n.GetObjectValue<global::Tamin.Client.Soa.Prod.Models.Complaint>(global::Tamin.Client.Soa.Prod.Models.Complaint.CreateFromDiscriminatorValue); } },
                 { "patient", n => { Patient = n.GetStringValue(); } },
                 { "prescDate", n => { PrescDate = n.GetStringValue(); } },
                 { "prescType", n => { PrescType = n.GetObjectValue<global::Tamin.Client.Soa.Prod.Models.PrescType>(global::Tamin.Client.Soa.Prod.Models.PrescType.CreateFromDiscriminatorValue); } },
                 { "referralFeedbackId", n => { ReferralFeedbackId = n.GetLongValue(); } },
+                { "siamId", n => { SiamId = n.GetStringValue(); } },
+                { "terminology", n => { Terminology = n.GetStringValue(); } },
             };
         }
         /// <summary>
@@ -170,7 +188,6 @@ namespace Tamin.Client.Soa.Prod.Models
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("comments", Comments);
-            writer.WriteObjectValue<global::Tamin.Client.Soa.Prod.Models.Complaint>("Complaint", Complaint);
             writer.WriteStringValue("creatorType", CreatorType);
             writer.WriteStringValue("docId", DocId);
             writer.WriteStringValue("docMobileNo", DocMobileNo);
@@ -179,10 +196,13 @@ namespace Tamin.Client.Soa.Prod.Models
             writer.WriteStringValue("mobile", Mobile);
             writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.NoteDetailEprsc>("noteDetailEprscs", NoteDetailEprscs);
             writer.WriteCollectionOfObjectValues<global::Tamin.Client.Soa.Prod.Models.NoteDetailsReferral>("noteDetailsReferralList", NoteDetailsReferralList);
+            writer.WriteObjectValue<global::Tamin.Client.Soa.Prod.Models.Complaint>("noteHeadEprscSupplementary", NoteHeadEprscSupplementary);
             writer.WriteStringValue("patient", Patient);
             writer.WriteStringValue("prescDate", PrescDate);
             writer.WriteObjectValue<global::Tamin.Client.Soa.Prod.Models.PrescType>("prescType", PrescType);
             writer.WriteLongValue("referralFeedbackId", ReferralFeedbackId);
+            writer.WriteStringValue("siamId", SiamId);
+            writer.WriteStringValue("terminology", Terminology);
             writer.WriteAdditionalData(AdditionalData);
         }
     }

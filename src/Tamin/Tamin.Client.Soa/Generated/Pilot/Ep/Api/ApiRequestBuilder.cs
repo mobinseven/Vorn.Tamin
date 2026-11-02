@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
-using Tamin.Client.Soa.Pilot.Ep.Api.V7;
+using Tamin.Client.Soa.Pilot.Ep.Api.V2;
 namespace Tamin.Client.Soa.Pilot.Ep.Api
 {
     /// <summary>
@@ -15,10 +15,10 @@ namespace Tamin.Client.Soa.Pilot.Ep.Api
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class ApiRequestBuilder : BaseRequestBuilder
     {
-        /// <summary>The v7 property</summary>
-        public global::Tamin.Client.Soa.Pilot.Ep.Api.V7.V7RequestBuilder V7
+        /// <summary>The v2 property</summary>
+        public global::Tamin.Client.Soa.Pilot.Ep.Api.V2.V2RequestBuilder V2
         {
-            get => new global::Tamin.Client.Soa.Pilot.Ep.Api.V7.V7RequestBuilder(PathParameters, RequestAdapter);
+            get => new global::Tamin.Client.Soa.Pilot.Ep.Api.V2.V2RequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Pilot.Ep.Api.ApiRequestBuilder"/> and sets the default values.

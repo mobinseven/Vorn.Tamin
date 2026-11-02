@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: Tamin Electronic Prescription API - Production
-  version: 1.9.7
-  description: Production OpenAPI contract transcribed solely from EP-TAMIN-API.md, document version 1.9.7 dated 1405/04/20. Where the source does not define a response payload, the response remains deliberately unconstrained and is identified as such in the companion audit.
+  version: 1.10.1
+  description: Production OpenAPI contract transcribed solely from the Tamin electronic-prescription service guide (PDF), document version 1.10.1 dated 1405/08/03; it supersedes the earlier Markdown transcription, which has been removed from the repository. Where the source does not define a response payload, the response remains deliberately unconstrained (an UndocumentedJsonSuccess response with a free-form JSON object).
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 servers:
   - url: https://soa.tamin.ir
@@ -30,7 +30,7 @@ tags:
   - name: Patient Diseases
     description: Selectable disease lookup and patient disease marking.
 paths:
-  /interface/epresc/SendEpresc/v7:
+  /interface/epresc/SendEpresc/v2:
     post:
       tags:
         - Prescriptions
@@ -47,7 +47,6 @@ paths:
                 summary: Referral-feedback prescription
                 value:
                   patient: '************'
-                  mobile: '***********'
                   prescType:
                     prescTypeId: 8
                   prescDate: '14050325'
@@ -310,7 +309,7 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/UndocumentedJsonSuccess'
-  /interface/epresc/SendEpresc/v7/noteDetailsReferral/count/{nationalCode}/{docId}:
+  /interface/epresc/SendEpresc/v2/noteDetailsReferral/count/{nationalCode}/{docId}:
     get:
       tags:
         - Referrals
@@ -322,7 +321,7 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/UndocumentedJsonSuccess'
-  /interface/epresc/SendEpresc/v7/findNoteReferral/{nationalCode}/{docId}/{trackingCode}:
+  /interface/epresc/SendEpresc/v2/findNoteReferral/{nationalCode}/{docId}/{trackingCode}:
     get:
       tags:
         - Referrals
@@ -340,7 +339,7 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/UndocumentedJsonSuccess'
-  /interface/epresc/SendEpresc/v7/findNoteReferral/{masterId}/{nationalCode}:
+  /interface/epresc/SendEpresc/v2/findNoteReferral/{masterId}/{nationalCode}:
     get:
       tags:
         - Referrals
@@ -363,7 +362,7 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/UndocumentedJsonSuccess'
-  /interface/epresc/SendEpresc/v7/noteDetailsReferral/referredList/{nationalCode}:
+  /interface/epresc/SendEpresc/v2/noteDetailsReferral/referredList/{nationalCode}:
     get:
       tags:
         - Referrals
@@ -379,7 +378,7 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/UndocumentedJsonSuccess'
-  /interface/epresc/SendEpresc/v7/fetchReferralCartable/{docNationalCode}/{patientNationalCode}/{trackingCode}:
+  /interface/epresc/SendEpresc/v2/fetchReferralCartable/{docNationalCode}/{patientNationalCode}/{trackingCode}:
     get:
       tags:
         - Referrals
@@ -420,21 +419,7 @@ paths:
                       specDescReferral: عنوان تخصص پزشک ارجاع دهنده
                       specCodeReferred: کد تخصص پزشک ارجاع شده
                       specDescReferred: عنوان تخصص پزشک ارجاع شده
-                  id: 0
-                  masterParent: 327247893
-                  masterChild: null
-                  referralDate: 1747839599371
-                  docId: null
-                  quantity: 0
-                  specCodeReferral: '00138'
-                  specDescReferral: متخصص قلب و عروق
-                  specCodeReferred: null
-                  specDescReferred: null
-                  icd10Referrals: null
-                  complaints: null
-                  message: null
-                  diagnosisIDs: null
-  /interface/epresc/SendEpresc/v7/referral/noteDetail/{id}/{masterParent}:
+  /interface/epresc/SendEpresc/v2/referral/noteDetail/{id}/{masterParent}:
     get:
       tags:
         - Referrals
@@ -451,7 +436,7 @@ paths:
         - name: masterParent
           in: path
           required: true
-          description: Parent referral identifier from the referral-cartable response.
+          description: Parent referral identifier (masterParent) from the referral feedback list response (p44-45).
           schema:
             type: integer
             format: int64
@@ -498,45 +483,9 @@ paths:
                       maxNormal: null
                       maxSpecial: null
                       lstatus: '0'
+                      referralDate: 1792075765000
                   count: 1
-  /interface/epresc/SendEpresc/v7/cartableNurse/getAll/{siamId}/{nationalCode}:
-    get:
-      tags:
-        - Nursing
-      summary: List unclaimed nursing prescriptions for a clinic
-      operationId: listUnclaimedNursingPrescriptions
-      parameters:
-        - $ref: '#/components/parameters/SiamId'
-        - name: nationalCode
-          in: path
-          required: true
-          description: Patient national code.
-          schema:
-            type: string
-      responses:
-        '200':
-          $ref: '#/components/responses/UndocumentedJsonSuccess'
-  /interface/epresc/SendEpresc/v7/cartableNurse/saveEprsc:
-    post:
-      tags:
-        - Nursing
-      summary: Record nursing actions on prescription items
-      operationId: saveNursingActions
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NursingActionRequest'
-            example:
-              noteDetailsEprscIds:
-                - 1290361
-              nurseNationalCode: '********'
-              siamId: 614E4BCC-8AEE-********-********
-      responses:
-        '200':
-          $ref: '#/components/responses/UndocumentedJsonSuccess'
-  /interface/epresc/SendEpresc/v2/{nationalCode}/{docId}/{trackingCode}/referentalPrescDetail:
+  /interface/epresc/SendEpresc/v2/{nationalCode}/{docId}/{trackingCode}/referentialPrescDetail:
     get:
       tags:
         - Referred Services
@@ -596,11 +545,68 @@ paths:
                     message: ff
                     diagnosisIDs: X46.43
                     docFamily: true
+                    patientNationalCode: '**********'
+  /interface/epresc/SendEpresc/v2/referralList/{referralId}:
+    get:
+      tags:
+        - Referrals
+      summary: List the feedback entries registered for a referral
+      description: Returns the entries the second doctor registered for the referral identified by referralId. The id and masterParent of each entry feed the referral-feedback detail operation (p44-45).
+      operationId: listReferralFeedbackEntries
+      parameters:
+        - name: referralId
+          in: path
+          required: true
+          description: Registered referral identifier, returned as referralId by the referral-cartable operation. Its scalar type is undocumented.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful referral feedback list response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralListResponse'
+              example:
+                status: 200
+                family: SUCCESSFUL
+                reason: OK
+                data:
+                  total: 2
+                  list:
+                    - id: 327241062
+                      masterParent: 327240269
+                      masterChild: 327247893
+                      referralDate: 1750517662000
+                      docId: '**********'
+                      quantity: 1
+                      specCodeReferral: '00100'
+                      specDescReferral: پزشک عمومی
+                      specCodeReferred: '00138'
+                      specDescReferred: متخصص قلب و عروق
+                      icd10Referrals: null
+                      complaints: null
+                      message: بیماری تشخیص داده شده و توضیحات
+                      diagnosisIDs: W27.19
+                    - id: 0
+                      masterParent: 327247893
+                      masterChild: null
+                      referralDate: 1747839599371
+                      docId: null
+                      quantity: 0
+                      specCodeReferral: '00138'
+                      specDescReferral: متخصص قلب و عروق
+                      specCodeReferred: null
+                      specDescReferred: null
+                      icd10Referrals: null
+                      complaints: null
+                      message: null
+                      diagnosisIDs: null
 components:
   securitySchemes:
     taminOAuth:
       type: oauth2
-      description: PKCE authorization-code authentication documented by Tamin. The source states that the resulting token is used for the remaining services but does not state the HTTP Authorization header format or any scopes.
+      description: PKCE authorization-code authentication documented by Tamin. The source states that the resulting token is used for the remaining services; its only documented use is as a Bearer token in the Authorization header (p30 curl sample). No scopes are documented.
       flows:
         authorizationCode:
           authorizationUrl: https://account.tamin.ir/auth/server/authorize
@@ -651,13 +657,6 @@ components:
       description: Prescription tracking code.
       schema:
         type: integer
-    SiamId:
-      name: siamId
-      in: path
-      required: true
-      description: SIAM identifier of the clinic or medical center.
-      schema:
-        type: string
     SiamIdHyphen:
       name: siam-id
       in: path
@@ -752,10 +751,9 @@ components:
     PrescriptionCreateRequest:
       type: object
       additionalProperties: true
-      description: Electronic prescription payload. prescDate cannot be later than the current date. For prescTypeId 3, noteDetailEprscs must be empty. For prescTypeId 1, every srvType must be 01. For prescTypeId 2, srvType must be one of 02 through the documented service types. prescTypeId 6 accepts only medical-service items. Conditional referral, hospitalization, nursing, dentistry, and physiotherapy rules are described on the corresponding properties because the source does not provide a single machine-enforceable discriminator contract.
+      description: Electronic prescription payload. prescDate cannot be later than the current date. For prescTypeId 3, noteDetailEprscs must be empty. For prescTypeId 1, every srvType must be 01. For prescTypeId 2, srvType must be one of 02 through 08 or 11 through 14 (p64). prescTypeId 6 accepts only medical-service items. Conditional referral, hospitalization, nursing, dentistry, and physiotherapy rules are described on the corresponding properties because the source does not provide a single machine-enforceable discriminator contract.
       required:
         - patient
-        - mobile
         - prescDate
         - docId
         - docNationalCode
@@ -767,7 +765,7 @@ components:
           description: Patient national code.
         mobile:
           type: string
-          description: Patient mobile number; validation errors show that it is required and format-checked.
+          description: Patient mobile number. The PDF field table (p14-15) does not list this field, but p65 documents errors for an empty or malformed mobile value and the samples on p20 and p26 send it, so it is kept as an optional property.
         prescDate:
           $ref: '#/components/schemas/JalaliDate'
         expireDate:
@@ -800,8 +798,14 @@ components:
           type: integer
           format: int64
           description: Identifier of the original referral prescription; required for prescTypeId 8.
-        Complaint:
+        noteHeadEprscSupplementary:
           $ref: '#/components/schemas/Complaint'
+        terminology:
+          type: string
+          description: Coding system of the prescription. Send SNOMED for drug prescriptions that use SNOMED coding (p15, p29).
+        siamId:
+          type: string
+          description: SIAM identifier of the clinic. Nursing prescriptions must be registered from a clinic, so it is required for them (p26).
         creatorType:
           type: string
           description: Present in the documented dentistry example; its meaning and constraints are not defined.
@@ -822,7 +826,7 @@ components:
             - 7
             - 8
             - 9
-          description: 1 drug; 2 paraclinical; 3 visit; 5 services; 6 referred services; 7 doctor referral; 8 doctor-referral feedback; 9 hospitalization order.
+          description: 1 drug; 2 paraclinical (srvType 02 through 08 and 11 through 14 only, p64); 3 visit; 5 services; 6 referred services; 7 doctor referral; 8 doctor-referral feedback; 9 hospitalization order.
         prescTypeCode:
           type: string
           readOnly: true
@@ -849,7 +853,12 @@ components:
           $ref: '#/components/schemas/TbDrugAmount'
         dose:
           type: string
-          description: Consumption instructions.
+          description: Usage route (p16). For SNOMED drug prescriptions the route is sent as doseCode instead.
+        doseCode:
+          type: string
+          description: Usage-route code; required for drug prescriptions that use SNOMED coding (p16). The value is the id of a drugUsages entry (p31).
+        methodUsage:
+          $ref: '#/components/schemas/MethodUsage'
         repeat:
           type: string
           description: Drug repetition period; no more than three repeat periods are allowed.
@@ -859,7 +868,7 @@ components:
           $ref: '#/components/schemas/DrugInstruction'
         illnessId:
           type: string
-          description: Physiotherapy illness id or comma-separated ids. Optional; each service in a prescription must use a different selected illness.
+          description: Physiotherapy illness id or comma-separated ids. Optional. The illness selected for a service must not differ from the illness of the other services in the same prescription, and the service quantity must be the same for all services in the prescription; otherwise the server returns an error (p27).
         planId:
           type: string
           description: Physiotherapy plan id or comma-separated ids.
@@ -876,8 +885,6 @@ components:
           type: string
           description: FDI tooth code when the service is tied to a tooth.
         noteDetailDrug:
-          $ref: '#/components/schemas/JsonObject'
-        DiagnosisID:
           $ref: '#/components/schemas/DiagnosisID'
     Service:
       type: object
@@ -895,7 +902,7 @@ components:
           $ref: '#/components/schemas/ParTarefGroup'
         terminology:
           type: string
-          description: When set to thritha.BEHDAISHT for a paraclinical prescription, srvCode follows the Ministry of Health coding.
+          description: When set to thritha.BEHDASHT for a paraclinical prescription, srvCode follows the Ministry of Health coding; otherwise the usual Tamin coding applies (p21).
     ServiceType:
       type: object
       additionalProperties: true
@@ -951,23 +958,25 @@ components:
         parGrpCode:
           type: string
           enum:
-            - '0.00'
-            - '0.01'
-            - '0.02'
-            - '0.03'
-            - '0.04'
-          description: 0.01 pathology; 0.02 genetics; 0.03 global genetics; 0.00 unknown; 0.04 medical diagnostics. ASCII digits normalize the localized numerals printed in the source.
+            - '000'
+            - '001'
+            - '002'
+            - '003'
+            - '004'
+          description: 001 pathology; 002 genetics; 003 global genetics; 000 unknown; 004 medical diagnostics (p18). The codes are three-digit strings; ASCII digits normalize the localized numerals printed in the source.
     Complaint:
       type: object
+      description: Complaint of the prescription (p15).
       additionalProperties: true
       required:
         - complaintIDs
       properties:
         complaintIDs:
           type: string
-          description: One or more complaint identifiers separated by the Persian comma "،".
+          description: One or more complaint identifiers separated by the ASCII comma ",".
     DiagnosisID:
       type: object
+      description: Initial diagnosis; currently documented for drug prescriptions only (p16).
       additionalProperties: true
       required:
         - icdId
@@ -982,7 +991,6 @@ components:
         id:
           type: integer
           format: int64
-          description: The structure table labels this field as the referral date, while examples use referralHijriDate; both documented wire names are retained.
         patientNationalCode:
           type: string
         docSpecReferred:
@@ -1006,6 +1014,7 @@ components:
           description: Required only for hospitalization-order prescriptions.
         referralHijriDate:
           $ref: '#/components/schemas/JalaliDate'
+          description: Referral deadline, for example 14040510 (p18). For hospitalization orders it carries the hospitalization date (p28).
         referenceStatus:
           type: integer
         noteDetailsEprscId:
@@ -1023,6 +1032,9 @@ components:
       properties:
         specCode:
           type: string
+        terminology:
+          type: string
+          description: Send MAXA when specCode follows the MAXA specialty coding (p22). The sample on p22-23 prints the value in lowercase (maxa), so both spellings appear in the source.
     ReferralIcd10:
       type: object
       additionalProperties: true
@@ -1057,7 +1069,7 @@ components:
             - 3
             - 4
             - 5
-          description: The document lists 1 through 5 for version 1.9.7, but states that the live question list may change and should be fetched.
+          description: The document lists 1 through 5 for version 1.10.1, but states that the live question list may change and should be fetched.
         answerId:
           $ref: '#/components/schemas/ReferralFeedbackAnswer'
         comments:
@@ -1074,7 +1086,7 @@ components:
           examples:
             - 100
             - 101
-          description: 100 means yes and 101 means no in version 1.9.7. The document states that the live answer list may change and should be fetched.
+          description: 100 means yes and 101 means no in version 1.10.1. The document states that the live answer list may change and should be fetched.
     PrescriptionMutationResponse:
       type: object
       additionalProperties: true
@@ -1083,12 +1095,13 @@ components:
           type:
             - integer
             - 'null'
+          format: int64
           description: Prescription identifier.
-        complementary_Msg:
+        complemantary_Msg:
           type:
             - string
             - 'null'
-          description: Populated on success.
+          description: Populated on success. The wire name is spelled complemantary_Msg in the source (p62).
         error_Code:
           type:
             - string
@@ -1139,24 +1152,6 @@ components:
         toothId:
           type: string
           description: FDI tooth identifier when the service is tooth-specific.
-    NursingActionRequest:
-      type: object
-      additionalProperties: true
-      required:
-        - siamId
-        - noteDetailsEprscIds
-        - nurseNationalCode
-      properties:
-        siamId:
-          type: string
-          description: Clinic identifier.
-        noteDetailsEprscIds:
-          type: array
-          items:
-            type: integer
-            format: int64
-        nurseNationalCode:
-          type: string
     ReferralCartableResponse:
       type: object
       additionalProperties: true
@@ -1180,9 +1175,6 @@ components:
       required:
         - total
         - list
-        - id
-        - masterParent
-        - quantity
       properties:
         total:
           type: integer
@@ -1190,65 +1182,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReferralCartableItem'
-        id:
-          type: integer
-          format: int64
-        masterParent:
-          type: integer
-          format: int64
-        masterChild:
-          type:
-            - integer
-            - 'null'
-          format: int64
-        referralDate:
-          type:
-            - integer
-            - 'null'
-          format: int64
-          description: Epoch-like numeric value as shown in the source example; unit is undocumented.
-        docId:
-          type:
-            - string
-            - 'null'
-        quantity:
-          type: integer
-        specCodeReferral:
-          type:
-            - string
-            - 'null'
-        specDescReferral:
-          type:
-            - string
-            - 'null'
-        specCodeReferred:
-          type:
-            - string
-            - 'null'
-        specDescReferred:
-          type:
-            - string
-            - 'null'
-        icd10Referrals:
-          type:
-            - array
-            - 'null'
-          items:
-            $ref: '#/components/schemas/ReferralIcd10'
-        complaints:
-          type:
-            - array
-            - 'null'
-          items:
-            $ref: '#/components/schemas/ReferralComplaint'
-        message:
-          type:
-            - string
-            - 'null'
-        diagnosisIDs:
-          type:
-            - string
-            - 'null'
     ReferralCartableItem:
       type: object
       additionalProperties: true
@@ -1273,7 +1206,7 @@ components:
           description: Placeholder text is used in the source example; the actual scalar type is undocumented.
         referralId:
           type: string
-          description: Placeholder text is used in the source example; the actual scalar type is undocumented.
+          description: Identifier of the registered referral; it is the input of the referral feedback list operation (p43-44). Placeholder text is used in the source example, so the actual scalar type is undocumented.
         patientID:
           type: string
         docID:
@@ -1368,7 +1301,7 @@ components:
             - array
             - 'null'
           items:
-            $ref: '#/components/schemas/NoteDetailsReferral'
+            $ref: '#/components/schemas/NoteDetailsReferralResponse'
     PrescriptionDetailItem:
       type: object
       additionalProperties: true
@@ -1434,6 +1367,10 @@ components:
         formCode:
           anyOf:
             - $ref: '#/components/schemas/DrugForm'
+            - type: 'null'
+        parTarefGrp:
+          anyOf:
+            - $ref: '#/components/schemas/ParTarefGroupDetails'
             - type: 'null'
         status:
           type:
@@ -1551,6 +1488,32 @@ components:
           type:
             - string
             - 'null'
+    ParTarefGroupDetails:
+      type: object
+      additionalProperties: true
+      description: Paraclinical group of a response service (p46, p48); null for services without a group. The request-side ParTarefGroup carries only parGrpCode; the response sample adds parGrpDesc (empty in the sample), parGrpRem, status and statusStDate. Only parGrpCode is required.
+      required:
+        - parGrpCode
+      properties:
+        parGrpCode:
+          type: string
+          description: Group code, for example 002 (genetics). Same codes as the request-side ParTarefGroup.
+        parGrpDesc:
+          type:
+            - string
+            - 'null'
+        parGrpRem:
+          type:
+            - string
+            - 'null'
+        status:
+          type:
+            - string
+            - 'null'
+        statusStDate:
+          type:
+            - string
+            - 'null'
     PatientOpenReferralsResponse:
       type: object
       additionalProperties: true
@@ -1618,6 +1581,10 @@ components:
             - 'null'
         lstatus:
           type: string
+        referralDate:
+          type: integer
+          format: int64
+          description: Epoch timestamp of the patient referral (p50, added in document version 1.9.9).
     HospitalizationOrderResponse:
       type: object
       additionalProperties: true
@@ -1669,7 +1636,7 @@ components:
         referralDate:
           type: integer
           format: int64
-          description: Epoch-like numeric value as shown in the source example; unit is undocumented.
+          description: Epoch timestamp (documented as Epoch TimeStamp for the same field on p50). The p57 sample value has 12 digits, one fewer than the 13-digit millisecond values on p44 and p47.
         docId:
           type: string
         quantity:
@@ -1687,13 +1654,13 @@ components:
             - array
             - 'null'
           items:
-            $ref: '#/components/schemas/ReferralIcd10'
+            $ref: '#/components/schemas/ReferralIcd10Response'
         complaints:
           type:
             - array
             - 'null'
           items:
-            $ref: '#/components/schemas/ReferralComplaint'
+            $ref: '#/components/schemas/ReferralComplaintResponse'
         message:
           type:
             - string
@@ -1705,3 +1672,160 @@ components:
         docFamily:
           type: boolean
           description: True when the hospitalization order was registered through family-doctor flow.
+        patientNationalCode:
+          type: string
+          description: Patient national code (added in document version 1.9.8, p57).
+    ReferralComplaintResponse:
+      type: object
+      additionalProperties: true
+      description: Complaint as returned in referral responses (p47). Requests use ReferralComplaint, where id is a string.
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+        code:
+          type: integer
+          format: int64
+          description: Complaint coding value.
+        displayName:
+          type: string
+        englishName:
+          type: string
+        terminology:
+          type: string
+          description: Coding system name as printed in the sample (SNOMEDCT).
+        status:
+          type: string
+    ReferralIcd10Response:
+      type: object
+      additionalProperties: true
+      description: Initial diagnosis as returned in referral responses (p47). Requests use ReferralIcd10, which carries only the ICD-10 code in icdId.
+      required:
+        - icdId
+      properties:
+        icdId:
+          type: string
+          description: Internal diagnosis identifier, printed as a string in the sample.
+        icdCode:
+          type: string
+          description: ICD-10 code.
+        icdName:
+          type: string
+    MethodUsage:
+      type: object
+      additionalProperties: true
+      description: Method of use for SNOMED drug prescriptions (p19-20).
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          description: Identifier of the method of use. The medication-instructions response (p35) prints these ids as strings.
+    NoteDetailsReferralResponse:
+      type: object
+      additionalProperties: true
+      description: Referral entry returned by the referral feedback list (p44-45) and by referral-feedback details (p47). Fields that are null in the documented samples are nullable.
+      required:
+        - id
+        - masterParent
+        - quantity
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Identifier of the registered referral feedback entry. Zero marks the second doctor feedback itself; a non-zero value marks another prescription type registered by that doctor (p45).
+        masterParent:
+          type: integer
+          format: int64
+          description: Identifier of the main registered feedback; it is sent as masterParent or masterId to the detail operations (p42, p45).
+        masterChild:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Identifier of the second registered feedback (p44).
+        referralDate:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Epoch timestamp of the feedback registration (p44).
+        docId:
+          type:
+            - string
+            - 'null'
+          description: Medical Council number of the doctor who registered the feedback (p44).
+        quantity:
+          type: integer
+        specCodeReferral:
+          type:
+            - string
+            - 'null'
+          description: Specialty code of the referring doctor (p44).
+        specDescReferral:
+          type:
+            - string
+            - 'null'
+        specCodeReferred:
+          type:
+            - string
+            - 'null'
+          description: Specialty code of the referred doctor (p44).
+        specDescReferred:
+          type:
+            - string
+            - 'null'
+        icd10Referrals:
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/ReferralIcd10Response'
+          description: Initial diagnoses registered by the doctor (p44).
+        complaints:
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/ReferralComplaintResponse'
+          description: Complaints stated by the patient (p44).
+        message:
+          type:
+            - string
+            - 'null'
+          description: Doctor message and comments in the referral feedback (p44).
+        diagnosisIDs:
+          type:
+            - string
+            - 'null'
+          description: Diagnoses registered by the second doctor (p44).
+    ReferralListResponse:
+      type: object
+      additionalProperties: true
+      description: Feedback entries registered for one referral (p44).
+      required:
+        - status
+        - family
+        - reason
+        - data
+      properties:
+        status:
+          type: integer
+        family:
+          type: string
+        reason:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+          required:
+            - total
+            - list
+          properties:
+            total:
+              type: integer
+            list:
+              type: array
+              items:
+                $ref: '#/components/schemas/NoteDetailsReferralResponse'

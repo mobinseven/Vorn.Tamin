@@ -30,7 +30,7 @@ namespace Tamin.Client.Soa.Prod.Models
 #else
         public string Comments { get; set; }
 #endif
-        /// <summary>The document lists 1 through 5 for version 1.9.7, but states that the live question list may change and should be fetched.</summary>
+        /// <summary>The document lists 1 through 5 for version 1.10.1, but states that the live question list may change and should be fetched.</summary>
         public int? QuestionId { get; set; }
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Prod.Models.ReferralFeedbackItem"/> and sets the default values.

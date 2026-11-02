@@ -227,10 +227,14 @@ npm install
 
 This validates:
 - 6 OpenAPI documents (3 services x 2 environments)
+- The routes of all 94 operations match `openapi/tamin-route-manifest.json`, which is transcribed by hand from the Tamin guide v1.10.1
+- The guide's sample payloads in `tests/tamin-contract-fixtures` validate against the operation schemas (known conflicts are listed in `expected-failures.json`)
 - Redocly lint warnings match expected counts
-- 40 operations per environment
+- 47 operations per environment
 - Required route literals (e.g. `docNatioanlCode`, `siamId`)
 - Deterministic regeneration (generated code is identical before/after)
+
+The conformance checks also run on their own with `./scripts/verify-tamin-conformance.ps1`.
 
 ---
 
@@ -253,6 +257,9 @@ openapi/tamin/                    # Split OpenAPI specs (pilot + prod)
 ├── account.{pilot,prod}.yaml
 ├── api.{pilot,prod}.yaml
 └── soa.{pilot,prod}.yaml
+openapi/tamin-route-manifest.json # Routes transcribed from the guide, checked against the specs
+
+tests/tamin-contract-fixtures/    # Guide sample payloads + known conflicts
 
 src/tamin-{pilot,production}.openapi.yaml  # Source OpenAPI specs
 
@@ -272,7 +279,9 @@ src/Tamin/
 scripts/
 ├── Split-TaminOpenApi.ps1        # Splits source specs into per-service docs
 ├── generate-tamin-clients.ps1    # Runs Kiota code generation
-└── verify-tamin-contracts.ps1    # Validates specs + determinism
+├── verify-tamin-conformance.ps1  # Route manifest + sample payload checks
+├── tamin-contract-checks/        # Node checks used by the conformance script
+└── verify-tamin-contracts.ps1    # Validates specs + conformance + determinism
 ```
 
 ---

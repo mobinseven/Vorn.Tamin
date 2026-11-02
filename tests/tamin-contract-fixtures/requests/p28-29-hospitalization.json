@@ -1,0 +1,28 @@
+{
+  "patient": "0000000000",
+  "prescType": {
+    "prescTypeId": 9
+  },
+  "prescDate": "14050115",
+  "docId": "00000123456",
+  "docMobileNo": "09120000000",
+  "docNationalCode": "0000000000",
+  "comments": "",
+  "expireDate": "14050330",
+  "noteDetailEprscs": [],
+  "noteDetailsReferralList": [
+    {
+      "icd10s": [
+        {
+          "icdId": "X46.49"
+        },
+        {
+          "icdId": "X46.51"
+        }
+      ],
+      "message": "توضیحات پزشک",
+      "referralHijriDate": "14050220",
+      "siamId": "00000000-0000-0000-0000-000000000000"
+    }
+  ]
+}

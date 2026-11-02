@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
+using Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.ActiveHospitals;
 using Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.Item;
 namespace Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder
 {
@@ -15,6 +16,11 @@ namespace Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class HospitalizationOrderRequestBuilder : BaseRequestBuilder
     {
+        /// <summary>The activeHospitals property</summary>
+        public global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.ActiveHospitals.ActiveHospitalsRequestBuilder ActiveHospitals
+        {
+            get => new global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.ActiveHospitals.ActiveHospitalsRequestBuilder(PathParameters, RequestAdapter);
+        }
         /// <summary>Gets an item from the Tamin.Client.Soa.Pilot.api.noteDetailsReferral.hospitalizationOrder.item collection</summary>
         /// <param name="position">SIAM identifier of the clinic. For an office-based entitlement check, the doctor&apos;s Medical Council number is sent instead.</param>
         /// <returns>A <see cref="global::Tamin.Client.Soa.Pilot.Api.NoteDetailsReferral.HospitalizationOrder.Item.SiamItemRequestBuilder"/></returns>

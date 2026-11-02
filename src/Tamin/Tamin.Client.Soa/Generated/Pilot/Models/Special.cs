@@ -22,6 +22,14 @@ namespace Tamin.Client.Soa.Pilot.Models
 #else
         public string SpecCode { get; set; }
 #endif
+        /// <summary>Send MAXA when specCode follows the MAXA specialty coding (p22). The sample on p22-23 prints the value in lowercase (maxa), so both spellings appear in the source.</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public string? Terminology { get; set; }
+#nullable restore
+#else
+        public string Terminology { get; set; }
+#endif
         /// <summary>
         /// Instantiates a new <see cref="global::Tamin.Client.Soa.Pilot.Models.Special"/> and sets the default values.
         /// </summary>
@@ -48,6 +56,7 @@ namespace Tamin.Client.Soa.Pilot.Models
             return new Dictionary<string, Action<IParseNode>>
             {
                 { "specCode", n => { SpecCode = n.GetStringValue(); } },
+                { "terminology", n => { Terminology = n.GetStringValue(); } },
             };
         }
         /// <summary>
@@ -58,6 +67,7 @@ namespace Tamin.Client.Soa.Pilot.Models
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
             writer.WriteStringValue("specCode", SpecCode);
+            writer.WriteStringValue("terminology", Terminology);
             writer.WriteAdditionalData(AdditionalData);
         }
     }

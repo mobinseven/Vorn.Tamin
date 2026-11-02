@@ -1,0 +1,24 @@
+{
+  "patient": "*********",
+  "prescType": {
+    "prescTypeId": 5
+  },
+  "prescDate": "14010225",
+  "docId": "*****",
+  "docMobileNo": "**********",
+  "docNationalCode": "*********",
+  "comments": "",
+  "noteDetailEprscs": [
+    {
+      "noteDetailsEprscId": 1139861,
+      "srvId": {
+        "srvType": {
+          "srvType": "17"
+        },
+        "srvCode": "0000900770"
+      },
+      "srvQty": 1,
+      "referenceStatus": 1
+    }
+  ]
+}
