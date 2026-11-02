@@ -8,13 +8,37 @@ using System;
 namespace Tamin.Client.Api.Prod.Models
 {
     /// <summary>
-    /// Prescription item inside a nursing-cartable prescription (p53-56). Every optional member in the sample is null, so a type can only be taken from the same-named request field that the guide documents (p16-20). Members with such a type are declared nullable. Members without one are not declared and pass through additionalProperties: isBrand, isPayable, organId, organDesc, organDet, organDetDesc, illnessDesc, planDesc, confirmStatusflag, noteHeadEprscId, repeatDays, messages, dialysisType. repeat, dateDo and isDentalService are also not declared because their wire types are still undecided pending pilot testing.
+    /// Prescription item inside a nursing-cartable prescription (p53-56). Every optional member in the sample is null, so a type can only be taken from the same-named request field that the guide documents (p16-20). Members with such a type are declared nullable. Members whose type no such request field settles are declared untyped ({}): isBrand, isPayable, organId, organDesc, organDet, organDetDesc, illnessDesc, planDesc, confirmStatusflag, noteHeadEprscId, repeatDays, messages, dialysisType. repeat, dateDo and isDentalService are also untyped because their wire types are still undecided pending pilot testing.
     /// </summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class NursingPrescriptionItem : IAdditionalDataHolder, IParsable
     {
         /// <summary>Stores additional data not described in the OpenAPI description found when deserializing. Can be used for serialization as well.</summary>
         public IDictionary<string, object> AdditionalData { get; set; }
+        /// <summary>The confirmStatusflag property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? ConfirmStatusflag { get; set; }
+#nullable restore
+#else
+        public UntypedNode ConfirmStatusflag { get; set; }
+#endif
+        /// <summary>The dateDo property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? DateDo { get; set; }
+#nullable restore
+#else
+        public UntypedNode DateDo { get; set; }
+#endif
+        /// <summary>The dialysisType property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? DialysisType { get; set; }
+#nullable restore
+#else
+        public UntypedNode DialysisType { get; set; }
+#endif
         /// <summary>Usage route (p16).</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -43,6 +67,14 @@ namespace Tamin.Client.Api.Prod.Models
 #else
         public global::Tamin.Client.Api.Prod.Models.DrugInstruction DrugInstruction { get; set; }
 #endif
+        /// <summary>The illnessDesc property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? IllnessDesc { get; set; }
+#nullable restore
+#else
+        public UntypedNode IllnessDesc { get; set; }
+#endif
         /// <summary>Physiotherapy illness id or comma-separated ids (p27).</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -51,6 +83,22 @@ namespace Tamin.Client.Api.Prod.Models
 #else
         public string IllnessId { get; set; }
 #endif
+        /// <summary>The isBrand property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? IsBrand { get; set; }
+#nullable restore
+#else
+        public UntypedNode IsBrand { get; set; }
+#endif
+        /// <summary>The isDentalService property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? IsDentalService { get; set; }
+#nullable restore
+#else
+        public UntypedNode IsDentalService { get; set; }
+#endif
         /// <summary>The isOk property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -58,6 +106,22 @@ namespace Tamin.Client.Api.Prod.Models
 #nullable restore
 #else
         public string IsOk { get; set; }
+#endif
+        /// <summary>The isPayable property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? IsPayable { get; set; }
+#nullable restore
+#else
+        public UntypedNode IsPayable { get; set; }
+#endif
+        /// <summary>The messages property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? Messages { get; set; }
+#nullable restore
+#else
+        public UntypedNode Messages { get; set; }
 #endif
         /// <summary>The noteDetailDrug property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
@@ -69,6 +133,54 @@ namespace Tamin.Client.Api.Prod.Models
 #endif
         /// <summary>Item identifier; this is the value sent in noteDetailsEprscIds when recording a nursing action.</summary>
         public long? NoteDetailsEprscId { get; set; }
+        /// <summary>The noteHeadEprscId property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? NoteHeadEprscId { get; set; }
+#nullable restore
+#else
+        public UntypedNode NoteHeadEprscId { get; set; }
+#endif
+        /// <summary>The organDesc property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? OrganDesc { get; set; }
+#nullable restore
+#else
+        public UntypedNode OrganDesc { get; set; }
+#endif
+        /// <summary>The organDet property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? OrganDet { get; set; }
+#nullable restore
+#else
+        public UntypedNode OrganDet { get; set; }
+#endif
+        /// <summary>The organDetDesc property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? OrganDetDesc { get; set; }
+#nullable restore
+#else
+        public UntypedNode OrganDetDesc { get; set; }
+#endif
+        /// <summary>The organId property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? OrganId { get; set; }
+#nullable restore
+#else
+        public UntypedNode OrganId { get; set; }
+#endif
+        /// <summary>The planDesc property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? PlanDesc { get; set; }
+#nullable restore
+#else
+        public UntypedNode PlanDesc { get; set; }
+#endif
         /// <summary>Physiotherapy plan id or comma-separated ids.</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -81,6 +193,22 @@ namespace Tamin.Client.Api.Prod.Models
         public bool? ReadOnly { get; set; }
         /// <summary>Referred-service action status.</summary>
         public int? ReferenceStatus { get; set; }
+        /// <summary>The repeat property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? Repeat { get; set; }
+#nullable restore
+#else
+        public UntypedNode Repeat { get; set; }
+#endif
+        /// <summary>The repeatDays property</summary>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#nullable enable
+        public UntypedNode? RepeatDays { get; set; }
+#nullable restore
+#else
+        public UntypedNode RepeatDays { get; set; }
+#endif
         /// <summary>The srvId property</summary>
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
 #nullable enable
@@ -136,18 +264,34 @@ namespace Tamin.Client.Api.Prod.Models
         {
             return new Dictionary<string, Action<IParseNode>>
             {
+                { "confirmStatusflag", n => { ConfirmStatusflag = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
+                { "dateDo", n => { DateDo = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
+                { "dialysisType", n => { DialysisType = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
                 { "dose", n => { Dose = n.GetStringValue(); } },
                 { "doseCode", n => { DoseCode = n.GetStringValue(); } },
                 { "drugAmntId", n => { DrugAmntId = n.GetIntValue(); } },
                 { "drugInstId", n => { DrugInstId = n.GetIntValue(); } },
                 { "drugInstruction", n => { DrugInstruction = n.GetObjectValue<global::Tamin.Client.Api.Prod.Models.DrugInstruction>(global::Tamin.Client.Api.Prod.Models.DrugInstruction.CreateFromDiscriminatorValue); } },
+                { "illnessDesc", n => { IllnessDesc = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
                 { "illnessId", n => { IllnessId = n.GetStringValue(); } },
+                { "isBrand", n => { IsBrand = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
+                { "isDentalService", n => { IsDentalService = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
                 { "isOk", n => { IsOk = n.GetStringValue(); } },
+                { "isPayable", n => { IsPayable = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
+                { "messages", n => { Messages = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
                 { "noteDetailDrug", n => { NoteDetailDrug = n.GetObjectValue<global::Tamin.Client.Api.Prod.Models.DiagnosisID>(global::Tamin.Client.Api.Prod.Models.DiagnosisID.CreateFromDiscriminatorValue); } },
                 { "noteDetailsEprscId", n => { NoteDetailsEprscId = n.GetLongValue(); } },
+                { "noteHeadEprscId", n => { NoteHeadEprscId = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
+                { "organDesc", n => { OrganDesc = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
+                { "organDet", n => { OrganDet = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
+                { "organDetDesc", n => { OrganDetDesc = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
+                { "organId", n => { OrganId = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
+                { "planDesc", n => { PlanDesc = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
                 { "planId", n => { PlanId = n.GetStringValue(); } },
                 { "readOnly", n => { ReadOnly = n.GetBoolValue(); } },
                 { "referenceStatus", n => { ReferenceStatus = n.GetIntValue(); } },
+                { "repeat", n => { Repeat = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
+                { "repeatDays", n => { RepeatDays = n.GetObjectValue<UntypedNode>(UntypedNode.CreateFromDiscriminatorValue); } },
                 { "srvId", n => { SrvId = n.GetObjectValue<global::Tamin.Client.Api.Prod.Models.ServiceDetails>(global::Tamin.Client.Api.Prod.Models.ServiceDetails.CreateFromDiscriminatorValue); } },
                 { "srvPrice", n => { SrvPrice = n.GetLongValue(); } },
                 { "srvQty", n => { SrvQty = n.GetIntValue(); } },
@@ -163,18 +307,34 @@ namespace Tamin.Client.Api.Prod.Models
         public virtual void Serialize(ISerializationWriter writer)
         {
             if(ReferenceEquals(writer, null)) throw new ArgumentNullException(nameof(writer));
+            writer.WriteObjectValue<UntypedNode>("confirmStatusflag", ConfirmStatusflag);
+            writer.WriteObjectValue<UntypedNode>("dateDo", DateDo);
+            writer.WriteObjectValue<UntypedNode>("dialysisType", DialysisType);
             writer.WriteStringValue("dose", Dose);
             writer.WriteStringValue("doseCode", DoseCode);
             writer.WriteIntValue("drugAmntId", DrugAmntId);
             writer.WriteIntValue("drugInstId", DrugInstId);
             writer.WriteObjectValue<global::Tamin.Client.Api.Prod.Models.DrugInstruction>("drugInstruction", DrugInstruction);
+            writer.WriteObjectValue<UntypedNode>("illnessDesc", IllnessDesc);
             writer.WriteStringValue("illnessId", IllnessId);
+            writer.WriteObjectValue<UntypedNode>("isBrand", IsBrand);
+            writer.WriteObjectValue<UntypedNode>("isDentalService", IsDentalService);
             writer.WriteStringValue("isOk", IsOk);
+            writer.WriteObjectValue<UntypedNode>("isPayable", IsPayable);
+            writer.WriteObjectValue<UntypedNode>("messages", Messages);
             writer.WriteObjectValue<global::Tamin.Client.Api.Prod.Models.DiagnosisID>("noteDetailDrug", NoteDetailDrug);
             writer.WriteLongValue("noteDetailsEprscId", NoteDetailsEprscId);
+            writer.WriteObjectValue<UntypedNode>("noteHeadEprscId", NoteHeadEprscId);
+            writer.WriteObjectValue<UntypedNode>("organDesc", OrganDesc);
+            writer.WriteObjectValue<UntypedNode>("organDet", OrganDet);
+            writer.WriteObjectValue<UntypedNode>("organDetDesc", OrganDetDesc);
+            writer.WriteObjectValue<UntypedNode>("organId", OrganId);
+            writer.WriteObjectValue<UntypedNode>("planDesc", PlanDesc);
             writer.WriteStringValue("planId", PlanId);
             writer.WriteBoolValue("readOnly", ReadOnly);
             writer.WriteIntValue("referenceStatus", ReferenceStatus);
+            writer.WriteObjectValue<UntypedNode>("repeat", Repeat);
+            writer.WriteObjectValue<UntypedNode>("repeatDays", RepeatDays);
             writer.WriteObjectValue<global::Tamin.Client.Api.Prod.Models.ServiceDetails>("srvId", SrvId);
             writer.WriteLongValue("srvPrice", SrvPrice);
             writer.WriteIntValue("srvQty", SrvQty);

@@ -34,7 +34,7 @@ public sealed class TaminHttpPipelineTests
         Assert.Equal(body, exception.RawBody);
         var entry = Assert.Single(logger.Entries);
         Assert.Contains(operationId, entry);
-        Assert.Contains(body, entry);
+        Assert.DoesNotContain("provider detail", entry);
     }
 
     [Fact]

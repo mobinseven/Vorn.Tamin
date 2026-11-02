@@ -3,10 +3,10 @@ using Microsoft.Kiota.Abstractions.Authentication;
 
 namespace Tamin.Integration.Auth;
 
-public sealed record DoctorAuthorizationCode(string Code, string ClientId, string Audience, string RedirectUri, string CodeVerifier);
-public sealed record DoctorToken(string AccessToken, string? RefreshToken, DateTimeOffset? ExpiresAt);
+internal sealed record DoctorAuthorizationCode(string Code, string ClientId, string Audience, string RedirectUri, string CodeVerifier);
+internal sealed record DoctorToken(string AccessToken, string? RefreshToken, DateTimeOffset? ExpiresAt);
 
-public interface IDoctorTokenExchange
+internal interface IDoctorTokenExchange
 {
     Task<DoctorToken> ExchangeAuthorizationCodeAsync(DoctorAuthorizationCode grant, CancellationToken cancellationToken);
     Task<DoctorToken> RefreshAsync(string refreshToken, string clientId, string audience, CancellationToken cancellationToken);
@@ -15,7 +15,7 @@ public interface IDoctorTokenExchange
 public sealed class TaminReauthorizationRequiredException(string message, Exception? innerException = null) : Exception(message, innerException);
 
 /// <summary>Owns PKCE validation, grant selection and the single cached doctor token.</summary>
-public sealed class TaminTokenProvider : IAccessTokenProvider
+internal sealed class TaminTokenProvider : IAccessTokenProvider
 {
     private readonly IDoctorTokenExchange exchange;
     private readonly string clientId;
@@ -81,6 +81,11 @@ public sealed class TaminTokenProvider : IAccessTokenProvider
             {
                 throw;
             }
+            // An outage says nothing about the refresh token: keep it, so a later call can refresh without a new login.
+            catch (Exception exception) when (IsTransient(exception))
+            {
+                throw;
+            }
             catch (Exception exception)
             {
                 token = null;
@@ -90,6 +95,7 @@ public sealed class TaminTokenProvider : IAccessTokenProvider
         finally { gate.Release(); }
     }
 
+    private static bool IsTransient(Exception exception) => exception is TaskCanceledException or HttpRequestException { StatusCode: null or >= System.Net.HttpStatusCode.InternalServerError };
     // Without an expiry the token cannot safely be considered fresh.
     private static bool NeedsRefresh(DoctorToken value) => value.ExpiresAt is not { } expiry || expiry <= DateTimeOffset.UtcNow.AddMinutes(2);
     private static void ValidateCodeVerifier(string verifier)
