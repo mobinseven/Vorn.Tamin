@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-11-09
+
+Unofficial client, built and maintained for internal company use. It is not published, endorsed or supported by the Social Security Insurance of Iran.
+
+### Known limitations
+- **Nursing is not supported yet.** `ListUnclaimedNursingPrescriptionsAsync`, `ListDoctorNursingPrescriptionsAsync` and `SaveNursingActionsAsync` follow the guide but have never run against the live service. Sixteen nursing response fields (guide pp. 53-56) are declared untyped because every guide sample value is null; their real types need pilot data. Do not rely on these operations.
+- **Two pilot routes return 404** (observed 2026-11-02): `/api/specials/getAll` (`ListDoctorSpecialtiesAsync`) and the three-parameter `cartable-nurse/get-all` (`ListDoctorNursingPrescriptionsAsync`). The operations follow the guide, so callers get a `TaminApiException` on the pilot server until the provider fixes them.
+- **Not validated against a live service.** No authenticated pilot test has run. Correctness is established against guide v1.10.1 (routes, field names, sample payloads) and the unit tests, not against real responses.
+- 29 operations return `UnconstrainedResponse` because the guide gives no response schema; their bodies are untyped.
+- Production behaviour is untested. The pilot and production specs differ in places (see the breaking changes below).
+
 Moves the contract from the earlier `docs/EP-TAMIN-API.md` transcription (document 1.9.7) to the Tamin electronic prescription service guide v1.10.1 (1405/08/03). This release contains breaking changes; the next release must be a major version.
 
 ### Breaking changes
