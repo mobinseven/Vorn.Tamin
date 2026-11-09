@@ -149,6 +149,28 @@ public sealed class PrescriptionRequestMapperTests
         Assert.Equal(("B", null, "12"), (pilotSecondService.SrvCode, pilotSecondService.Terminology, pilot[1].ToothId));
     }
 
+    [Theory]
+    [InlineData("01", ProdModels.ServiceType_srvType.ZeroOne, PilotModels.ServiceType_srvType.ZeroOne)]
+    [InlineData("16", ProdModels.ServiceType_srvType.OneSix, PilotModels.ServiceType_srvType.OneSix)]
+    [InlineData("17", ProdModels.ServiceType_srvType.OneSeven, PilotModels.ServiceType_srvType.OneSeven)]
+    public void Service_type_is_sent_for_every_item_in_both_environments(string code, ProdModels.ServiceType_srvType production, PilotModels.ServiceType_srvType pilot)
+    {
+        var detail = Detail(DentalServiceFlag.Zero) with { SrvId = new("code", null, code) };
+        var input = Input(details: [detail]);
+        Assert.Equal(production, mapper.MapProduction(input).NoteDetailEprscs![0].SrvId!.SrvType!.SrvType);
+        Assert.Equal(pilot, mapper.MapPilot(input).NoteDetailEprscs![0].SrvId!.SrvType!.SrvType);
+        Assert.Contains($"\"srvType\":{{\"srvType\":\"{code}\"}}", Serialize(mapper.MapProduction(input).NoteDetailEprscs![0].SrvId!));
+    }
+
+    [Fact]
+    public void Service_type_is_omitted_when_not_given_and_rejected_when_undocumented()
+    {
+        Assert.Null(mapper.MapProduction(Input(details: [Detail(DentalServiceFlag.Zero)])).NoteDetailEprscs![0].SrvId!.SrvType);
+        var invalid = Detail(DentalServiceFlag.Zero) with { SrvId = new("code", null, "99") };
+        var failure = Assert.Throws<TaminRequestValidationException>(() => mapper.MapProduction(Input(details: [invalid])));
+        Assert.Equal("srvType", failure.FieldName);
+    }
+
     private static PrescriptionCreateInput Input(string? mobile = "0912", IReadOnlyList<PrescriptionDetailInput>? details = null, IReadOnlyList<PrescriptionReferralInput>? referrals = null,
         string? siamId = "siam-id", string? terminology = "SNOMEDCT") =>
         new("comments", "creator", "doc", "doc-mobile", "national", "14040611", mobile,
