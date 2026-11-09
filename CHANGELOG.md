@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0] - 2026-11-09
+
+### Added
+- `ITaminTokenStore` and `TaminClientOptions.TokenStore`, for hosts that create a client per request or run several instances. When a store is supplied it is the source of truth for the doctor token: every read, authorization and refresh goes through it, under a lease the store provides, so one refresh runs at a time across clients. A rejected refresh token clears the store; a network or 5xx failure keeps it.
+- `DoctorToken` is now public, as the value the store reads and writes.
+- `TaminClientOptions` and `ServiceInput` keep their 4.0.0 constructors, so code compiled against 4.0.0 still binds.
+- `ServiceInput.SrvType`, a trailing optional parameter. The guide requires `srvType` on every prescription item (`01` drug, `16` visit, `17` medical service), but the facade had no way to send it. An undocumented value throws `TaminRequestValidationException`.
+
 ## [4.0.0] - 2026-11-09
 
 Unofficial client, built and maintained for internal company use. It is not published, endorsed or supported by the Social Security Insurance of Iran.

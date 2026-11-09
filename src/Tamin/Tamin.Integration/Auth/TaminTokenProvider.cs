@@ -4,7 +4,22 @@ using Microsoft.Kiota.Abstractions.Authentication;
 namespace Tamin.Integration.Auth;
 
 internal sealed record DoctorAuthorizationCode(string Code, string ClientId, string Audience, string RedirectUri, string CodeVerifier);
-internal sealed record DoctorToken(string AccessToken, string? RefreshToken, DateTimeOffset? ExpiresAt);
+/// <summary>A doctor's access token with the refresh token and expiry that came with it.</summary>
+public sealed record DoctorToken(string AccessToken, string? RefreshToken, DateTimeOffset? ExpiresAt);
+
+/// <summary>
+/// Optional persistence for the doctor token, for hosts that create a client per request or run several instances.
+/// When a store is supplied it, not the client's memory, is the source of truth: every token read and write goes through it.
+/// </summary>
+public interface ITaminTokenStore
+{
+    /// <summary>Takes exclusive ownership of the stored token until the lease is disposed, so one refresh runs at a time across clients.</summary>
+    Task<IAsyncDisposable> AcquireAsync(CancellationToken cancellationToken);
+    /// <summary>The stored token, or null when none is stored. Called only while a lease is held.</summary>
+    Task<DoctorToken?> ReadAsync(CancellationToken cancellationToken);
+    /// <summary>Stores the token, or removes it when null. Called only while a lease is held.</summary>
+    Task WriteAsync(DoctorToken? token, CancellationToken cancellationToken);
+}
 
 internal interface IDoctorTokenExchange
 {
@@ -21,10 +36,12 @@ internal sealed class TaminTokenProvider : IAccessTokenProvider
     private readonly string clientId;
     private readonly string audience;
     private readonly SemaphoreSlim gate = new(1, 1);
+    private readonly ITaminTokenStore? store;
     private DoctorToken? token;
 
-    public TaminTokenProvider(IDoctorTokenExchange exchange, string clientId, string audience, IEnumerable<string> allowedHosts)
+    public TaminTokenProvider(IDoctorTokenExchange exchange, string clientId, string audience, IEnumerable<string> allowedHosts, ITaminTokenStore? store = null)
     {
+        this.store = store;
         this.exchange = exchange ?? throw new ArgumentNullException(nameof(exchange));
         this.clientId = string.IsNullOrWhiteSpace(clientId) ? throw new ArgumentException("Client ID is required.", nameof(clientId)) : clientId;
         this.audience = string.IsNullOrWhiteSpace(audience) ? throw new ArgumentException("Audience is required.", nameof(audience)) : audience;
@@ -51,22 +68,29 @@ internal sealed class TaminTokenProvider : IAccessTokenProvider
         ValidateCodeVerifier(codeVerifier);
         if (string.IsNullOrWhiteSpace(code)) throw new ArgumentException("Authorization code is required.", nameof(code));
         await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try { token = await exchange.ExchangeAuthorizationCodeAsync(new(code, clientId, audience, redirectUri, codeVerifier), cancellationToken).ConfigureAwait(false); }
+        try
+        {
+            await using var lease = await AcquireAsync(cancellationToken).ConfigureAwait(false);
+            await SaveAsync(await exchange.ExchangeAuthorizationCodeAsync(new(code, clientId, audience, redirectUri, codeVerifier), cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+        }
         finally { gate.Release(); }
     }
 
     public async Task<string> GetAuthorizationTokenAsync(Uri uri, Dictionary<string, object>? additionalAuthenticationContext = null, CancellationToken cancellationToken = default)
     {
         if (!AllowedHostsValidator.IsUrlHostValid(uri)) return string.Empty;
-        if (token is { } current && !NeedsRefresh(current)) return current.AccessToken;
+        // With a store, memory is never trusted: another client may have refreshed or replaced the token.
+        if (store is null && token is { } current && !NeedsRefresh(current)) return current.AccessToken;
         await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (token is { } cached && !NeedsRefresh(cached)) return cached.AccessToken;
-            if (token?.RefreshToken is not { Length: > 0 } refreshToken)
+            await using var lease = await AcquireAsync(cancellationToken).ConfigureAwait(false);
+            var stored = await LoadAsync(cancellationToken).ConfigureAwait(false);
+            if (stored is { } cached && !NeedsRefresh(cached)) return cached.AccessToken;
+            if (stored?.RefreshToken is not { Length: > 0 } refreshToken)
             {
                 var cause = new InvalidOperationException("The cached doctor token has no usable refresh token.");
-                token = null;
+                await SaveAsync(null, cancellationToken).ConfigureAwait(false);
                 throw new TaminReauthorizationRequiredException("Doctor authorization must be completed again.", cause);
             }
             try
@@ -74,7 +98,7 @@ internal sealed class TaminTokenProvider : IAccessTokenProvider
                 var refreshed = await exchange.RefreshAsync(refreshToken, clientId, audience, cancellationToken).ConfigureAwait(false);
                 if (string.IsNullOrWhiteSpace(refreshed.AccessToken))
                     throw new InvalidOperationException("The refresh response had no usable access token.");
-                token = refreshed;
+                await SaveAsync(refreshed, cancellationToken).ConfigureAwait(false);
                 return refreshed.AccessToken;
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -88,11 +112,29 @@ internal sealed class TaminTokenProvider : IAccessTokenProvider
             }
             catch (Exception exception)
             {
-                token = null;
+                await SaveAsync(null, cancellationToken).ConfigureAwait(false);
                 throw new TaminReauthorizationRequiredException("Doctor token refresh failed; authorization must be completed again.", exception);
             }
         }
         finally { gate.Release(); }
+    }
+
+    private async Task<IAsyncDisposable> AcquireAsync(CancellationToken cancellationToken) =>
+        store is null ? NoLease.Instance : await store.AcquireAsync(cancellationToken).ConfigureAwait(false);
+
+    private async Task<DoctorToken?> LoadAsync(CancellationToken cancellationToken) =>
+        store is null ? token : await store.ReadAsync(cancellationToken).ConfigureAwait(false);
+
+    private async Task SaveAsync(DoctorToken? value, CancellationToken cancellationToken)
+    {
+        if (store is not null) await store.WriteAsync(value, cancellationToken).ConfigureAwait(false);
+        token = value;
+    }
+
+    private sealed class NoLease : IAsyncDisposable
+    {
+        public static readonly NoLease Instance = new();
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 
     private static bool IsTransient(Exception exception) => exception is TaskCanceledException or HttpRequestException { StatusCode: null or >= System.Net.HttpStatusCode.InternalServerError };

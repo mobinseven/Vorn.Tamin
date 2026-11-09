@@ -26,7 +26,12 @@ public sealed record SpecialInput(string? SpecCode, string? Terminology = null);
 public sealed record MethodUsageInput(int? Id);
 public sealed record ReferralFeedbackAnswerInput(int? DrugAnswerId);
 public sealed record ReferralFeedbackItemInput(ReferralFeedbackAnswerInput? AnswerId, string? Comments, int? QuestionId);
-public sealed record ServiceInput(string? SrvCode, string? Terminology);
+/// <param name="SrvType">The service type code the guide requires on every item, such as "01" for a drug, "16" for a visit or "17" for a medical service.</param>
+public sealed record ServiceInput(string? SrvCode, string? Terminology, string? SrvType)
+{
+    /// <summary>The 4.0.0 shape, kept so code compiled against it keeps binding.</summary>
+    public ServiceInput(string? SrvCode, string? Terminology) : this(SrvCode, Terminology, null) { }
+}
 public sealed record DrugInstructionInput(int? DrugInstId);
 public sealed record DrugAmountInput(int? DrugAmntId);
 public sealed record PrescriptionDetailInput(
@@ -226,8 +231,22 @@ internal sealed class PrescriptionRequestMapper
     private static PilotModels.ReferralFeedbackItem MapPilot(ReferralFeedbackItemInput x) => new() { AnswerId = x.AnswerId is null ? null : new() { DrugAnswerId = x.AnswerId.DrugAnswerId }, Comments = x.Comments, QuestionId = x.QuestionId };
     private static ProdModels.Complaint? Map(ComplaintInput? x) => x is null ? null : new() { ComplaintIDs = x.ComplaintIDs };
     private static PilotModels.Complaint? MapPilot(ComplaintInput? x) => x is null ? null : new() { ComplaintIDs = x.ComplaintIDs };
-    private static ProdModels.Service? Map(ServiceInput? x) => x is null ? null : new() { SrvCode = x.SrvCode, Terminology = x.Terminology };
-    private static PilotModels.Service? MapPilot(ServiceInput? x) => x is null ? null : new() { SrvCode = x.SrvCode, Terminology = x.Terminology };
+    private static ProdModels.Service? Map(ServiceInput? x) => x is null ? null : new() { SrvCode = x.SrvCode, Terminology = x.Terminology, SrvType = x.SrvType is null ? null : new() { SrvType = WireValue.Parse<ProdModels.ServiceType_srvType>("srvType", x.SrvType) } };
+    private static PilotModels.Service? MapPilot(ServiceInput? x) => x is null ? null : new() { SrvCode = x.SrvCode, Terminology = x.Terminology, SrvType = x.SrvType is null ? null : new() { SrvType = WireValue.Parse<PilotModels.ServiceType_srvType>("srvType", x.SrvType) } };
+}
+
+/// <summary>Resolves a documented wire value, such as "01", to the generated enum member that serializes to it.</summary>
+internal static class WireValue
+{
+    public static TEnum Parse<TEnum>(string field, string value) where TEnum : struct, Enum
+    {
+        foreach (var member in typeof(TEnum).GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+        {
+            var wire = (System.Runtime.Serialization.EnumMemberAttribute?)Attribute.GetCustomAttribute(member, typeof(System.Runtime.Serialization.EnumMemberAttribute));
+            if (wire?.Value == value) return (TEnum)member.GetValue(null)!;
+        }
+        throw new TaminRequestValidationException(field, $"'{value}' is not a documented value");
+    }
 }
 
 // D-07: normalize the two documented string and numeric representations at the transport boundary.

@@ -16,7 +16,13 @@ using ProdSoaClient = Tamin.Client.Soa.Prod.ProdSoaClient;
 namespace Tamin.Integration;
 
 /// <param name="PrimaryHandler">Owned by the caller, who keeps it alive and disposes it. Reuse one instance.</param>
-public sealed record TaminClientOptions(string ClientId, string Audience, HttpMessageHandler PrimaryHandler, ILoggerFactory? LoggerFactory = null);
+/// <param name="TokenStore">Optional. Keeps the doctor token outside the client, for hosts that create a client per request or run several instances.</param>
+public sealed record TaminClientOptions(string ClientId, string Audience, HttpMessageHandler PrimaryHandler, ILoggerFactory? LoggerFactory, ITaminTokenStore? TokenStore)
+{
+    /// <summary>The 4.0.0 shape, kept so code compiled against it keeps binding.</summary>
+    public TaminClientOptions(string ClientId, string Audience, HttpMessageHandler PrimaryHandler, ILoggerFactory? LoggerFactory = null)
+        : this(ClientId, Audience, PrimaryHandler, LoggerFactory, null) { }
+}
 
 /// <summary>Creates <see cref="ITaminClient"/> instances. Hosts come from the generated clients, which take them from the OpenAPI servers.</summary>
 public static class TaminClient
@@ -64,7 +70,7 @@ public static class TaminClient
         var accountBase = new Uri(account.BaseUrl!.TrimEnd('/') + "/");
         // The token route is outside the retrying pipeline: mutations are never retried.
         var exchange = new TaminDoctorTokenExchange(new HttpClient(options.PrimaryHandler, disposeHandler: false), new Uri(accountBase, "auth/server/v2/token"), isPilot);
-        var tokens = new TaminTokenProvider(exchange, options.ClientId, options.Audience, [new Uri(soa.BaseUrl!).Host, new Uri(api.BaseUrl!).Host]);
+        var tokens = new TaminTokenProvider(exchange, options.ClientId, options.Audience, [new Uri(soa.BaseUrl!).Host, new Uri(api.BaseUrl!).Host], options.TokenStore);
         soa.Tokens.Provider = tokens;
         api.Tokens.Provider = tokens;
         return tokens;
