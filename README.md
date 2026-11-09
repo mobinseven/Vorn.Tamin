@@ -6,6 +6,8 @@
 [![NuGet Version](https://img.shields.io/nuget/v/Tamin.Client.Soa?style=flat-square&label=Tamin.Client.Soa)](https://www.nuget.org/packages/Tamin.Client.Soa)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
+> **Unofficial, internal client.** This library is not provided, endorsed or supported by the Social Security Insurance of Iran. It is built for our company's own use. Nursing operations are not supported yet, two pilot routes currently return 404, and nothing has been validated against the live service. See "Known limitations" in [CHANGELOG.md](CHANGELOG.md).
+
 A .NET 10 client SDK for the EP.Tamin electronic prescription APIs of the Social Security Insurance of Iran (سازمان تأمین اجتماعی).
 
 Clients are **generated from audited OpenAPI specifications** using [Kiota](https://github.com/microsoft/kiota), then wrapped by an environment-neutral client, `ITaminClient`, that provides every operation with authentication, HTTP resilience, and request/response mapping.
