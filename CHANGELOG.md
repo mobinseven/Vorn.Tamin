@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `ITaminTokenStore` and `TaminClientOptions.TokenStore`, for hosts that create a client per request or run several instances. When a store is supplied it is the source of truth for the doctor token: every read, authorization and refresh goes through it, under a lease the store provides, so one refresh runs at a time across clients. A rejected refresh token clears the store; a network or 5xx failure keeps it.
+- `DoctorToken` is now public, as the value the store reads and writes.
+
 ## [4.0.0] - 2026-11-09
 
 Unofficial client, built and maintained for internal company use. It is not published, endorsed or supported by the Social Security Insurance of Iran.

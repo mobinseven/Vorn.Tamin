@@ -148,6 +148,88 @@ public sealed class TaminTokenProviderTests
         await Assert.ThrowsAsync<TaminReauthorizationRequiredException>(() => provider.GetAuthorizationTokenAsync(new Uri("https://soa.tamin.ir/resource")));
     }
 
+    [Fact]
+    public async Task Store_is_the_source_of_truth_across_clients()
+    {
+        var store = new InMemoryStore { Token = new("stored", "refresh", DateTimeOffset.UtcNow.AddHours(1)) };
+        var exchange = new RecordingExchange();
+        var provider = new TaminTokenProvider(exchange, "client", "audience", ["soa.tamin.ir"], store);
+
+        Assert.Equal("stored", await provider.GetAuthorizationTokenAsync(new Uri("https://soa.tamin.ir/resource")));
+        store.Token = new("replaced", "refresh", DateTimeOffset.UtcNow.AddHours(1));
+        Assert.Equal("replaced", await provider.GetAuthorizationTokenAsync(new Uri("https://soa.tamin.ir/resource")));
+        Assert.Equal(0, exchange.RefreshCalls);
+    }
+
+    [Fact]
+    public async Task Authorization_and_refresh_are_written_to_the_store_under_a_lease()
+    {
+        var store = new InMemoryStore();
+        var exchange = new RecordingExchange { AuthorizationToken = new("initial", "refresh", DateTimeOffset.UtcNow.AddSeconds(1)) };
+        var provider = new TaminTokenProvider(exchange, "client", "audience", ["soa.tamin.ir"], store);
+
+        await provider.CompleteAuthorizationAsync("code", "https://callback.example", new string('a', 43));
+        Assert.Equal("initial", store.Token!.AccessToken);
+        Assert.Equal("refreshed", await provider.GetAuthorizationTokenAsync(new Uri("https://soa.tamin.ir/resource")));
+        Assert.Equal("refreshed", store.Token!.AccessToken);
+        Assert.Equal(0, store.OpenLeases);
+        Assert.True(store.Leases >= 2);
+    }
+
+    [Fact]
+    public async Task Concurrent_clients_sharing_a_store_refresh_once()
+    {
+        var store = new InMemoryStore { Token = new("old", "refresh", DateTimeOffset.UtcNow.AddSeconds(1)) };
+        var exchange = new RecordingExchange { RefreshDelay = TimeSpan.FromMilliseconds(50) };
+
+        var results = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ =>
+            new TaminTokenProvider(exchange, "client", "audience", ["soa.tamin.ir"], store).GetAuthorizationTokenAsync(new Uri("https://soa.tamin.ir/resource"))));
+
+        Assert.All(results, value => Assert.Equal("refreshed", value));
+        Assert.Equal(1, exchange.RefreshCalls);
+    }
+
+    [Fact]
+    public async Task Rejected_refresh_clears_the_store_but_an_outage_keeps_it()
+    {
+        var store = new InMemoryStore { Token = new("old", "refresh", DateTimeOffset.UtcNow.AddSeconds(1)) };
+        var outage = new TaminTokenProvider(new RecordingExchange { RefreshFailure = new HttpRequestException("down") }, "client", "audience", ["soa.tamin.ir"], store);
+        await Assert.ThrowsAsync<HttpRequestException>(() => outage.GetAuthorizationTokenAsync(new Uri("https://soa.tamin.ir/resource")));
+        Assert.NotNull(store.Token);
+
+        var rejected = new TaminTokenProvider(new RecordingExchange { RefreshFailure = new HttpRequestException("rejected", null, System.Net.HttpStatusCode.BadRequest) }, "client", "audience", ["soa.tamin.ir"], store);
+        await Assert.ThrowsAsync<TaminReauthorizationRequiredException>(() => rejected.GetAuthorizationTokenAsync(new Uri("https://soa.tamin.ir/resource")));
+        Assert.Null(store.Token);
+        Assert.Equal(0, store.OpenLeases);
+    }
+
+    [Fact]
+    public async Task Empty_store_requires_reauthorization()
+    {
+        var provider = new TaminTokenProvider(new RecordingExchange(), "client", "audience", ["soa.tamin.ir"], new InMemoryStore());
+        await Assert.ThrowsAsync<TaminReauthorizationRequiredException>(() => provider.GetAuthorizationTokenAsync(new Uri("https://soa.tamin.ir/resource")));
+    }
+
+    private sealed class InMemoryStore : ITaminTokenStore
+    {
+        private readonly SemaphoreSlim gate = new(1, 1);
+        public DoctorToken? Token { get; set; }
+        public int Leases { get; private set; }
+        public int OpenLeases { get; private set; }
+        public async Task<IAsyncDisposable> AcquireAsync(CancellationToken cancellationToken)
+        {
+            await gate.WaitAsync(cancellationToken);
+            Leases++; OpenLeases++;
+            return new Lease(this);
+        }
+        public Task<DoctorToken?> ReadAsync(CancellationToken cancellationToken) => Task.FromResult(Token);
+        public Task WriteAsync(DoctorToken? token, CancellationToken cancellationToken) { Token = token; return Task.CompletedTask; }
+        private sealed class Lease(InMemoryStore owner) : IAsyncDisposable
+        {
+            public ValueTask DisposeAsync() { owner.OpenLeases--; owner.gate.Release(); return ValueTask.CompletedTask; }
+        }
+    }
+
     private static TaminTokenProvider Provider(IDoctorTokenExchange exchange) => new(exchange, "client", "audience", ["soa.tamin.ir"]);
 
     private sealed class RecordingExchange : IDoctorTokenExchange
