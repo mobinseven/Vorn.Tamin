@@ -27,7 +27,11 @@ public sealed record MethodUsageInput(int? Id);
 public sealed record ReferralFeedbackAnswerInput(int? DrugAnswerId);
 public sealed record ReferralFeedbackItemInput(ReferralFeedbackAnswerInput? AnswerId, string? Comments, int? QuestionId);
 /// <param name="SrvType">The service type code the guide requires on every item, such as "01" for a drug, "16" for a visit or "17" for a medical service.</param>
-public sealed record ServiceInput(string? SrvCode, string? Terminology, string? SrvType = null);
+public sealed record ServiceInput(string? SrvCode, string? Terminology, string? SrvType)
+{
+    /// <summary>The 4.0.0 shape, kept so code compiled against it keeps binding.</summary>
+    public ServiceInput(string? SrvCode, string? Terminology) : this(SrvCode, Terminology, null) { }
+}
 public sealed record DrugInstructionInput(int? DrugInstId);
 public sealed record DrugAmountInput(int? DrugAmntId);
 public sealed record PrescriptionDetailInput(

@@ -17,7 +17,12 @@ namespace Tamin.Integration;
 
 /// <param name="PrimaryHandler">Owned by the caller, who keeps it alive and disposes it. Reuse one instance.</param>
 /// <param name="TokenStore">Optional. Keeps the doctor token outside the client, for hosts that create a client per request or run several instances.</param>
-public sealed record TaminClientOptions(string ClientId, string Audience, HttpMessageHandler PrimaryHandler, ILoggerFactory? LoggerFactory = null, ITaminTokenStore? TokenStore = null);
+public sealed record TaminClientOptions(string ClientId, string Audience, HttpMessageHandler PrimaryHandler, ILoggerFactory? LoggerFactory, ITaminTokenStore? TokenStore)
+{
+    /// <summary>The 4.0.0 shape, kept so code compiled against it keeps binding.</summary>
+    public TaminClientOptions(string ClientId, string Audience, HttpMessageHandler PrimaryHandler, ILoggerFactory? LoggerFactory = null)
+        : this(ClientId, Audience, PrimaryHandler, LoggerFactory, null) { }
+}
 
 /// <summary>Creates <see cref="ITaminClient"/> instances. Hosts come from the generated clients, which take them from the OpenAPI servers.</summary>
 public static class TaminClient
